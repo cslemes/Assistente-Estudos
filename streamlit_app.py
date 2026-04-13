@@ -76,7 +76,7 @@ with st.sidebar:
 
 # ── Main tabs ─────────────────────────────────────────────────────────────────
 
-tab_chat, tab_flashcards = st.tabs(["💬 Chat", "🃏 Flashcards"])
+tab_chat, tab_resumos, tab_flashcards = st.tabs(["💬 Chat", "📝 Resumos", "🃏 Flashcards"])
 
 
 # ── Chat tab ──────────────────────────────────────────────────────────────────
@@ -153,6 +153,88 @@ with tab_chat:
         st.session_state.messages.append(
             {"role": "assistant", "content": state["full_text"], "sources": state["sources"]}
         )
+
+
+# ── Resumos tab ───────────────────────────────────────────────────────────────
+
+with tab_resumos:
+    st.title("Resumos das Aulas")
+    st.caption("Gere e consulte resumos das transcrições via Map-Reduce.")
+
+    def load_transcriptions():
+        try:
+            r = requests.get(f"{API}/summarize", timeout=10)
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            st.error(f"Erro ao carregar transcrições: {e}")
+            return []
+
+    if "resumos_data" not in st.session_state:
+        st.session_state.resumos_data = []
+
+    col_refresh, col_all = st.columns([1, 1])
+    with col_refresh:
+        if st.button("🔄 Atualizar lista"):
+            st.session_state.resumos_data = load_transcriptions()
+    with col_all:
+        if st.button("⚡ Resumir todos pendentes", type="primary"):
+            with st.spinner("Resumindo todas as aulas sem resumo… (pode demorar)"):
+                try:
+                    r = requests.post(f"{API}/summarize/all", timeout=600)
+                    r.raise_for_status()
+                    st.success(f"{len(r.json())} resumo(s) gerado(s).")
+                    st.session_state.resumos_data = load_transcriptions()
+                except Exception as e:
+                    st.error(f"Erro: {e}")
+
+    if not st.session_state.resumos_data:
+        st.session_state.resumos_data = load_transcriptions()
+
+    transcriptions = st.session_state.resumos_data
+
+    if not transcriptions:
+        st.info("Nenhuma transcrição encontrada. Execute o pipeline de transcrição primeiro.")
+    else:
+        # Group by course → topic
+        from collections import defaultdict
+        grouped: dict = defaultdict(lambda: defaultdict(list))
+        for t in transcriptions:
+            grouped[t["course"]][t["topic"]].append(t)
+
+        for course_name, topics in sorted(grouped.items()):
+            all_aulas = [t for aulas in topics.values() for t in aulas]
+            n_course_done = sum(1 for t in all_aulas if t["summarized"])
+            with st.expander(f"📚 {course_name} · {n_course_done}/{len(all_aulas)} resumidos", expanded=False):
+              for topic_name, aulas in sorted(topics.items()):
+                n_done = sum(1 for t in aulas if t["summarized"])
+                with st.expander(f"**{topic_name}** · {n_done}/{len(aulas)} resumidos", expanded=False):
+                    aulas_sorted = sorted(aulas, key=lambda x: x["aula_number"] or 0)
+                    for t in aulas_sorted:
+                        fname = t["file_path"].replace("\\", "/").split("/")[-1]
+                        aula_label = fname.rsplit(".", 1)[0]
+                        icon = "✅" if t["summarized"] else "⏳"
+                        st.markdown(f"**{icon} {aula_label}**")
+                        st.caption(f"ID: {t['id']} · {t['created_at'][:10]}")
+                        if t.get("video_url"):
+                            st.link_button("▶ Assistir aula", t["video_url"], key=f"yt_{t['id']}")
+                        if t["summarized"]:
+                            st.markdown(t["summary"])
+                        else:
+                            if st.button("Gerar resumo", key=f"summarize_{t['id']}"):
+                                with st.spinner(f"Resumindo {aula_label}… (pode demorar alguns minutos)"):
+                                    try:
+                                        r = requests.post(f"{API}/summarize/{t['id']}", timeout=600)
+                                        if r.ok:
+                                            st.success("Resumo gerado!")
+                                            st.markdown(r.json()["summary"])
+                                            st.session_state.resumos_data = load_transcriptions()
+                                            st.rerun()
+                                        else:
+                                            st.error(f"Erro {r.status_code}: {r.text[:200]}")
+                                    except Exception as e:
+                                        st.error(f"Erro: {e}")
+                        st.divider()
 
 
 # ── Flashcards tab ────────────────────────────────────────────────────────────

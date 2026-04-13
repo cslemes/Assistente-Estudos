@@ -60,3 +60,10 @@ class ExtractAudioRequest(BaseModel):
 class ExtractAudioBatchRequest(BaseModel):
     folder: str
     recursive: bool = False
+
+
+class SummarizeResponse(BaseModel):
+    id: int
+    file_path: str
+    summary: str
+    chunks_processed: int

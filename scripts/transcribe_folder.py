@@ -59,9 +59,19 @@ def extract_audio(video_path: Path, ai_data_dir: Path) -> Path | None:
     try:
         subprocess.run(
             [
-                "ffmpeg", "-i", str(video_path),
-                "-vn", "-ac", "1", "-ar", "44100", "-ab", "128k",
-                "-f", "mp3", str(audio_path),
+                "ffmpeg",
+                "-i",
+                str(video_path),
+                "-vn",
+                "-ac",
+                "1",
+                "-ar",
+                "44100",
+                "-ab",
+                "128k",
+                "-f",
+                "mp3",
+                str(audio_path),
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -118,11 +128,11 @@ def main():
 
         if args.dry_run:
             print(f"    [dry-run] extract → {audio_path}")
-            print(f"    [dry-run] transcribe → POST /transcribe")
+            print("    [dry-run] transcribe → POST /transcribe")
             continue
 
         # Step 1: extract audio
-        print(f"    extracting audio...", end="", flush=True)
+        print("    extracting audio...", end="", flush=True)
         audio = extract_audio(video, ai_data_dir)
         if audio is None:
             print("  FAILED (FFmpeg)")
@@ -131,7 +141,7 @@ def main():
         print(f" {audio.name}")
 
         # Step 2: send to transcription API
-        print(f"    transcribing...", end="", flush=True)
+        print("    transcribing...", end="", flush=True)
         try:
             result = _api_request("POST", "/transcribe", {"file_path": str(audio)})
             print(f" done  ({result.get('output_file', '')})")

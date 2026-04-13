@@ -12,6 +12,7 @@ from app.routers.groq import router as groq_router
 from app.routers.ingestion import router as ingestion_router
 from app.routers.openai import router as openai_router
 from app.routers.search import router as search_router
+from app.routers.summarize import router as summarize_router
 from app.routers.sync import router as sync_router
 from app.routers.youtube import router as youtube_router
 
@@ -35,6 +36,7 @@ app.include_router(search_router)
 app.include_router(openai_router)
 app.include_router(groq_router)
 app.include_router(flashcards_router)
+app.include_router(summarize_router, prefix="/summarize")
 
 
 @app.get("/health", tags=["health"])

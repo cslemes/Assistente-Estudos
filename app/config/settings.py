@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
 from typing import Optional
+
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -75,6 +76,32 @@ Contexto:
 Pergunta: {query}
 
 Responda em português, de forma didática e completa."""
+
+    # Summarization
+    summarize_chunk_size: int = 3000  # chars per Map chunk (~750 tokens)
+    summarize_max_tokens: int = 1024  # max output tokens per LLM call
+    summarize_reduce_max_chars: int = 15000  # max chars fed into a single Reduce call
+    summarize_tpm_limit: int = (
+        7500  # token-per-minute budget (leave headroom below provider limit)
+    )
+    # Use a large-context model for summarization, independent of the chat model
+    summarize_groq_model: str = (
+        "llama-3.3-70b-versatile"  # 128k ctx, better for long transcripts
+    )
+    summarize_openai_model: str = "gpt-4o-mini"
+    summarize_map_prompt: str = (
+        "Você é um assistente acadêmico especializado em IA. "
+        "Resuma o trecho de aula abaixo em português, destacando: "
+        "conceitos principais, definições, exemplos e fórmulas. "
+        "Seja objetivo e preserve termos técnicos.\n\n{chunk}"
+    )
+    summarize_reduce_prompt: str = (
+        "Você é um assistente acadêmico especializado em IA. "
+        "A seguir estão resumos parciais de uma aula longa. "
+        "Combine-os em um único guia de estudo executivo em português, "
+        "organizado por tópicos, com destaques para conceitos-chave, "
+        "definições e exemplos práticos.\n\n{partial_summaries}"
+    )
 
     # LangSmith Configuration
     langsmith_api_key: Optional[str] = None

@@ -235,6 +235,7 @@ uv run streamlit run streamlit_app.py
 Open `http://localhost:8501` in your browser.
 
 **Features:**
+
 - Select LLM provider (Groq — fast, or OpenAI — precise)
 - Filter answers by course and topic
 - Streaming responses with source citations and YouTube deep links

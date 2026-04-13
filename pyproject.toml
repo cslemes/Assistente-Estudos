@@ -3,9 +3,9 @@ name = "assistente-aluno"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
-    "deepgram-sdk>=6.1.0",
+    "deepgram-sdk>= 6.1.1",
     "dotenv>=0.9.9",
     "fastapi>=0.135.2",
     "fastembed>=0.8.0",
@@ -23,11 +23,12 @@ dependencies = [
     "tqdm>=4.67.3",
     "transformers>=5.4.0",
     "uvicorn>=0.42.0",
-    "charset-normalizer>=3.4.6",
     "streamlit>=1.45.0",
     "websockets>=16.0",
-    "torch>=2.11.0",
+    "torch",
+    "torchvision",
 ]
 
-[project.scripts]
-assistente = "main:main"
+[[tool.uv.index]]
+url = "https://download.pytorch.org/whl/cu130"
+default = true
