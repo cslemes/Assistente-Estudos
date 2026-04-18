@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from huggingface_hub import login
 
 from app.routers.audio import router as audio_router
+from app.routers.frames import router as frames_router
 from app.routers.flashcards import router as flashcards_router
 from app.routers.groq import router as groq_router
 from app.routers.ingestion import router as ingestion_router
@@ -30,6 +31,7 @@ app.add_middleware(
 
 app.include_router(sync_router)
 app.include_router(audio_router)
+app.include_router(frames_router)
 app.include_router(youtube_router)
 app.include_router(ingestion_router)
 app.include_router(search_router)

@@ -16,7 +16,6 @@ Usage:
 
 import argparse
 import re
-from itertools import groupby
 from pathlib import Path
 
 VIDEO_EXTENSIONS = (".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv")
@@ -37,7 +36,9 @@ def slugify(text: str) -> str:
 
 def find_videos(folder: Path, recursive: bool) -> list[Path]:
     if recursive:
-        return sorted(p for p in folder.rglob("*") if p.suffix.lower() in VIDEO_EXTENSIONS)
+        return sorted(
+            p for p in folder.rglob("*") if p.suffix.lower() in VIDEO_EXTENSIONS
+        )
     return sorted(p for p in folder.iterdir() if p.suffix.lower() in VIDEO_EXTENSIONS)
 
 
@@ -92,7 +93,9 @@ def main():
     )
     parser.add_argument("folder", type=Path, help="Folder to scan")
     parser.add_argument("--recursive", action="store_true", help="Scan subfolders")
-    parser.add_argument("--dry-run", action="store_true", help="Preview without renaming")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview without renaming"
+    )
     args = parser.parse_args()
 
     folder = args.folder.resolve()
@@ -123,7 +126,9 @@ def main():
             skipped += 1
             continue
 
-        print(f"  {'[dry-run] ' if args.dry_run else ''}RENAME  {video.name}  →  {new_name}")
+        print(
+            f"  {'[dry-run] ' if args.dry_run else ''}RENAME  {video.name}  →  {new_name}"
+        )
 
         if not args.dry_run:
             try:

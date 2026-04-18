@@ -103,6 +103,9 @@ Responda em português, de forma didática e completa."""
         "definições e exemplos práticos.\n\n{partial_summaries}"
     )
 
+    # Frame Extraction
+    frame_interval_seconds: int = 5  # seconds between extracted frames
+
     # LangSmith Configuration
     langsmith_api_key: Optional[str] = None
     langsmith_project: str = "assistente-estudos"

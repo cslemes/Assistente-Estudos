@@ -62,6 +62,17 @@ class ExtractAudioBatchRequest(BaseModel):
     recursive: bool = False
 
 
+class ExtractFramesRequest(BaseModel):
+    file_path: str
+    interval: int = 5  # seconds between frames
+
+
+class ExtractFramesBatchRequest(BaseModel):
+    folder: str
+    interval: int = 5
+    recursive: bool = False
+
+
 class SummarizeResponse(BaseModel):
     id: int
     file_path: str
