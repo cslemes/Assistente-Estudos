@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from huggingface_hub import login
 
+from app.database import init_db
+
 from app.routers.audio import router as audio_router
 from app.routers.frames import router as frames_router
 from app.routers.flashcards import router as flashcards_router
@@ -39,6 +41,11 @@ app.include_router(openai_router)
 app.include_router(groq_router)
 app.include_router(flashcards_router)
 app.include_router(summarize_router, prefix="/summarize")
+
+
+@app.on_event("startup")
+def startup():
+    init_db()
 
 
 @app.get("/health", tags=["health"])

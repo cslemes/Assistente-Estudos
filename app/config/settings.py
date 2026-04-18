@@ -2,6 +2,8 @@ from typing import Optional
 
 from pydantic_settings import BaseSettings
 
+VIDEO_EXTENSIONS = (".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv")
+
 
 class Settings(BaseSettings):
     # API Configuration
@@ -105,6 +107,10 @@ Responda em português, de forma didática e completa."""
 
     # Frame Extraction
     frame_interval_seconds: int = 5  # seconds between extracted frames
+
+    # CLIP Frame Classification
+    clip_model_name: str = "openai/clip-vit-base-patch16"
+    clip_device: str = "auto"  # "auto" → cuda if available, else cpu
 
     # LangSmith Configuration
     langsmith_api_key: Optional[str] = None

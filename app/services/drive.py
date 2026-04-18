@@ -74,7 +74,7 @@ def get_organized_path(topic_path: str, filename: str) -> str:
     return os.path.join(target_dir, filename)
 
 
-VIDEO_EXTENSIONS = (".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv")
+from app.config.settings import VIDEO_EXTENSIONS
 
 
 def _find_any_video(directory: str) -> str | None:

@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 
 from app.config.settings import Settings
 from app.database import get_pending, set_status
-from app.services.ingestion import ingest_pending_transcriptions
 
 router = APIRouter(tags=["ingestion"])
 
@@ -45,6 +44,7 @@ def list_classes():
 
 @router.post("/ingest")
 def ingest(collection: str = None):
+    from app.services.ingestion import ingest_pending_transcriptions
     return ingest_pending_transcriptions(collection)
 
 

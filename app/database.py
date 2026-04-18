@@ -103,6 +103,3 @@ def set_status(transcription_id: int, status: str):
             "UPDATE transcriptions SET status = ? WHERE id = ?",
             (status, transcription_id),
         )
-
-
-init_db()

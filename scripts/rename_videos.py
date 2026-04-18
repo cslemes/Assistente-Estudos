@@ -18,7 +18,7 @@ import argparse
 import re
 from pathlib import Path
 
-VIDEO_EXTENSIONS = (".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv")
+from app.config.settings import VIDEO_EXTENSIONS
 AULA_PATTERN = re.compile(r"aula\s*(\d+)", re.IGNORECASE)
 
 

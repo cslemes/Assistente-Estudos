@@ -3,7 +3,7 @@ name = "assistente-aluno"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13"
 dependencies = [
     "deepgram-sdk>= 6.1.1",
     "dotenv>=0.9.9",
@@ -29,6 +29,12 @@ dependencies = [
     "torchvision",
 ]
 
-[[tool.uv.index]]
-url = "https://download.pytorch.org/whl/cu130"
-default = true
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.0.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "scripts"]

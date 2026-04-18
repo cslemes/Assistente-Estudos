@@ -73,6 +73,15 @@ class ExtractFramesBatchRequest(BaseModel):
     recursive: bool = False
 
 
+class ClassifyFramesRequest(BaseModel):
+    frames_dir: str
+
+
+class ClassifyFramesBatchRequest(BaseModel):
+    folder: str
+    recursive: bool = False
+
+
 class SummarizeResponse(BaseModel):
     id: int
     file_path: str

@@ -1,9 +1,9 @@
 import json
 import os
 import uuid
+from functools import lru_cache
 from typing import List
 
-from dotenv import load_dotenv
 from tqdm.auto import tqdm
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct
@@ -15,11 +15,11 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification, pipelin
 from app.database import get_pending, set_status
 
 
-
 EMBED_MODEL_ID = "sentence-transformers/all-MiniLM-L6-v2"
 NER_MODEL_ID = "lfcc/bert-portuguese-ner"
 MIN_ENTITY_CONFIDENCE = 0.80
 CHUNK_SIZE = 750  # characters
+WINDOW_SECONDS = 60  # legacy word-level chunking window
 
 
 def _get_qdrant_client() -> QdrantClient:
@@ -29,10 +29,19 @@ def _get_qdrant_client() -> QdrantClient:
     )
 
 
-def initialize_ner_pipeline():
+@lru_cache(maxsize=1)
+def _get_ner_pipeline():
     tokenizer = AutoTokenizer.from_pretrained(NER_MODEL_ID)
     model = AutoModelForTokenClassification.from_pretrained(NER_MODEL_ID)
     return pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="first")
+
+
+@lru_cache(maxsize=1)
+def _get_embedding_models():
+    dense_model = TextEmbedding(EMBED_MODEL_ID)
+    bm25_model = Bm25("Qdrant/bm25")
+    colbert_model = LateInteractionTextEmbedding("colbert-ir/colbertv2.0")
+    return dense_model, bm25_model, colbert_model
 
 
 def extract_entities(text: str, ner_pipeline) -> dict:
@@ -52,27 +61,14 @@ def extract_entities(text: str, ner_pipeline) -> dict:
     return {k: list(v) for k, v in entities.items()}
 
 
-def initialize_embedding_models():
-    dense_model = TextEmbedding(EMBED_MODEL_ID)
-    bm25_model = Bm25("Qdrant/bm25")
-    colbert_model = LateInteractionTextEmbedding("colbert-ir/colbertv2.0")
-    return dense_model, bm25_model, colbert_model
-
-
-def create_embeddings(chunk_text: str, dense_model, bm25_model, colbert_model) -> dict:
-    dense = list(dense_model.passage_embed([chunk_text]))[0].tolist()
-    sparse = list(bm25_model.passage_embed([chunk_text]))[0].as_object()
-    colbert = list(colbert_model.passage_embed([chunk_text]))[0].tolist()
+def create_embeddings(text: str, dense_model, bm25_model, colbert_model) -> dict:
+    dense = list(dense_model.passage_embed([text]))[0].tolist()
+    sparse = list(bm25_model.passage_embed([text]))[0].as_object()
+    colbert = list(colbert_model.passage_embed([text]))[0].tolist()
     return {"dense": dense, "sparse": sparse, "colbertv2.0": colbert}
 
 
-MAX_CHUNK_CHARS = 750
-
-
-WINDOW_SECONDS = 60
-
-
-def chunk_segments(items: list, max_chars: int = MAX_CHUNK_CHARS) -> list:
+def chunk_segments(items: list, max_chars: int = CHUNK_SIZE) -> list:
     """
     Chunk transcription data into RAG chunks.
 
@@ -88,55 +84,54 @@ def chunk_segments(items: list, max_chars: int = MAX_CHUNK_CHARS) -> list:
         return []
 
     if "text" in items[0]:
-        # Utterance format
-        chunks = []
-        acc_text = items[0]["text"]
-        acc_start = items[0]["start"]
-        acc_speaker = items[0]["speaker"]
+        return _chunk_utterances(items, max_chars)
+    return _chunk_legacy_words(items)
 
-        for utt in items[1:]:
-            merged = acc_text + " " + utt["text"]
-            if utt["speaker"] == acc_speaker and len(merged) <= max_chars:
-                acc_text = merged
-            else:
-                chunks.append({"text": acc_text, "start": int(acc_start)})
-                acc_text = utt["text"]
-                acc_start = utt["start"]
-                acc_speaker = utt["speaker"]
 
-        chunks.append({"text": acc_text, "start": int(acc_start)})
-        return chunks
+def _chunk_utterances(items: list, max_chars: int) -> list:
+    chunks = []
+    acc_text = items[0]["text"]
+    acc_start = items[0]["start"]
+    acc_speaker = items[0]["speaker"]
 
-    else:
-        # Word-level format (legacy) — 60-second time windows
-        chunks = []
-        window_start = items[0]["start"]
-        current_words = []
+    for utt in items[1:]:
+        merged = acc_text + " " + utt["text"]
+        if utt["speaker"] == acc_speaker and len(merged) <= max_chars:
+            acc_text = merged
+        else:
+            chunks.append({"text": acc_text, "start": int(acc_start)})
+            acc_text = utt["text"]
+            acc_start = utt["start"]
+            acc_speaker = utt["speaker"]
 
-        for w in items:
-            if w["start"] - window_start >= WINDOW_SECONDS and current_words:
-                chunks.append({
-                    "text": " ".join(x["word"] for x in current_words),
-                    "start": int(window_start),
-                })
-                window_start = w["start"]
-                current_words = []
-            current_words.append(w)
+    chunks.append({"text": acc_text, "start": int(acc_start)})
+    return chunks
 
-        if current_words:
+
+def _chunk_legacy_words(items: list) -> list:
+    chunks = []
+    window_start = items[0]["start"]
+    current_words = []
+
+    for w in items:
+        if w["start"] - window_start >= WINDOW_SECONDS and current_words:
             chunks.append({
                 "text": " ".join(x["word"] for x in current_words),
                 "start": int(window_start),
             })
-        return chunks
+            window_start = w["start"]
+            current_words = []
+        current_words.append(w)
+
+    if current_words:
+        chunks.append({
+            "text": " ".join(x["word"] for x in current_words),
+            "start": int(window_start),
+        })
+    return chunks
 
 
 def _extract_class_meta(file_path: str) -> dict:
-    """
-    Extract course, topic and aula_number from the file path structure:
-    .../Course/Topic/ai_data/Aula_09_Topic.mp3
-    Returns {"course": "...", "topic": "...", "aula_number": int | None}
-    """
     from pathlib import Path
     import re
     p = Path(file_path)
@@ -167,14 +162,14 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> List[str]:
     return chunks
 
 
-def prepare_point(chunk_text: str, embedding_models, ner_pipeline, payload: dict) -> PointStruct:
+def _build_point(text: str, embedding_models, ner_pipeline, payload: dict) -> PointStruct:
     dense_model, bm25_model, colbert_model = embedding_models
-    embeddings = create_embeddings(chunk_text, dense_model, bm25_model, colbert_model)
+    embeddings = create_embeddings(text, dense_model, bm25_model, colbert_model)
 
     entities = {}
-    if len(chunk_text.split()) > 20:
+    if len(text.split()) > 20:
         try:
-            entities = extract_entities(chunk_text, ner_pipeline)
+            entities = extract_entities(text, ner_pipeline)
         except Exception:
             pass
 
@@ -185,7 +180,7 @@ def prepare_point(chunk_text: str, embedding_models, ner_pipeline, payload: dict
             "sparse": embeddings["sparse"],
             "colbertv2.0": embeddings["colbertv2.0"],
         },
-        payload={"text": chunk_text, "entities": entities, **payload},
+        payload={"text": text, "entities": entities, **payload},
     )
 
 
@@ -204,6 +199,46 @@ def upload_in_batches(client: QdrantClient, collection_name: str, points: List[P
     print(f"Uploaded {uploaded} points to '{collection_name}'")
 
 
+def _build_points_for_row(row: dict, embedding_models, ner_pipeline) -> List[PointStruct]:
+    class_meta = _extract_class_meta(row["file_path"])
+    raw_segments = row.get("segments_json")
+
+    if raw_segments:
+        timed_chunks = chunk_segments(json.loads(raw_segments))
+        return [
+            _build_point(
+                tc["text"],
+                embedding_models,
+                ner_pipeline,
+                {
+                    "source_type": "transcript",
+                    "file_path": row["file_path"],
+                    "video_url": _build_deep_link(row.get("video_url"), tc["start"]),
+                    "transcription_id": row["id"],
+                    "start_time": tc["start"],
+                    **class_meta,
+                },
+            )
+            for tc in timed_chunks
+        ]
+
+    return [
+        _build_point(
+            chunk,
+            embedding_models,
+            ner_pipeline,
+            {
+                "source_type": "transcript",
+                "file_path": row["file_path"],
+                "video_url": row.get("video_url"),
+                "transcription_id": row["id"],
+                **class_meta,
+            },
+        )
+        for chunk in chunk_text(row["text"])
+    ]
+
+
 def ingest_pending_transcriptions(collection_name: str = None) -> dict:
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
     pending = get_pending()
@@ -212,42 +247,14 @@ def ingest_pending_transcriptions(collection_name: str = None) -> dict:
         return {"ingested": 0, "message": "No pending transcriptions"}
 
     client = _get_qdrant_client()
-    embedding_models = initialize_embedding_models()
-    ner_pipeline = initialize_ner_pipeline()
-
-    points = []
-    processed_ids = []
+    embedding_models = _get_embedding_models()
+    ner_pipeline = _get_ner_pipeline()
 
     print(f"Processing {len(pending)} transcriptions...")
+    points = []
+    processed_ids = []
     for row in tqdm(pending):
-        raw_segments = row.get("segments_json")
-
-        class_meta = _extract_class_meta(row["file_path"])
-
-        if raw_segments:
-            timed_chunks = chunk_segments(json.loads(raw_segments))
-            for tc in timed_chunks:
-                payload = {
-                    "source_type": "transcript",
-                    "file_path": row["file_path"],
-                    "video_url": _build_deep_link(row.get("video_url"), tc["start"]),
-                    "transcription_id": row["id"],
-                    "start_time": tc["start"],
-                    **class_meta,
-                }
-                points.append(prepare_point(tc["text"], embedding_models, ner_pipeline, payload))
-        else:
-            chunks = chunk_text(row["text"])
-            payload = {
-                "source_type": "transcript",
-                "file_path": row["file_path"],
-                "video_url": row.get("video_url"),
-                "transcription_id": row["id"],
-                **class_meta,
-            }
-            for chunk in chunks:
-                points.append(prepare_point(chunk, embedding_models, ner_pipeline, payload))
-
+        points.extend(_build_points_for_row(row, embedding_models, ner_pipeline))
         processed_ids.append(row["id"])
 
     upload_in_batches(client, collection_name, points)

@@ -1,13 +1,23 @@
+import json
 import os
+from collections import Counter
+from functools import lru_cache
 
+import torch
 from fastapi import APIRouter, HTTPException
 
-from app.models.api import ExtractFramesBatchRequest, ExtractFramesRequest
+from app.config.settings import Settings
+from app.models.api import (
+    ClassifyFramesBatchRequest,
+    ClassifyFramesRequest,
+    ExtractFramesBatchRequest,
+    ExtractFramesRequest,
+)
+from app.config.settings import VIDEO_EXTENSIONS
+from app.services.clip_classifier import CLIPFrameClassifier
 from app.services.frame_extractor import extract_frames_from_video
 
 router = APIRouter(tags=["frames"])
-
-VIDEO_EXTENSIONS = (".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv")
 
 
 def _frames_dir(video_path: str) -> str:
@@ -72,5 +82,75 @@ def extract_frames_batch(payload: ExtractFramesBatchRequest):
         "skipped": len(skipped),
         "failed": len(failed),
         "files": results,
+        "errors": failed,
+    }
+
+
+@lru_cache(maxsize=1)
+def _get_classifier() -> CLIPFrameClassifier:
+    settings = Settings()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    if settings.clip_device != "auto":
+        device = settings.clip_device
+    return CLIPFrameClassifier(settings.clip_model_name, device)
+
+
+@router.post("/classify-frames")
+def classify_frames_job(payload: ClassifyFramesRequest):
+    if not os.path.isdir(payload.frames_dir):
+        raise HTTPException(status_code=404, detail="Frames directory not found")
+
+    results = _get_classifier().classify_directory(payload.frames_dir)
+
+    out = os.path.join(payload.frames_dir, "classifications.json")
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2, ensure_ascii=False)
+
+    counts = dict(Counter(r["classification"] for r in results))
+    return {
+        "frames_dir": payload.frames_dir,
+        "total_frames": len(results),
+        "counts": counts,
+        "output_file": out,
+    }
+
+
+@router.post("/classify-frames/batch")
+def classify_frames_batch(payload: ClassifyFramesBatchRequest):
+    # Find all *_frames/ directories under the given folder
+    frames_dirs = []
+    walk = os.walk(payload.folder) if payload.recursive else [(payload.folder, os.listdir(payload.folder), [])]
+    for dirpath, dirnames, _ in walk:
+        for name in dirnames:
+            if name.endswith("_frames"):
+                frames_dirs.append(os.path.join(dirpath, name))
+
+    if not frames_dirs:
+        raise HTTPException(status_code=404, detail="No *_frames directories found")
+
+    classifier = _get_classifier()
+    results = []
+    skipped = []
+    failed = []
+
+    for frames_dir in sorted(frames_dirs):
+        out = os.path.join(frames_dir, "classifications.json")
+        if os.path.exists(out):
+            skipped.append(frames_dir)
+            continue
+        try:
+            classifications = classifier.classify_directory(frames_dir)
+            with open(out, "w", encoding="utf-8") as f:
+                json.dump(classifications, f, indent=2, ensure_ascii=False)
+            counts = dict(Counter(r["classification"] for r in classifications))
+            results.append({"frames_dir": frames_dir, "total_frames": len(classifications), "counts": counts})
+        except Exception as e:
+            failed.append({"frames_dir": frames_dir, "error": str(e)})
+
+    return {
+        "processed": len(results),
+        "skipped": len(skipped),
+        "failed": len(failed),
+        "results": results,
         "errors": failed,
     }

@@ -90,7 +90,14 @@ app/
 ├── routers/
 │   ├── search.py            # POST /search
 │   ├── openai.py            # POST /ask, POST /ask/stream
-│   └── groq.py              # POST /ask/groq, POST /ask/groq/stream
+│   ├── groq.py              # POST /ask/groq, POST /ask/groq/stream
+│   ├── frames.py            # POST /extract-frames, POST /classify-frames
+│   ├── summarize.py         # POST /summarize/{id}, POST /summarize/all
+│   ├── flashcards.py        # POST /flashcards/generate
+│   ├── audio.py             # POST /extract-audio, POST /transcribe
+│   ├── ingestion.py         # POST /ingest
+│   ├── sync.py              # POST /sync, POST /scrape
+│   └── youtube.py           # POST /upload, POST /upload/batch
 └── services/
     ├── sync.py              # Google Classroom → Drive download
     ├── drive.py             # Drive/Forms scraping + file org
@@ -100,18 +107,21 @@ app/
     ├── retriever.py         # Qdrant 2-stage retrieval
     ├── openai_service.py    # OpenAI sync + streaming
     ├── groq_service.py      # Groq sync + streaming
+    ├── llm_client.py        # Provider-agnostic chat client factory
     ├── ingestion.py         # Embed + NER + upload to Qdrant (transcript)
-    ├── frame_extractor.py   # FFmpeg → frames every Ns [PLANNED]
-    ├── clip_classifier.py   # CLIP zero-shot: slide/notebook/whiteboard/camera [PLANNED]
+    ├── summarizer.py        # Map-Reduce summarization
+    ├── flashcard_service.py # Anki .apkg generation via genanki
+    ├── frame_extractor.py   # FFmpeg → frames every Ns
+    ├── clip_classifier.py   # CLIP zero-shot: slide/notebook/whiteboard/camera
     ├── slide_matcher.py     # LibreOffice render + CLIP similarity → timestamp [PLANNED]
     ├── ocr.py               # EasyOCR wrapper for notebook/whiteboard frames [PLANNED]
     ├── whiteboard.py        # Whiteboard frames → text chunks → Qdrant [PLANNED]
     ├── notebook.py          # .ipynb cells + OCR match → Qdrant [PLANNED]
     └── create_collection.py # One-time Qdrant collection setup
 scripts/
-    ├── rename_videos.py     # Rename videos to Aula_NN_Topic.mp4
-    ├── transcribe_folder.py # Batch audio extract + transcribe
-    └── cleanup.py           # Reset ai_data/ and DB records
+    ├── rename_videos.py        # Rename videos to Aula_NN_Topic.mp4
+    ├── transcribe_folder.py    # Scan folder → POST /transcribe for each video
+    └── cleanup.py              # Reset ai_data/ and DB records
 streamlit_app.py             # Chat UI
 main.py                      # CLI trigger
 ```
@@ -247,18 +257,21 @@ Open `http://localhost:8501` in your browser.
 ```text
 GET  /health
 GET  /status
-GET  /classes                      # List indexed classes
 POST /sync                         # Download from Classroom
 POST /scrape                       # Download from Drive/Forms URL
 POST /transcribe                   # Deepgram transcription
 POST /extract-audio                # FFmpeg audio extraction (single)
 POST /extract-audio/batch          # FFmpeg audio extraction (batch)
+POST /extract-frames               # FFmpeg frame extraction (single)
+POST /extract-frames/batch         # FFmpeg frame extraction (batch)
+POST /classify-frames              # CLIP zero-shot classification (single)
+POST /classify-frames/batch        # CLIP zero-shot classification (batch)
 POST /upload                       # Upload single video to YouTube
 POST /upload/batch?limit=6         # Batch upload (default 6/day)
 POST /ingest                       # Embed + NER + send to Qdrant (transcripts)
 POST /ingest/slides                # CLIP match pptx slides → Qdrant [PLANNED]
-POST /ingest/notebook              # CLIP/OCR match .ipynb cells → Qdrant [PLANNED]
-POST /ingest/whiteboard            # OCR whiteboard frames → Qdrant [PLANNED]
+POST /ingest/notebook              # EasyOCR match .ipynb cells → Qdrant [PLANNED]
+POST /ingest/whiteboard            # EasyOCR whiteboard frames → Qdrant [PLANNED]
 GET  /transcriptions/pending       # List pending for embedding
 PATCH /transcriptions/{id}/status  # Update status
 POST /search                       # Hybrid vector search
@@ -266,6 +279,10 @@ POST /ask                          # RAG answer (sync, OpenAI)
 POST /ask/stream                   # RAG answer (SSE streaming, OpenAI)
 POST /ask/groq                     # RAG answer (sync, Groq)
 POST /ask/groq/stream              # RAG answer (SSE streaming, Groq)
+GET  /summarize                    # List transcriptions with summary status
+POST /summarize/{id}               # Map-Reduce summarize one transcription
+POST /summarize/all                # Map-Reduce summarize all pending
+POST /flashcards/generate          # Generate Anki .apkg deck from Qdrant
 ```
 
 ---
@@ -277,10 +294,14 @@ POST /sync              → Download files from Google Classroom
 POST /extract-audio     → FFmpeg: video → .mp3 in ai_data/
 POST /transcribe        → Deepgram → .txt + .json (utterances) + SQLite (status=pending)
 POST /ingest            → NER + embed transcripts → Qdrant (status=sent)
-POST /ingest/slides     → frames → CLIP classify → LibreOffice render → CLIP similarity → timestamp → Qdrant [PLANNED]
-POST /ingest/notebook   → frames → CLIP classify → EasyOCR → cell match → Qdrant [PLANNED]
-POST /ingest/whiteboard → frames → CLIP classify → EasyOCR → Qdrant [PLANNED]
+POST /summarize/{id}    → Map-Reduce → summary stored in SQLite
+POST /extract-frames    → FFmpeg: video → ai_data/{stem}_frames/frame_XXXX.jpg
+POST /classify-frames   → CLIP: frames → classifications.json (slide/notebook/whiteboard/camera)
+POST /ingest/slides     → LibreOffice render + CLIP similarity → timestamp → Qdrant [PLANNED]
+POST /ingest/notebook   → EasyOCR → cell match → Qdrant [PLANNED]
+POST /ingest/whiteboard → EasyOCR → Qdrant [PLANNED]
 POST /ask               → Query → hybrid search → LLM → answer
+POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 ```
 
 ---
@@ -300,18 +321,18 @@ POST /ask               → Query → hybrid search → LLM → answer
 | Deepgram Nova-3 PT-BR diarization | ✅ Implemented |
 | YouTube resumable upload (auto token refresh) | ✅ Implemented |
 | Groq LLM (llama-3.3-70b) sync + streaming | ✅ Implemented |
-| FFmpeg audio extraction endpoint | ✅ Implemented |
+| FFmpeg audio extraction | ✅ Implemented |
 | Streamlit chat UI | ✅ Implemented |
-| Frame extraction (FFmpeg) | 🔜 Planned |
-| CLIP zero-shot frame classifier (slide/notebook/whiteboard/camera) | 🔜 Planned |
+| Summary / Map-Reduce | ✅ Implemented |
+| Flashcards (Anki/genanki) | ✅ Implemented |
+| Frame extraction (FFmpeg) | ✅ Implemented |
+| CLIP zero-shot frame classifier (`openai/clip-vit-base-patch16`) | ✅ Implemented |
 | PowerPoint ingestion — LibreOffice render + CLIP similarity matching | 🔜 Planned |
 | Jupyter notebook ingestion — EasyOCR + cell text match | 🔜 Planned |
 | Whiteboard ingestion — EasyOCR → Qdrant chunks | 🔜 Planned |
 | Slide thumbnail capture + R2 upload | 🔜 Planned |
 | Discord Bot | ❌ Not started |
 | Highlights / Key Points | ❌ Not started |
-| Summary / Map-Reduce | ❌ Not started |
-| Flashcards (Anki/genanki) | ❌ Not started |
 
 ---
 
@@ -324,14 +345,14 @@ POST /ask               → Query → hybrid search → LLM → answer
 | Google Drive API | File download/listing | ✅ Implemented |
 | YouTube Data API | Unlisted video upload | ✅ Implemented |
 | Playwright/Chromium | Google Forms scraping | ✅ Implemented |
-| FFmpeg | Audio extraction + frame extraction | ✅ Implemented (frames planned) |
+| FFmpeg | Audio + frame extraction | ✅ Implemented |
 | Qdrant Cloud | Vector DB for RAG search | ✅ Implemented |
 | OpenAI GPT-4o-mini | RAG answer generation | ✅ Implemented |
 | Groq (llama-3.3-70b) | RAG answer generation (fast) | ✅ Implemented |
-| CLIP (`open_clip`) | Zero-shot frame classification + slide similarity | 🔜 Planned |
+| Anki/genanki | Flashcard .apkg generation | ✅ Implemented |
+| CLIP (`openai/clip-vit-base-patch16`) | Zero-shot frame classification | ✅ Implemented |
 | LibreOffice headless | Render .pptx slides → PNG images | 🔜 Planned |
 | python-pptx | PowerPoint slide text extraction | 🔜 Planned |
 | EasyOCR | Notebook + whiteboard text extraction from frames | 🔜 Planned |
 | Cloudflare R2 | Slide thumbnail storage | 🔜 Planned |
 | Discord Bot | User interface | ❌ Not started |
-| Anki/genanki | Flashcard generation | ❌ Not started |

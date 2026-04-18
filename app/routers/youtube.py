@@ -3,12 +3,11 @@ import os
 from fastapi import APIRouter, HTTPException
 
 from app.models.api import UploadYoutubeRequest
+from app.config.settings import VIDEO_EXTENSIONS
 from app.services.google_auth import get_google_services
 from app.services.youtube import upload_to_youtube
 
 router = APIRouter(tags=["youtube"])
-
-VIDEO_EXTENSIONS = (".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv")
 DOWNLOADS_DIR = os.path.join(os.getcwd(), "Downloads")
 
 
