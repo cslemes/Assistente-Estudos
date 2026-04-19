@@ -1,7 +1,13 @@
+import os
+
 from fastapi import APIRouter, HTTPException
 
 from app.config.settings import Settings
 from app.database import get_pending, set_status
+from app.models.api import IngestNotebookRequest, IngestSlidesRequest, IngestWhiteboardRequest
+from app.services.notebook_matcher import ingest_notebook
+from app.services.slide_matcher import ingest_pptx
+from app.services.whiteboard_ingester import ingest_whiteboard
 
 router = APIRouter(tags=["ingestion"])
 
@@ -40,6 +46,45 @@ def list_classes():
 
     classes.sort(key=lambda c: (c["course"] or "", c["aula_number"] or 0))
     return {"count": len(classes), "classes": classes}
+
+
+@router.post("/ingest/slides")
+def ingest_slides(payload: IngestSlidesRequest):
+    if not os.path.exists(payload.pptx_path):
+        raise HTTPException(status_code=404, detail="PPTX file not found")
+    if not os.path.isdir(payload.frames_dir):
+        raise HTTPException(status_code=404, detail="Frames directory not found")
+    return ingest_pptx(
+        pptx_path=payload.pptx_path,
+        video_path=payload.video_path,
+        frames_dir=payload.frames_dir,
+        interval=payload.interval,
+    )
+
+
+@router.post("/ingest/notebook")
+def ingest_notebook_endpoint(payload: IngestNotebookRequest):
+    if not os.path.exists(payload.ipynb_path):
+        raise HTTPException(status_code=404, detail="Notebook file not found")
+    if not os.path.isdir(payload.frames_dir):
+        raise HTTPException(status_code=404, detail="Frames directory not found")
+    return ingest_notebook(
+        ipynb_path=payload.ipynb_path,
+        video_path=payload.video_path,
+        frames_dir=payload.frames_dir,
+        interval=payload.interval,
+    )
+
+
+@router.post("/ingest/whiteboard")
+def ingest_whiteboard_endpoint(payload: IngestWhiteboardRequest):
+    if not os.path.isdir(payload.frames_dir):
+        raise HTTPException(status_code=404, detail="Frames directory not found")
+    return ingest_whiteboard(
+        video_path=payload.video_path,
+        frames_dir=payload.frames_dir,
+        interval=payload.interval,
+    )
 
 
 @router.post("/ingest")

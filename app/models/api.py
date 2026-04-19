@@ -87,3 +87,23 @@ class SummarizeResponse(BaseModel):
     file_path: str
     summary: str
     chunks_processed: int
+
+
+class IngestSlidesRequest(BaseModel):
+    pptx_path: str
+    video_path: str
+    frames_dir: str
+    interval: int = 5
+
+
+class IngestNotebookRequest(BaseModel):
+    ipynb_path: str
+    video_path: str
+    frames_dir: str
+    interval: int = 5
+
+
+class IngestWhiteboardRequest(BaseModel):
+    video_path: str
+    frames_dir: str
+    interval: int = 5

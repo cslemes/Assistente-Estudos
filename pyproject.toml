@@ -27,6 +27,8 @@ dependencies = [
     "websockets>=16.0",
     "torch",
     "torchvision",
+    "python-pptx>=1.0.2",
+    "easyocr>=1.7.2",
 ]
 
 [dependency-groups]
