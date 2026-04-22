@@ -254,3 +254,73 @@ def test_step_whiteboards_dry_run_does_not_call_api(tmp_path):
 
     mock_api.assert_not_called()
     assert total == 0
+
+
+from vision_folder import process_video, ALL_STEPS
+
+
+def test_process_video_skips_classify_if_extract_fails(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+    stats = {"extracted": 0, "classified": 0, "slides": 0, "notebooks": 0, "whiteboards": 0, "failed": 0}
+
+    with patch("vision_folder.step_extract", return_value=False) as mock_extract, \
+         patch("vision_folder.step_classify") as mock_classify:
+        process_video(video, frames_dir, [], [], ALL_STEPS, interval=5, dry_run=False, stats=stats)
+
+    mock_extract.assert_called_once()
+    mock_classify.assert_not_called()
+    assert stats["failed"] == 1
+
+
+def test_process_video_skips_ingestion_if_classify_fails(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+    stats = {"extracted": 0, "classified": 0, "slides": 0, "notebooks": 0, "whiteboards": 0, "failed": 0}
+
+    with patch("vision_folder.step_extract", return_value=True), \
+         patch("vision_folder.step_classify", return_value=False), \
+         patch("vision_folder.step_slides") as mock_slides, \
+         patch("vision_folder.step_notebooks") as mock_notebooks, \
+         patch("vision_folder.step_whiteboards") as mock_whiteboards:
+        process_video(video, frames_dir, [], [], ALL_STEPS, interval=5, dry_run=False, stats=stats)
+
+    mock_slides.assert_not_called()
+    mock_notebooks.assert_not_called()
+    mock_whiteboards.assert_not_called()
+    assert stats["failed"] == 1
+
+
+def test_process_video_runs_all_steps_on_success(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+    pptx_files = [tmp_path / "documentos" / "slides.pptx"]
+    ipynb_files = [tmp_path / "scripts" / "nb.ipynb"]
+    stats = {"extracted": 0, "classified": 0, "slides": 0, "notebooks": 0, "whiteboards": 0, "failed": 0}
+
+    with patch("vision_folder.step_extract", return_value=True), \
+         patch("vision_folder.step_classify", return_value=True), \
+         patch("vision_folder.step_slides", return_value=3), \
+         patch("vision_folder.step_notebooks", return_value=2), \
+         patch("vision_folder.step_whiteboards", return_value=1):
+        process_video(video, frames_dir, pptx_files, ipynb_files, ALL_STEPS, interval=5, dry_run=False, stats=stats)
+
+    assert stats["extracted"] == 1
+    assert stats["classified"] == 1
+    assert stats["slides"] == 3
+    assert stats["notebooks"] == 2
+    assert stats["whiteboards"] == 1
+    assert stats["failed"] == 0
+
+
+def test_process_video_respects_steps_filter(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+    stats = {"extracted": 0, "classified": 0, "slides": 0, "notebooks": 0, "whiteboards": 0, "failed": 0}
+
+    with patch("vision_folder.step_extract", return_value=True) as mock_extract, \
+         patch("vision_folder.step_classify") as mock_classify:
+        process_video(video, frames_dir, [], [], ["extract"], interval=5, dry_run=False, stats=stats)
+
+    mock_extract.assert_called_once()
+    mock_classify.assert_not_called()

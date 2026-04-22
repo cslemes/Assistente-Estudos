@@ -203,3 +203,122 @@ def step_whiteboards(video_path: Path, frames_dir: Path, interval: int, dry_run:
     except RuntimeError as exc:
         print(f"    whiteboards → ERROR: {exc}", flush=True)
         return 0
+
+
+def process_video(
+    video_path: Path,
+    frames_dir: Path,
+    pptx_files: list[Path],
+    ipynb_files: list[Path],
+    steps: list[str],
+    interval: int,
+    dry_run: bool,
+    stats: dict,
+) -> None:
+    """Process a single video through the vision pipeline.
+
+    Orchestrates the extraction, classification, and ingestion steps.
+    If extract or classify fail, stops early to avoid downstream errors.
+
+    Args:
+        video_path: Path to video file
+        frames_dir: Path to frames directory
+        pptx_files: List of PowerPoint files to ingest
+        ipynb_files: List of Jupyter notebook files to ingest
+        steps: List of steps to run (subset of ALL_STEPS)
+        interval: Interval in seconds between frames
+        dry_run: If True, only print what would be done
+        stats: Dict to accumulate statistics
+    """
+    if "extract" in steps:
+        ok = step_extract(video_path, frames_dir, interval, dry_run)
+        if ok:
+            stats["extracted"] += 1
+        else:
+            stats["failed"] += 1
+            return
+
+    if "classify" in steps:
+        ok = step_classify(frames_dir, dry_run)
+        if ok:
+            stats["classified"] += 1
+        else:
+            stats["failed"] += 1
+            return
+
+    if "slides" in steps:
+        stats["slides"] += step_slides(video_path, frames_dir, pptx_files, interval, dry_run)
+
+    if "notebooks" in steps:
+        stats["notebooks"] += step_notebooks(video_path, frames_dir, ipynb_files, interval, dry_run)
+
+    if "whiteboards" in steps:
+        stats["whiteboards"] += step_whiteboards(video_path, frames_dir, interval, dry_run)
+
+
+def main() -> None:
+    """CLI entry point for vision_folder script."""
+    parser = argparse.ArgumentParser(
+        description="Run the vision pipeline (extract → classify → ingest) over a folder of class directories."
+    )
+    parser.add_argument("root_folder", type=Path, help="Root folder to scan for class directories")
+    parser.add_argument(
+        "--steps",
+        default=",".join(ALL_STEPS),
+        help=f"Comma-separated steps to run (default: all). Choices: {', '.join(ALL_STEPS)}",
+    )
+    parser.add_argument("--interval", type=int, default=5, help="Frame extraction interval in seconds (default: 5)")
+    parser.add_argument("--recursive", action="store_true", help="Scan subdirectories for class dirs")
+    parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
+    args = parser.parse_args()
+
+    root = args.root_folder.resolve()
+    if not root.is_dir():
+        parser.error(f"Not a directory: {root}")
+
+    steps = [s.strip() for s in args.steps.split(",")]
+    invalid = [s for s in steps if s not in ALL_STEPS]
+    if invalid:
+        parser.error(f"Unknown step(s): {', '.join(invalid)}. Choices: {', '.join(ALL_STEPS)}")
+
+    class_dirs = find_class_dirs(root, args.recursive)
+    if not class_dirs:
+        print(f"No class directories found in {root}")
+        return
+
+    print(f"Found {len(class_dirs)} class dir(s) in {root}\n")
+
+    stats = {"extracted": 0, "classified": 0, "slides": 0, "notebooks": 0, "whiteboards": 0, "failed": 0}
+
+    for class_dir in class_dirs:
+        video_dir = class_dir / "video"
+        docs_dir = class_dir / "documentos"
+        scripts_dir = class_dir / "scripts"
+
+        videos = sorted(
+            p for p in video_dir.iterdir()
+            if p.is_file() and p.suffix.lower() in VIDEO_EXTENSIONS
+        )
+        pptx_files = sorted(docs_dir.glob("*.pptx")) if docs_dir.is_dir() else []
+        ipynb_files = sorted(scripts_dir.glob("*.ipynb")) if scripts_dir.is_dir() else []
+
+        if not videos:
+            print(f"[{class_dir.name}] no videos found, skipping\n")
+            continue
+
+        for video in videos:
+            frames_dir = frames_dir_for(video)
+            print(f"[{class_dir.name}] {video.relative_to(class_dir)}")
+            process_video(video, frames_dir, pptx_files, ipynb_files, steps, args.interval, args.dry_run, stats)
+
+        print()
+
+    print(
+        f"Done: {stats['extracted']} extracted, {stats['classified']} classified, "
+        f"{stats['slides']} slides ingested, {stats['notebooks']} notebooks ingested, "
+        f"{stats['whiteboards']} whiteboards ingested, {stats['failed']} failed."
+    )
+
+
+if __name__ == "__main__":
+    main()
