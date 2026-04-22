@@ -89,6 +89,9 @@ def step_classify(frames_dir: Path, dry_run: bool) -> bool:
     Returns:
         True on success, False on error
     """
+    if not frames_dir.exists():
+        print(f"    classify → ERROR: frames directory not found: {frames_dir}", flush=True)
+        return False
     if (frames_dir / "classifications.json").exists():
         print(f"    classify → skipped (classifications.json exists)", flush=True)
         return True
@@ -170,9 +173,9 @@ def step_notebooks(video_path: Path, frames_dir: Path, ipynb_files: list[Path], 
             })
             n = result.get("ingested", 0)
             total += n
-            print(f"    notebooks→ {n} chunks ({ipynb.name})", flush=True)
+            print(f"    notebooks → {n} chunks ({ipynb.name})", flush=True)
         except RuntimeError as exc:
-            print(f"    notebooks→ ERROR ({ipynb.name}): {exc}", flush=True)
+            print(f"    notebooks → ERROR ({ipynb.name}): {exc}", flush=True)
     return total
 
 
@@ -293,14 +296,14 @@ def main() -> None:
     for class_dir in class_dirs:
         video_dir = class_dir / "video"
         docs_dir = class_dir / "documentos"
-        scripts_dir = class_dir / "scripts"
+        notebooks_dir = class_dir / "scripts"
 
         videos = sorted(
             p for p in video_dir.iterdir()
             if p.is_file() and p.suffix.lower() in VIDEO_EXTENSIONS
         )
         pptx_files = sorted(docs_dir.glob("*.pptx")) if docs_dir.is_dir() else []
-        ipynb_files = sorted(scripts_dir.glob("*.ipynb")) if scripts_dir.is_dir() else []
+        ipynb_files = sorted(notebooks_dir.glob("*.ipynb")) if notebooks_dir.is_dir() else []
 
         if not videos:
             print(f"[{class_dir.name}] no videos found, skipping\n")
