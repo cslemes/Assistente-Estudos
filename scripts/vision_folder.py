@@ -50,3 +50,57 @@ def frames_dir_for(video_path: Path) -> Path:
     """
     class_dir = video_path.parent.parent
     return class_dir / "ai_data" / f"{video_path.stem}_frames"
+
+
+def step_extract(video_path: Path, frames_dir: Path, interval: int, dry_run: bool) -> bool:
+    """Extract frames from a video file.
+
+    Args:
+        video_path: Path to video file
+        frames_dir: Path to output frames directory
+        interval: Interval in seconds between frames
+        dry_run: If True, only print what would be done
+
+    Returns:
+        True on success, False on error
+    """
+    if frames_dir.exists() and any(frames_dir.iterdir()):
+        print(f"    extract  → skipped (frames exist)", flush=True)
+        return True
+    if dry_run:
+        print(f"    [dry-run] extract → POST /extract-frames", flush=True)
+        return True
+    try:
+        result = api_request("POST", "/extract-frames", {"file_path": str(video_path), "interval": interval})
+        print(f"    extract  → {result.get('frame_count', '?')} frames", flush=True)
+        return True
+    except RuntimeError as exc:
+        print(f"    extract  → ERROR: {exc}", flush=True)
+        return False
+
+
+def step_classify(frames_dir: Path, dry_run: bool) -> bool:
+    """Classify frames using CLIP model.
+
+    Args:
+        frames_dir: Path to frames directory
+        dry_run: If True, only print what would be done
+
+    Returns:
+        True on success, False on error
+    """
+    if (frames_dir / "classifications.json").exists():
+        print(f"    classify → skipped (classifications.json exists)", flush=True)
+        return True
+    if dry_run:
+        print(f"    [dry-run] classify → POST /classify-frames", flush=True)
+        return True
+    try:
+        result = api_request("POST", "/classify-frames", {"frames_dir": str(frames_dir)})
+        counts = result.get("counts", {})
+        counts_str = " ".join(f"{k}:{v}" for k, v in counts.items())
+        print(f"    classify → {counts_str}", flush=True)
+        return True
+    except RuntimeError as exc:
+        print(f"    classify → ERROR: {exc}", flush=True)
+        return False
