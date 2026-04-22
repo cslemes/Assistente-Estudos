@@ -104,3 +104,102 @@ def step_classify(frames_dir: Path, dry_run: bool) -> bool:
     except RuntimeError as exc:
         print(f"    classify → ERROR: {exc}", flush=True)
         return False
+
+
+def step_slides(video_path: Path, frames_dir: Path, pptx_files: list[Path], interval: int, dry_run: bool) -> int:
+    """Ingest slides from PowerPoint files matched against video frames.
+
+    Args:
+        video_path: Path to video file
+        frames_dir: Path to frames directory
+        pptx_files: List of PowerPoint files to ingest
+        interval: Interval in seconds between frames
+        dry_run: If True, only print what would be done
+
+    Returns:
+        Total number of chunks ingested
+    """
+    if not pptx_files:
+        return 0
+    total = 0
+    for pptx in pptx_files:
+        if dry_run:
+            print(f"    [dry-run] slides  → POST /ingest/slides ({pptx.name})", flush=True)
+            continue
+        try:
+            result = api_request("POST", "/ingest/slides", {
+                "pptx_path": str(pptx),
+                "video_path": str(video_path),
+                "frames_dir": str(frames_dir),
+                "interval": interval,
+            })
+            n = result.get("ingested", 0)
+            total += n
+            print(f"    slides   → {n} chunks ({pptx.name})", flush=True)
+        except RuntimeError as exc:
+            print(f"    slides   → ERROR ({pptx.name}): {exc}", flush=True)
+    return total
+
+
+def step_notebooks(video_path: Path, frames_dir: Path, ipynb_files: list[Path], interval: int, dry_run: bool) -> int:
+    """Ingest notebook cells matched against video frames.
+
+    Args:
+        video_path: Path to video file
+        frames_dir: Path to frames directory
+        ipynb_files: List of Jupyter notebook files to ingest
+        interval: Interval in seconds between frames
+        dry_run: If True, only print what would be done
+
+    Returns:
+        Total number of chunks ingested
+    """
+    if not ipynb_files:
+        return 0
+    total = 0
+    for ipynb in ipynb_files:
+        if dry_run:
+            print(f"    [dry-run] notebooks → POST /ingest/notebook ({ipynb.name})", flush=True)
+            continue
+        try:
+            result = api_request("POST", "/ingest/notebook", {
+                "ipynb_path": str(ipynb),
+                "video_path": str(video_path),
+                "frames_dir": str(frames_dir),
+                "interval": interval,
+            })
+            n = result.get("ingested", 0)
+            total += n
+            print(f"    notebooks→ {n} chunks ({ipynb.name})", flush=True)
+        except RuntimeError as exc:
+            print(f"    notebooks→ ERROR ({ipynb.name}): {exc}", flush=True)
+    return total
+
+
+def step_whiteboards(video_path: Path, frames_dir: Path, interval: int, dry_run: bool) -> int:
+    """Extract and ingest whiteboard content from video frames.
+
+    Args:
+        video_path: Path to video file
+        frames_dir: Path to frames directory
+        interval: Interval in seconds between frames
+        dry_run: If True, only print what would be done
+
+    Returns:
+        Number of chunks ingested
+    """
+    if dry_run:
+        print(f"    [dry-run] whiteboards → POST /ingest/whiteboard", flush=True)
+        return 0
+    try:
+        result = api_request("POST", "/ingest/whiteboard", {
+            "video_path": str(video_path),
+            "frames_dir": str(frames_dir),
+            "interval": interval,
+        })
+        n = result.get("ingested", 0)
+        print(f"    whiteboards → {n} chunks", flush=True)
+        return n
+    except RuntimeError as exc:
+        print(f"    whiteboards → ERROR: {exc}", flush=True)
+        return 0

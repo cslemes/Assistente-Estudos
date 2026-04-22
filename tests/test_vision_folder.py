@@ -162,3 +162,95 @@ def test_step_classify_dry_run_does_not_call_api(tmp_path):
 
     mock_api.assert_not_called()
     assert result is True
+
+
+from vision_folder import step_slides, step_notebooks, step_whiteboards
+
+
+def test_step_slides_calls_api_for_each_pptx(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+    pptx_files = [tmp_path / "documentos" / "slides.pptx"]
+
+    with patch("vision_folder.api_request", return_value={"ingested": 5}) as mock_api:
+        total = step_slides(video, frames_dir, pptx_files, interval=5, dry_run=False)
+
+    mock_api.assert_called_once_with(
+        "POST", "/ingest/slides",
+        {"pptx_path": str(pptx_files[0]), "video_path": str(video), "frames_dir": str(frames_dir), "interval": 5}
+    )
+    assert total == 5
+
+
+def test_step_slides_returns_zero_when_no_pptx(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+
+    with patch("vision_folder.api_request") as mock_api:
+        total = step_slides(video, frames_dir, [], interval=5, dry_run=False)
+
+    mock_api.assert_not_called()
+    assert total == 0
+
+
+def test_step_slides_dry_run_does_not_call_api(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+    pptx_files = [tmp_path / "documentos" / "slides.pptx"]
+
+    with patch("vision_folder.api_request") as mock_api:
+        total = step_slides(video, frames_dir, pptx_files, interval=5, dry_run=True)
+
+    mock_api.assert_not_called()
+    assert total == 0
+
+
+def test_step_notebooks_calls_api_for_each_ipynb(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+    ipynb_files = [tmp_path / "scripts" / "notebook.ipynb"]
+
+    with patch("vision_folder.api_request", return_value={"ingested": 3}) as mock_api:
+        total = step_notebooks(video, frames_dir, ipynb_files, interval=5, dry_run=False)
+
+    mock_api.assert_called_once_with(
+        "POST", "/ingest/notebook",
+        {"ipynb_path": str(ipynb_files[0]), "video_path": str(video), "frames_dir": str(frames_dir), "interval": 5}
+    )
+    assert total == 3
+
+
+def test_step_notebooks_returns_zero_when_no_ipynb(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+
+    with patch("vision_folder.api_request") as mock_api:
+        total = step_notebooks(video, frames_dir, [], interval=5, dry_run=False)
+
+    mock_api.assert_not_called()
+    assert total == 0
+
+
+def test_step_whiteboards_calls_api(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+
+    with patch("vision_folder.api_request", return_value={"ingested": 2}) as mock_api:
+        total = step_whiteboards(video, frames_dir, interval=5, dry_run=False)
+
+    mock_api.assert_called_once_with(
+        "POST", "/ingest/whiteboard",
+        {"video_path": str(video), "frames_dir": str(frames_dir), "interval": 5}
+    )
+    assert total == 2
+
+
+def test_step_whiteboards_dry_run_does_not_call_api(tmp_path):
+    video = tmp_path / "video" / "Aula_01.mp4"
+    frames_dir = tmp_path / "ai_data" / "Aula_01_frames"
+
+    with patch("vision_folder.api_request") as mock_api:
+        total = step_whiteboards(video, frames_dir, interval=5, dry_run=True)
+
+    mock_api.assert_not_called()
+    assert total == 0
