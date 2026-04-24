@@ -78,7 +78,7 @@ class OpenAIService:
                     yield json.dumps({"type": "response.created", "response_id": event.response.id, "model": event.response.model})
 
                 elif event.type == "response.output_text.delta":
-                    yield json.dumps({"type": "text_delta", "delta": event.delta, "output_index": event.output_index, "content_index": event.content_index})
+                    yield json.dumps({"type": "text_delta", "text": event.delta, "output_index": event.output_index, "content_index": event.content_index})
 
                 elif event.type == "response.output_text.done":
                     yield json.dumps({"type": "text_done", "text": event.text, "output_index": event.output_index, "content_index": event.content_index})

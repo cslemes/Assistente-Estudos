@@ -69,7 +69,18 @@ export async function* streamAsk(
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        // Flush remaining buffer after stream closes
+        if (buffer.trim()) {
+          for (const line of buffer.split('\n').filter((l) => l.startsWith('data: '))) {
+            const json = line.slice(6);
+            if (json.trim()) {
+              yield JSON.parse(json) as AskStreamEvent;
+            }
+          }
+        }
+        break;
+      }
 
       buffer += decoder.decode(value, { stream: true });
 

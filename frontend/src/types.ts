@@ -24,7 +24,7 @@ export interface Highlight {
   title: string;
   description: string;
   start_time: number;
-  video_url: string;
+  video_url?: string;
 }
 
 // HighlightsResponse — from GET /highlights/{id} and POST /highlights/{id}
@@ -36,13 +36,13 @@ export interface HighlightsResponse {
 
 // DocumentMetadata — nested inside Document
 export interface DocumentMetadata {
-  course: string | null;
-  topic: string | null;
-  aula_number: number | null;
-  video_url: string | null;
-  source_type: string;
-  start_time: number | null;
-  transcription_id: number | null;
+  course?: string | null;
+  topic?: string | null;
+  aula_number?: number | null;
+  video_url?: string | null;
+  source_type?: string;
+  start_time?: number | null;
+  transcription_id?: number | null;
 }
 
 // Document — used in source_documents SSE event
