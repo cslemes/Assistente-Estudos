@@ -7,17 +7,17 @@ interface CourseSidebarProps {
 }
 
 function StatusIcon({ done, current }: { done: boolean; current: boolean }) {
-  if (done) {
-    return (
-      <span className="text-sky-400 font-bold text-sm w-4 shrink-0" title="Concluído">
-        ✓
-      </span>
-    );
-  }
   if (current) {
     return (
       <span className="text-sky-400 text-sm w-4 shrink-0" title="Aula atual">
         ●
+      </span>
+    );
+  }
+  if (done) {
+    return (
+      <span className="text-sky-400 font-bold text-sm w-4 shrink-0" title="Concluído">
+        ✓
       </span>
     );
   }
