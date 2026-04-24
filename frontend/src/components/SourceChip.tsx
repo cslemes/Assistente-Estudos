@@ -22,9 +22,13 @@ export default function SourceChip({ document }: SourceChipProps) {
       disabled={!hasLink}
       className="inline-flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs cursor-pointer hover:border-sky-400 hover:text-sky-400 transition-colors disabled:cursor-default disabled:hover:border-slate-700 disabled:hover:text-inherit"
     >
-      <span className="text-sky-400 font-mono">
-        {formatTime(metadata.start_time ?? 0)}
-      </span>
+      {metadata.start_time != null ? (
+        <span className="text-sky-400 font-mono">
+          {formatTime(metadata.start_time)}
+        </span>
+      ) : (
+        <span className="text-slate-500">—</span>
+      )}
       {(metadata.course || metadata.aula_number != null) && (
         <span className="text-slate-400">
           {metadata.course}

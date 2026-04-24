@@ -22,21 +22,11 @@ export default function AiChat({ course, topic }: AiChatProps) {
   const { messages, isStreaming, send, clear } = useAskStream();
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isStreaming]);
-
-  // Auto-resize textarea
-  useEffect(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    const maxHeight = 4 * 24; // ~4 rows
-    el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`;
-  }, [input]);
 
   async function handleSend() {
     const trimmed = input.trim();
@@ -78,7 +68,8 @@ export default function AiChat({ course, topic }: AiChatProps) {
         {messages.length > 0 && (
           <button
             onClick={clear}
-            className="ml-auto text-slate-500 hover:text-slate-300 transition-colors text-xs"
+            disabled={isStreaming}
+            className="ml-auto text-slate-500 hover:text-slate-300 transition-colors text-xs disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-slate-500"
             title="Limpar conversa"
           >
             Limpar
@@ -134,7 +125,6 @@ export default function AiChat({ course, topic }: AiChatProps) {
       <div className="shrink-0 border-t border-slate-700 p-3">
         <div className="flex items-end gap-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 focus-within:border-sky-400 transition-colors">
           <textarea
-            ref={textareaRef}
             rows={2}
             value={input}
             onChange={(e) => setInput(e.target.value)}

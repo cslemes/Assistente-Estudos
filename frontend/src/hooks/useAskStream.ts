@@ -20,6 +20,8 @@ export function useAskStream(): UseAskStreamReturn {
   const [isStreaming, setIsStreaming] = useState(false);
 
   async function send(query: string, course?: string, topic?: string): Promise<void> {
+    if (isStreaming) return;
+
     // 1. Append user message
     setMessages((prev) => [...prev, { role: 'user', content: query }]);
 
