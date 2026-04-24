@@ -24,6 +24,7 @@ export default function TranscriptTab({ lessonId, onSeek }: TranscriptTabProps) 
   const [empty, setEmpty] = useState(false);
 
   useEffect(() => {
+    setSegments([]);
     setLoading(true);
     setError(null);
     setEmpty(false);

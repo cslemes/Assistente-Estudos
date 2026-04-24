@@ -26,10 +26,10 @@ export default function VideoPlayer({ videoUrl, seekTo }: VideoPlayerProps) {
     : null;
 
   useEffect(() => {
-    if (seekTo === undefined || seekTo <= 0 || !iframeRef.current?.contentWindow) return;
+    if (seekTo === undefined || seekTo < 0 || !iframeRef.current?.contentWindow) return;
     iframeRef.current.contentWindow.postMessage(
       JSON.stringify({ event: 'command', func: 'seekTo', args: [seekTo, true] }),
-      '*',
+      'https://www.youtube.com',
     );
   }, [seekTo]);
 
