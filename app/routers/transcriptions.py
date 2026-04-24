@@ -10,9 +10,9 @@ router = APIRouter(tags=["transcriptions"])
 
 class SegmentOut(BaseModel):
     text: str
-    start: int
-    end: int
-    speaker: str
+    start: float
+    end: float
+    speaker: int | None
 
 
 @router.get("/{transcription_id}/segments", response_model=list[SegmentOut], summary="Get transcript segments for a transcription")
@@ -28,6 +28,6 @@ def get_segments(transcription_id: int):
 
     segments = json.loads(segments_json)
     if not segments:
-        raise HTTPException(status_code=404, detail="Segments not available")
+        raise HTTPException(status_code=404, detail="Segments stored but empty")
 
     return segments
