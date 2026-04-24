@@ -1,13 +1,21 @@
 import json
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from app.database import get_transcription
 
 router = APIRouter(tags=["transcriptions"])
 
 
-@router.get("/{transcription_id}/segments", summary="Get transcript segments for a transcription")
+class SegmentOut(BaseModel):
+    text: str
+    start: int
+    end: int
+    speaker: str
+
+
+@router.get("/{transcription_id}/segments", response_model=list[SegmentOut], summary="Get transcript segments for a transcription")
 def get_segments(transcription_id: int):
     """Return parsed utterance segments for the given transcription ID."""
     row = get_transcription(transcription_id)
@@ -18,4 +26,8 @@ def get_segments(transcription_id: int):
     if not segments_json:
         raise HTTPException(status_code=404, detail="Segments not available")
 
-    return json.loads(segments_json)
+    segments = json.loads(segments_json)
+    if not segments:
+        raise HTTPException(status_code=404, detail="Segments not available")
+
+    return segments
