@@ -138,9 +138,10 @@ def _chunk_legacy_words(items: list) -> list:
 
 
 def _extract_class_meta(file_path: str) -> dict:
-    from pathlib import Path
+    from pathlib import PurePosixPath, PureWindowsPath
     import re
-    p = Path(file_path)
+    # Paths stored in DB are Windows-style; use PureWindowsPath so backslashes parse correctly
+    p = PureWindowsPath(file_path) if "\\" in file_path else PurePosixPath(file_path)
     topic = p.parent.parent.name
     course = p.parent.parent.parent.name
     m = re.search(r'[Aa]ula[_\s]*(\d+)', p.stem)
