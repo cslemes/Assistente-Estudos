@@ -26,11 +26,12 @@ export default function Player() {
   const currentId = parseInt(id!);
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState(true);
   const [seekTo, setSeekTo] = useState<number | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<ActiveTab>('transcript');
 
   useEffect(() => {
-    fetchLessons().then(setLessons).catch(console.error);
+    fetchLessons().then(setLessons).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   // Reset per-lesson state when lesson id changes
@@ -39,12 +40,20 @@ export default function Player() {
     setActiveTab('transcript');
   }, [currentId]);
 
-  if (lessons.length === 0) return <LoadingSpinner />;
+  if (loading) return <LoadingSpinner />;
 
   const currentLesson = lessons.find((l) => l.id === currentId);
 
+  if (!currentLesson) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-900 text-slate-400">
+        Aula não encontrada.
+      </div>
+    );
+  }
+
   const sidebarLessons = lessons.filter(
-    (l) => l.course === currentLesson?.course && l.topic === currentLesson?.topic,
+    (l) => l.course === currentLesson.course && l.topic === currentLesson.topic,
   );
 
   const completedCount = sidebarLessons.filter((l) => l.summary !== null).length;
@@ -53,8 +62,8 @@ export default function Player() {
     <div className="bg-slate-900 min-h-screen">
       {/* Fixed TopBar */}
       <TopBar
-        courseName={currentLesson?.course ?? undefined}
-        topicName={currentLesson?.topic ?? undefined}
+        courseName={currentLesson.course ?? undefined}
+        topicName={currentLesson.topic ?? undefined}
         completedCount={completedCount}
         totalCount={sidebarLessons.length}
         lessonId={currentId}
@@ -78,18 +87,18 @@ export default function Player() {
         <div className="flex-1 h-full overflow-y-auto flex flex-col">
           {/* Video */}
           <div className="p-4">
-            <VideoPlayer videoUrl={currentLesson?.video_url ?? ''} seekTo={seekTo} />
+            <VideoPlayer videoUrl={currentLesson.video_url ?? ''} seekTo={seekTo} />
 
             {/* Title + breadcrumb */}
             <div className="mt-3">
               <h1 className="text-xl font-bold text-slate-100">
-                Aula {currentLesson?.aula_number ?? '—'} — {currentLesson?.topic ?? 'Sem tópico'}
+                Aula {currentLesson.aula_number ?? '—'} — {currentLesson.topic ?? 'Sem tópico'}
               </h1>
               <p className="text-sm text-slate-400 mt-1">
-                {currentLesson?.course ?? ''}
-                {currentLesson?.course && currentLesson?.topic ? ' › ' : ''}
-                {currentLesson?.topic ?? ''}
-                {currentLesson?.aula_number != null
+                {currentLesson.course ?? ''}
+                {currentLesson.course && currentLesson.topic ? ' › ' : ''}
+                {currentLesson.topic ?? ''}
+                {currentLesson.aula_number != null
                   ? ` · Aula ${currentLesson.aula_number}`
                   : ''}
               </p>
@@ -135,8 +144,8 @@ export default function Player() {
         {/* Right panel — AI Chat */}
         <div className="w-[340px] shrink-0 h-full overflow-y-auto border-l border-slate-700">
           <AiChat
-            course={currentLesson?.course ?? undefined}
-            topic={currentLesson?.topic ?? undefined}
+            course={currentLesson.course ?? undefined}
+            topic={currentLesson.topic ?? undefined}
           />
         </div>
       </div>
