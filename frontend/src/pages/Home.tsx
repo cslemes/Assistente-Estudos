@@ -68,40 +68,29 @@ function LessonCard({ lesson, onClick }: LessonCardProps) {
   );
 }
 
-interface CourseCardProps {
-  name: string;
-  lessons: Lesson[];
-  onClick: () => void;
-}
-
-function CourseCard({ name, lessons, onClick }: CourseCardProps) {
+function CourseCard({ name, lessons, onClick }: { name: string; lessons: Lesson[]; onClick: () => void }) {
   const summarized = lessons.filter((l) => l.summary !== null).length;
   const pct = lessons.length > 0 ? Math.round((summarized / lessons.length) * 100) : 0;
+  const topics = [...new Set(lessons.map((l) => l.topic ?? 'Sem tópico'))];
 
   return (
     <button
       onClick={onClick}
       className="w-full text-left p-6 rounded-xl bg-slate-800 border border-slate-700 hover:border-sky-400/60 hover:bg-slate-700/60 transition-all group"
     >
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <h2 className="text-base font-bold text-slate-100 group-hover:text-white leading-snug">
-          {name}
-        </h2>
-        <span className="shrink-0 text-xs text-slate-400 mt-0.5">
-          {lessons.length} aula{lessons.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mb-2">
-        <div
-          className="h-full bg-sky-500 rounded-full transition-all"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <p className="text-xs text-slate-500">
-        {summarized} de {lessons.length} resumidas
+      <h2 className="text-base font-bold text-slate-100 group-hover:text-white leading-snug mb-1">
+        {name}
+      </h2>
+      <p className="text-xs text-slate-500 mb-4">
+        {topics.slice(0, 3).join(' · ')}{topics.length > 3 ? ` +${topics.length - 3}` : ''}
       </p>
+      <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mb-2">
+        <div className="h-full bg-sky-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+      </div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-slate-500">{summarized}/{lessons.length} resumidas</p>
+        <span className="text-xs text-sky-400 group-hover:translate-x-0.5 transition-transform">Ver aulas →</span>
+      </div>
     </button>
   );
 }
@@ -116,33 +105,29 @@ export default function Home() {
   useEffect(() => {
     fetchLessons()
       .then(setLessons)
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Erro ao carregar aulas');
-      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Erro ao carregar aulas'))
       .finally(() => setLoading(false));
   }, []);
 
   const byCourse = groupBy(lessons, (l) => l.course ?? 'Sem curso');
+  const summarizedCount = lessons.filter((l) => l.summary !== null).length;
+
+  // Lesson view for a selected course
   const courseLessons = selectedCourse ? (byCourse[selectedCourse] ?? []) : [];
   const byTopic = groupBy(courseLessons, (l) => l.topic ?? 'Sem tópico');
-
-  const summarizedCount = lessons.filter((l) => l.summary !== null).length;
 
   return (
     <div className="min-h-screen bg-slate-900">
       <TopBar completedCount={summarizedCount} totalCount={lessons.length} />
 
       <main className="pt-13 px-6 pb-12 max-w-5xl mx-auto">
-
         {loading && <div className="mt-16"><LoadingSpinner /></div>}
 
         {error && (
-          <div className="mt-8 p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">
-            {error}
-          </div>
+          <div className="mt-8 p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">{error}</div>
         )}
 
-        {/* Course cards grid */}
+        {/* Course cards */}
         {!loading && !error && selectedCourse === null && (
           <>
             <div className="mt-8 mb-6">
@@ -151,51 +136,37 @@ export default function Home() {
                 {Object.keys(byCourse).length} curso{Object.keys(byCourse).length !== 1 ? 's' : ''} · {summarizedCount} de {lessons.length} aulas resumidas
               </p>
             </div>
-            {lessons.length === 0 && (
-              <p className="text-slate-400 text-sm">Nenhum curso encontrado.</p>
-            )}
+            {lessons.length === 0 && <p className="text-slate-400 text-sm">Nenhum curso encontrado.</p>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(byCourse).sort(([a], [b]) => a.localeCompare(b)).map(([name, cls]) => (
-                <CourseCard
-                  key={name}
-                  name={name}
-                  lessons={cls}
-                  onClick={() => setSelectedCourse(name)}
-                />
+                <CourseCard key={name} name={name} lessons={cls} onClick={() => setSelectedCourse(name)} />
               ))}
             </div>
           </>
         )}
 
-        {/* Lesson list for selected course */}
+        {/* Lessons for selected course */}
         {!loading && !error && selectedCourse !== null && (
           <>
-            <div className="mt-8 mb-6 flex items-center gap-4">
+            <div className="mt-8 mb-6 flex items-center gap-3">
               <button
                 onClick={() => setSelectedCourse(null)}
-                className="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-1"
+                className="text-slate-400 hover:text-sky-400 transition-colors text-sm"
               >
                 ← Cursos
               </button>
-              <h1 className="text-2xl font-bold text-slate-100">{selectedCourse}</h1>
+              <span className="text-slate-600">/</span>
+              <h1 className="text-xl font-bold text-slate-100">{selectedCourse}</h1>
             </div>
 
             {Object.entries(byTopic).map(([topicName, topicLessons]) => {
-              const sorted = [...topicLessons].sort(
-                (a, b) => (a.aula_number ?? 0) - (b.aula_number ?? 0),
-              );
+              const sorted = [...topicLessons].sort((a, b) => (a.aula_number ?? 0) - (b.aula_number ?? 0));
               return (
                 <div key={topicName} className="mb-8">
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-sky-400 mb-3">
-                    {topicName}
-                  </h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-widest text-sky-400 mb-3">{topicName}</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {sorted.map((lesson) => (
-                      <LessonCard
-                        key={lesson.id}
-                        lesson={lesson}
-                        onClick={() => navigate(`/lesson/${lesson.id}`)}
-                      />
+                      <LessonCard key={lesson.id} lesson={lesson} onClick={() => navigate(`/lesson/${lesson.id}`)} />
                     ))}
                   </div>
                 </div>
