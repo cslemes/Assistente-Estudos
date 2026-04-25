@@ -136,7 +136,7 @@ with tab_chat:
                             if etype == "source_documents":
                                 state["sources"] = event.get("documents", [])
                             elif etype == "text_delta":
-                                chunk = event.get("delta", "")
+                                chunk = event.get("text", "")
                                 state["full_text"] += chunk
                                 yield chunk
                             elif etype == "stream_completed":
