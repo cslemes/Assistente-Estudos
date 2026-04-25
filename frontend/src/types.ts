@@ -9,6 +9,7 @@ export interface Lesson {
   course: string | null;
   topic: string | null;
   aula_number: number | null;
+  parts_count?: number;
 }
 
 // Segment — from GET /transcriptions/{id}/segments

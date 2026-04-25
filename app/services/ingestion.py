@@ -146,7 +146,10 @@ def _extract_class_meta(file_path: str) -> dict:
     course = p.parent.parent.parent.name
     m = re.search(r'[Aa]ula[_\s]*(\d+)', p.stem)
     aula_number = int(m.group(1)) if m else None
-    return {"topic": topic, "course": course, "aula_number": aula_number}
+    # Part number: trailing _N suffix after the base name (0 = main video)
+    part_m = re.search(r'_(\d+)$', p.stem)
+    part_number = int(part_m.group(1)) if part_m else 0
+    return {"topic": topic, "course": course, "aula_number": aula_number, "part_number": part_number}
 
 
 def _build_deep_link(video_url: str | None, start_time: int | None) -> str | None:

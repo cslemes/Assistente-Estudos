@@ -19,21 +19,40 @@ def get_settings():
 @router.get("", summary="List all transcriptions with summary status")
 def list_transcriptions():
     rows = get_all_transcriptions()
-    result = []
+
+    # Group parts of the same lesson (same course + topic + aula_number) into one entry.
+    # Google Meet often splits a single recording into multiple files (_1, _2, …).
+    groups: dict[tuple, list] = {}
     for r in rows:
         meta = _extract_class_meta(r["file_path"])
+        key = (meta["course"], meta["topic"], meta["aula_number"])
+        groups.setdefault(key, []).append((meta["part_number"], r, meta))
+
+    result = []
+    for (course, topic, aula_number), parts in groups.items():
+        # Sort by part_number so part 0 (main video) comes first
+        parts.sort(key=lambda x: x[0])
+        _, rep, meta = parts[0]
+
+        # Use the first available video_url across all parts
+        video_url = next((r.get("video_url") for _, r, _ in parts if r.get("video_url")), None)
+        # Use the first available summary across all parts
+        summary = next((r.get("summary") for _, r, _ in parts if r.get("summary")), None)
+
         result.append({
-            "id": r["id"],
-            "file_path": r["file_path"],
-            "video_url": r.get("video_url"),
-            "status": r["status"],
-            "summarized": r.get("summary") is not None,
-            "summary": r.get("summary"),
-            "created_at": r["created_at"],
-            "course": meta["course"],
-            "topic": meta["topic"],
-            "aula_number": meta["aula_number"],
+            "id": rep["id"],
+            "file_path": rep["file_path"],
+            "video_url": video_url,
+            "status": rep["status"],
+            "summarized": summary is not None,
+            "summary": summary,
+            "created_at": rep["created_at"],
+            "course": course,
+            "topic": topic,
+            "aula_number": aula_number,
+            "parts_count": len(parts),
         })
+
     return result
 
 
