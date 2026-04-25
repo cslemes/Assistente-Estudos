@@ -70,7 +70,7 @@ class GroqService:
             for chunk in stream:
                 delta = chunk.choices[0].delta.content
                 if delta:
-                    yield json.dumps({"type": "text_delta", "delta": delta})
+                    yield json.dumps({"type": "text_delta", "text": delta})
 
             yield json.dumps({"type": "stream_completed"})
 

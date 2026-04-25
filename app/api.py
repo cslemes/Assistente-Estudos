@@ -15,6 +15,7 @@ from app.routers.openai import router as openai_router
 from app.routers.search import router as search_router
 from app.routers.summarize import router as summarize_router
 from app.routers.sync import router as sync_router
+from app.routers.transcriptions import router as transcriptions_router
 from app.routers.youtube import router as youtube_router
 
 load_dotenv()
@@ -39,6 +40,7 @@ app.include_router(groq_router)
 app.include_router(flashcards_router)
 app.include_router(summarize_router, prefix="/summarize")
 app.include_router(highlights_router)
+app.include_router(transcriptions_router, prefix="/transcriptions")
 
 
 @app.on_event("startup")
