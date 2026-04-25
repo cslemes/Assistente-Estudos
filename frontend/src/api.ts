@@ -53,7 +53,7 @@ export async function* streamAsk(
   course?: string,
   topic?: string,
 ): AsyncGenerator<AskStreamEvent> {
-  const res = await fetch('/api/ask/stream', {
+  const res = await fetch('/api/ask/groq/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, course, topic }),
