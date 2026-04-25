@@ -1,4 +1,6 @@
 import logging
+from functools import lru_cache
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.config.settings import Settings
@@ -14,12 +16,13 @@ def get_settings():
     return Settings()
 
 
+@lru_cache(maxsize=1)
+def _get_embedder(dense: str, bm25: str, late: str) -> QueryEmbedder:
+    return QueryEmbedder(dense_model_name=dense, bm25_model_name=bm25, late_interaction_model_name=late)
+
+
 def get_embedder(settings: Settings = Depends(get_settings)):
-    return QueryEmbedder(
-        dense_model_name=settings.dense_model_name,
-        bm25_model_name=settings.bm25_model_name,
-        late_interaction_model_name=settings.late_interaction_model_name,
-    )
+    return _get_embedder(settings.dense_model_name, settings.bm25_model_name, settings.late_interaction_model_name)
 
 
 def get_retriever(settings: Settings = Depends(get_settings)):

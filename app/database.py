@@ -23,14 +23,11 @@ def init_db():
                 created_at  TEXT NOT NULL
             )
         """)
-        try:
-            conn.execute("ALTER TABLE transcriptions ADD COLUMN segments_json TEXT")
-        except Exception:
-            pass  # column already exists
-        try:
-            conn.execute("ALTER TABLE transcriptions ADD COLUMN summary TEXT")
-        except Exception:
-            pass  # column already exists
+        for col in ("segments_json TEXT", "summary TEXT", "highlights_json TEXT"):
+            try:
+                conn.execute(f"ALTER TABLE transcriptions ADD COLUMN {col}")
+            except Exception:
+                pass
 
 
 def insert_transcription(file_path: str, text: str, video_url: str = None, segments_json: str = None):
@@ -103,3 +100,36 @@ def set_status(transcription_id: int, status: str):
             "UPDATE transcriptions SET status = ? WHERE id = ?",
             (status, transcription_id),
         )
+
+
+def set_highlights(transcription_id: int, highlights_json: str):
+    with get_connection() as conn:
+        conn.execute(
+            "UPDATE transcriptions SET highlights_json = ? WHERE id = ?",
+            (highlights_json, transcription_id),
+        )
+
+
+def get_highlights(transcription_id: int) -> list[dict] | None:
+    import json
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT highlights_json FROM transcriptions WHERE id = ?",
+            (transcription_id,),
+        ).fetchone()
+    if not row or not row["highlights_json"]:
+        return None
+    return json.loads(row["highlights_json"])
+
+
+def get_video_url_by_video_path(video_path: str) -> str | None:
+    """Return the YouTube URL for a video by looking up its derived audio path."""
+    from pathlib import Path
+    p = Path(video_path)
+    audio_path = str(p.parent.parent / "ai_data" / (p.stem + ".mp3"))
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT video_url FROM transcriptions WHERE file_path = ?",
+            (audio_path,),
+        ).fetchone()
+    return row["video_url"] if row else None

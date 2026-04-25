@@ -89,14 +89,14 @@ def step_classify(frames_dir: Path, dry_run: bool) -> bool:
     Returns:
         True on success, False on error
     """
+    if dry_run:
+        print(f"    [dry-run] classify → POST /classify-frames", flush=True)
+        return True
     if not frames_dir.exists():
         print(f"    classify → ERROR: frames directory not found: {frames_dir}", flush=True)
         return False
     if (frames_dir / "classifications.json").exists():
         print(f"    classify → skipped (classifications.json exists)", flush=True)
-        return True
-    if dry_run:
-        print(f"    [dry-run] classify → POST /classify-frames", flush=True)
         return True
     try:
         result = api_request("POST", "/classify-frames", {"frames_dir": str(frames_dir)})
@@ -107,6 +107,10 @@ def step_classify(frames_dir: Path, dry_run: bool) -> bool:
     except RuntimeError as exc:
         print(f"    classify → ERROR: {exc}", flush=True)
         return False
+
+
+def _marker(frames_dir: Path, name: str) -> Path:
+    return frames_dir / f"{name}_done"
 
 
 def step_slides(video_path: Path, frames_dir: Path, pptx_files: list[Path], interval: int, dry_run: bool) -> int:
@@ -126,8 +130,12 @@ def step_slides(video_path: Path, frames_dir: Path, pptx_files: list[Path], inte
         return 0
     total = 0
     for pptx in pptx_files:
+        marker = _marker(frames_dir, f"slides_{pptx.stem}")
         if dry_run:
             print(f"    [dry-run] slides  → POST /ingest/slides ({pptx.name})", flush=True)
+            continue
+        if marker.exists():
+            print(f"    slides   → skipped ({pptx.name} already ingested)", flush=True)
             continue
         try:
             result = api_request("POST", "/ingest/slides", {
@@ -138,6 +146,7 @@ def step_slides(video_path: Path, frames_dir: Path, pptx_files: list[Path], inte
             })
             n = result.get("ingested", 0)
             total += n
+            marker.touch()
             print(f"    slides   → {n} chunks ({pptx.name})", flush=True)
         except RuntimeError as exc:
             print(f"    slides   → ERROR ({pptx.name}): {exc}", flush=True)
@@ -161,8 +170,12 @@ def step_notebooks(video_path: Path, frames_dir: Path, ipynb_files: list[Path], 
         return 0
     total = 0
     for ipynb in ipynb_files:
+        marker = _marker(frames_dir, f"notebooks_{ipynb.stem}")
         if dry_run:
             print(f"    [dry-run] notebooks → POST /ingest/notebook ({ipynb.name})", flush=True)
+            continue
+        if marker.exists():
+            print(f"    notebooks → skipped ({ipynb.name} already ingested)", flush=True)
             continue
         try:
             result = api_request("POST", "/ingest/notebook", {
@@ -173,6 +186,7 @@ def step_notebooks(video_path: Path, frames_dir: Path, ipynb_files: list[Path], 
             })
             n = result.get("ingested", 0)
             total += n
+            marker.touch()
             print(f"    notebooks → {n} chunks ({ipynb.name})", flush=True)
         except RuntimeError as exc:
             print(f"    notebooks → ERROR ({ipynb.name}): {exc}", flush=True)
@@ -194,6 +208,10 @@ def step_whiteboards(video_path: Path, frames_dir: Path, interval: int, dry_run:
     if dry_run:
         print(f"    [dry-run] whiteboards → POST /ingest/whiteboard", flush=True)
         return 0
+    marker = _marker(frames_dir, "whiteboards")
+    if marker.exists():
+        print(f"    whiteboards → skipped (already ingested)", flush=True)
+        return 0
     try:
         result = api_request("POST", "/ingest/whiteboard", {
             "video_path": str(video_path),
@@ -201,6 +219,7 @@ def step_whiteboards(video_path: Path, frames_dir: Path, interval: int, dry_run:
             "interval": interval,
         })
         n = result.get("ingested", 0)
+        marker.touch()
         print(f"    whiteboards → {n} chunks", flush=True)
         return n
     except RuntimeError as exc:
@@ -266,13 +285,13 @@ def main() -> None:
     )
     parser.add_argument("root_folder", type=Path, help="Root folder to scan for class directories")
     parser.add_argument(
-        "--steps",
+        "-s", "--steps",
         default=",".join(ALL_STEPS),
         help=f"Comma-separated steps to run (default: all). Choices: {', '.join(ALL_STEPS)}",
     )
-    parser.add_argument("--interval", type=int, default=5, help="Frame extraction interval in seconds (default: 5)")
-    parser.add_argument("--recursive", action="store_true", help="Scan subdirectories for class dirs")
-    parser.add_argument("--dry-run", action="store_true", help="Print actions without executing")
+    parser.add_argument("-i", "--interval", type=int, default=5, help="Frame extraction interval in seconds (default: 5)")
+    parser.add_argument("-r", "--recursive", action="store_true", help="Scan subdirectories for class dirs")
+    parser.add_argument("-d", "--dry-run", action="store_true", help="Print actions without executing")
     args = parser.parse_args()
 
     root = args.root_folder.resolve()

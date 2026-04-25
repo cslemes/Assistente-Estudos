@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from app.services.notebook_matcher import ocr_frame
+from app.services.notebook_matcher import ocr_frame, _get_ocr_reader
 from app.services.slide_matcher import frame_number_to_timestamp
 
 
@@ -48,15 +48,15 @@ def ingest_whiteboard(
         _get_qdrant_client,
     )
 
+    from app.database import get_video_url_by_video_path
+
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
 
     whiteboard_frames = load_whiteboard_frames(frames_dir)
     if not whiteboard_frames:
         return {"ingested": 0, "message": "No whiteboard frames found in classifications"}
 
-    import easyocr
-    ocr_reader = easyocr.Reader(["pt", "en"], gpu=False)
-
+    ocr_reader = _get_ocr_reader()
     chunks = frames_to_chunks(whiteboard_frames, ocr_reader, interval=interval)
     if not chunks:
         return {"ingested": 0, "message": "No text extracted from whiteboard frames"}
@@ -65,13 +65,14 @@ def ingest_whiteboard(
     embedding_models = _get_embedding_models()
     ner_pipeline = _get_ner_pipeline()
     client = _get_qdrant_client()
+    video_url = get_video_url_by_video_path(video_path)
 
     points = []
     for chunk in chunks:
         payload = {
             "source_type": "whiteboard",
             "file_path": chunk["frame_path"],
-            "video_url": _build_deep_link(None, chunk["start_time"]),
+            "video_url": _build_deep_link(video_url, chunk["start_time"]),
             "start_time": chunk["start_time"],
             **class_meta,
         }

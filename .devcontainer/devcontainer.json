@@ -1,17 +1,34 @@
 {
-  "name": "uv",
-  "build": { "dockerfile": "Dockerfile" },
+  "name": "Assistente-Estudos",
+  "build": { 
+    "dockerfile": "Dockerfile" 
+  },
+  "mounts": [
+    // Persists the virtual environment (torch, fastapi, etc.)
+    "source=assistente-venv,target=${containerWorkspaceFolder}/.venv,type=volume",
+    // Persists the downloaded packages (uv wheels)
+    "source=uv-cache,target=/home/developer/.cache/uv,type=volume",
+    // Persists the ViT/EasyOCR weights
+    "source=hf-cache,target=/home/developer/.cache/huggingface,type=volume"
+  ],
+  "remoteEnv": {
+    "UV_PROJECT_ENVIRONMENT": "${containerWorkspaceFolder}/.venv",
+    "UV_LINK_MODE": "copy"
+  },
+  // We use 'sudo' to ensure the developer user owns the mounted volumes
+  "postCreateCommand": "sudo chown developer:developer ${containerWorkspaceFolder}/.venv /home/developer/.cache/uv /home/developer/.cache/huggingface && uv sync",
+  
   "remoteUser": "developer",
   "runArgs": [
     "--gpus", "all",
-    "--ipc=host"
+    "--ipc=host" // Critical for DataLoader multi-processing in Torch
   ],
   "customizations": {
     "vscode": {
       "extensions": [
         "ms-python.python",
-        "streetsidesoftware.code-spell-checker",
-        "esbenp.prettier-vscode"
+        "charliermarsh.ruff",
+        "streetsidesoftware.code-spell-checker"
       ]
     }
   }

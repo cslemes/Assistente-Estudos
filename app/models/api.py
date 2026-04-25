@@ -107,3 +107,16 @@ class IngestWhiteboardRequest(BaseModel):
     video_path: str
     frames_dir: str
     interval: int = 5
+
+
+class Highlight(BaseModel):
+    title: str
+    description: str
+    start_time: int
+    video_url: str | None = None
+
+
+class HighlightsResponse(BaseModel):
+    id: int
+    file_path: str
+    highlights: list[Highlight]

@@ -12,6 +12,16 @@ st.set_page_config(
 )
 
 
+@st.cache_data(show_spinner=False, ttl=300)
+def get_classes() -> list:
+    try:
+        r = requests.get(f"{API}/classes", timeout=30)
+        r.raise_for_status()
+        return r.json().get("classes", [])
+    except Exception:
+        return []
+
+
 def render_sources(sources: list) -> None:
     if not sources:
         return
@@ -43,15 +53,6 @@ with st.sidebar:
 
     st.subheader("Filtros")
 
-    @st.cache_data(show_spinner=False)
-    def get_classes() -> list:
-        try:
-            r = requests.get(f"{API}/classes", timeout=5)
-            r.raise_for_status()
-            return r.json().get("classes", [])
-        except Exception:
-            return []
-
     classes = get_classes()
     courses = sorted({c["course"] for c in classes if c.get("course")})
 
@@ -65,6 +66,10 @@ with st.sidebar:
         }
     )
     topic = st.selectbox("Tópico", ["Todos"] + available_topics)
+
+    if st.button("🔄 Atualizar filtros", use_container_width=True):
+        get_classes.clear()
+        st.rerun()
 
     st.divider()
     st.caption(f"{len(classes)} aulas indexadas")

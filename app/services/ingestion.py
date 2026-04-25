@@ -2,15 +2,8 @@ import json
 import os
 import uuid
 from functools import lru_cache
-from typing import List
 
 from tqdm.auto import tqdm
-from qdrant_client import QdrantClient
-from qdrant_client.http.models import PointStruct
-from fastembed.sparse.bm25 import Bm25
-from fastembed.late_interaction import LateInteractionTextEmbedding
-from fastembed import TextEmbedding
-from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 
 from app.database import get_pending, set_status
 
@@ -22,7 +15,8 @@ CHUNK_SIZE = 750  # characters
 WINDOW_SECONDS = 60  # legacy word-level chunking window
 
 
-def _get_qdrant_client() -> QdrantClient:
+def _get_qdrant_client():
+    from qdrant_client import QdrantClient
     return QdrantClient(
         url=os.getenv("QDRANT_URL"),
         api_key=os.getenv("QDRANT_API_KEY"),
@@ -31,13 +25,25 @@ def _get_qdrant_client() -> QdrantClient:
 
 @lru_cache(maxsize=1)
 def _get_ner_pipeline():
+    import torch
+    from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline      
+    device = 0 if torch.cuda.is_available() else -1
     tokenizer = AutoTokenizer.from_pretrained(NER_MODEL_ID)
     model = AutoModelForTokenClassification.from_pretrained(NER_MODEL_ID)
-    return pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="first")
-
+    
+    return pipeline(
+        "ner", 
+        model=model, 
+        tokenizer=tokenizer, 
+        aggregation_strategy="first",
+        device=device  # THIS IS THE KEY
+    )
 
 @lru_cache(maxsize=1)
 def _get_embedding_models():
+    from fastembed import TextEmbedding
+    from fastembed.sparse.bm25 import Bm25
+    from fastembed.late_interaction import LateInteractionTextEmbedding
     dense_model = TextEmbedding(EMBED_MODEL_ID)
     bm25_model = Bm25("Qdrant/bm25")
     colbert_model = LateInteractionTextEmbedding("colbert-ir/colbertv2.0")
@@ -148,7 +154,7 @@ def _build_deep_link(video_url: str | None, start_time: int | None) -> str | Non
     return f"{video_url.split('?')[0]}?t={start_time}"
 
 
-def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> List[str]:
+def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> list[str]:
     paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
     chunks, current = [], ""
     for paragraph in paragraphs:
@@ -162,7 +168,7 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> List[str]:
     return chunks
 
 
-def _build_point(text: str, embedding_models, ner_pipeline, payload: dict) -> PointStruct:
+def _build_point(text: str, embedding_models, ner_pipeline, payload: dict):
     dense_model, bm25_model, colbert_model = embedding_models
     embeddings = create_embeddings(text, dense_model, bm25_model, colbert_model)
 
@@ -173,6 +179,7 @@ def _build_point(text: str, embedding_models, ner_pipeline, payload: dict) -> Po
         except Exception:
             pass
 
+    from qdrant_client.http.models import PointStruct
     return PointStruct(
         id=str(uuid.uuid4()),
         vector={
@@ -184,7 +191,7 @@ def _build_point(text: str, embedding_models, ner_pipeline, payload: dict) -> Po
     )
 
 
-def upload_in_batches(client: QdrantClient, collection_name: str, points: List[PointStruct], batch_size: int = 10):
+def upload_in_batches(client, collection_name: str, points: list, batch_size: int = 10):
     n_batches = (len(points) + batch_size - 1) // batch_size
     print(f"Uploading {len(points)} points in {n_batches} batches...")
     uploaded = 0
@@ -199,7 +206,7 @@ def upload_in_batches(client: QdrantClient, collection_name: str, points: List[P
     print(f"Uploaded {uploaded} points to '{collection_name}'")
 
 
-def _build_points_for_row(row: dict, embedding_models, ner_pipeline) -> List[PointStruct]:
+def _build_points_for_row(row: dict, embedding_models, ner_pipeline) -> list:
     class_meta = _extract_class_meta(row["file_path"])
     raw_segments = row.get("segments_json")
 

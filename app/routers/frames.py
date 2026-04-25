@@ -3,7 +3,6 @@ import os
 from collections import Counter
 from functools import lru_cache
 
-import torch
 from fastapi import APIRouter, HTTPException
 
 from app.config.settings import Settings
@@ -14,7 +13,7 @@ from app.models.api import (
     ExtractFramesRequest,
 )
 from app.config.settings import VIDEO_EXTENSIONS
-from app.services.clip_classifier import CLIPFrameClassifier
+from app.services.clip_classifier import CLIPFrameClassifier, get_classifier
 from app.services.frame_extractor import extract_frames_from_video
 
 router = APIRouter(tags=["frames"])
@@ -86,13 +85,8 @@ def extract_frames_batch(payload: ExtractFramesBatchRequest):
     }
 
 
-@lru_cache(maxsize=1)
 def _get_classifier() -> CLIPFrameClassifier:
-    settings = Settings()
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    if settings.clip_device != "auto":
-        device = settings.clip_device
-    return CLIPFrameClassifier(settings.clip_model_name, device)
+    return get_classifier()
 
 
 @router.post("/classify-frames")

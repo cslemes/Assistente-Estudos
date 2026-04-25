@@ -5,10 +5,6 @@ import random
 import tempfile
 from typing import Optional
 
-import genanki
-from qdrant_client import QdrantClient
-from qdrant_client.http.models import FieldCondition, Filter, MatchValue
-
 from app.config.settings import Settings
 from app.models.embeddings import Document
 from app.services.llm_client import get_chat_client
@@ -72,6 +68,7 @@ ANKI_CSS = """\
 
 class FlashcardService:
     def __init__(self, settings: Settings):
+        from qdrant_client import QdrantClient
         client_params: dict = {"url": settings.qdrant_url}
         if settings.qdrant_api_key:
             client_params["api_key"] = settings.qdrant_api_key
@@ -84,7 +81,8 @@ class FlashcardService:
         topic: Optional[str],
         course: Optional[str],
         aula_number: Optional[int],
-    ) -> Optional[Filter]:
+    ):
+        from qdrant_client.http.models import FieldCondition, Filter, MatchValue
         conditions = []
         if topic:
             conditions.append(FieldCondition(key="topic", match=MatchValue(value=topic)))
@@ -176,7 +174,8 @@ class FlashcardService:
         topic: Optional[str],
         course: Optional[str],
         aula_number: Optional[int],
-    ) -> Optional[Filter]:
+    ):
+        from qdrant_client.http.models import FieldCondition, Filter, MatchValue
         conditions = []
         if topic:
             conditions.append(FieldCondition(key="topic", match=MatchValue(value=topic)))
@@ -271,7 +270,8 @@ class FlashcardService:
         cards: list[dict],
         deck_name: str,
         source_ref: str,
-    ) -> genanki.Deck:
+    ):
+        import genanki
         deck_id = int(hashlib.md5(deck_name.encode()).hexdigest()[:8], 16)
         model_id = int(hashlib.md5(f"{deck_name}_model".encode()).hexdigest()[:8], 16)
 
@@ -329,6 +329,7 @@ class FlashcardService:
         resolved_deck_name = deck_name or source_ref or "PUC-Rio IA Flashcards"
         deck = self._build_deck(cards, resolved_deck_name, source_ref)
 
+        import genanki
         package = genanki.Package(deck)
         tmp = tempfile.NamedTemporaryFile(
             suffix=".apkg",

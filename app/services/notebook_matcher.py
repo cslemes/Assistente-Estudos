@@ -1,8 +1,17 @@
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 
 from app.services.slide_matcher import frame_number_to_timestamp
+
+
+@lru_cache(maxsize=1)
+def _get_ocr_reader():
+    import easyocr
+    import torch
+    gpu = torch.cuda.is_available()
+    return easyocr.Reader(["pt", "en"], gpu=gpu)
 
 
 def extract_notebook_cells(ipynb_path: str) -> list[dict]:
@@ -95,6 +104,8 @@ def ingest_notebook(
         _get_qdrant_client,
     )
 
+    from app.database import get_video_url_by_video_path
+
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
 
     cells = extract_notebook_cells(ipynb_path)
@@ -103,9 +114,7 @@ def ingest_notebook(
     if not notebook_frames:
         return {"ingested": 0, "message": "No notebook frames found in classifications"}
 
-    import easyocr
-    ocr_reader = easyocr.Reader(["pt", "en"], gpu=False)
-
+    ocr_reader = _get_ocr_reader()
     matches = match_cells_to_frames(cells, notebook_frames, ocr_reader, interval=interval)
 
     if not matches:
@@ -115,6 +124,7 @@ def ingest_notebook(
     embedding_models = _get_embedding_models()
     ner_pipeline = _get_ner_pipeline()
     client = _get_qdrant_client()
+    video_url = get_video_url_by_video_path(video_path)
 
     cell_text_map = {c["cell_index"]: c["text"] for c in cells}
     points = []
@@ -123,7 +133,7 @@ def ingest_notebook(
         payload = {
             "source_type": "notebook",
             "file_path": ipynb_path,
-            "video_url": _build_deep_link(None, match["start_time"]),
+            "video_url": _build_deep_link(video_url, match["start_time"]),
             "cell_index": match["cell_index"],
             "cell_type": match["cell_type"],
             "start_time": match["start_time"],

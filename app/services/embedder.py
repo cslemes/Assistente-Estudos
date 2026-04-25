@@ -1,7 +1,4 @@
 import os
-from fastembed import TextEmbedding
-from fastembed.sparse.bm25 import Bm25
-from fastembed.late_interaction import LateInteractionTextEmbedding
 from app.models.embeddings import QueryEmbeddings, SparseVector
 
 
@@ -9,6 +6,10 @@ class QueryEmbedder:
     def __init__(self, dense_model_name: str, bm25_model_name: str, late_interaction_model_name: str):
         if "TOKENIZERS_PARALLELISM" not in os.environ:
             os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+        from fastembed import TextEmbedding
+        from fastembed.sparse.bm25 import Bm25
+        from fastembed.late_interaction import LateInteractionTextEmbedding
 
         self.dense_embedding_model = TextEmbedding(dense_model_name)
         self.bm25_embedding_model = Bm25(bm25_model_name)

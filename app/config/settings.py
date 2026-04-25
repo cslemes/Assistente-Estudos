@@ -112,6 +112,13 @@ Responda em português, de forma didática e completa."""
     clip_model_name: str = "openai/clip-vit-base-patch16"
     clip_device: str = "auto"  # "auto" → cuda if available, else cpu
 
+    # Cloudflare R2 Storage
+    cloudflare_account_id: Optional[str] = None
+    cloudflare_r2_access_key_id: Optional[str] = None
+    cloudflare_r2_secret_access_key: Optional[str] = None
+    cloudflare_r2_bucket_name: Optional[str] = None
+    cloudflare_r2_public_url: Optional[str] = None  # e.g. https://pub-xxx.r2.dev
+
     # LangSmith Configuration
     langsmith_api_key: Optional[str] = None
     langsmith_project: str = "assistente-estudos"

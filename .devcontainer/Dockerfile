@@ -1,5 +1,5 @@
-#FROM nvidia/cuda:12.1.1-cudnn8-devel-ubuntu22.04
-FROM nvidia/cuda:13.2.0-cudnn-devel-ubuntu24.04
+FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu24.04
+#FROM nvidia/cuda:13.2.0-cudnn-devel-ubuntu24.04
 
 ARG USER=developer
 ARG DEBIAN_FRONTEND=noninteractive
@@ -7,8 +7,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt update \
     && apt install -y --no-install-recommends \
        sudo git zsh curl wget ca-certificates \
-       python3 python3-venv \
        libgl1 libglib2.0-0 \
+       libreoffice ffmpeg \
     && apt clean \
     && apt autoremove -y \
     && rm -rf /var/lib/apt/lists/*
@@ -38,6 +38,9 @@ RUN <<EOT
     echo 'eval "$(uv generate-shell-completion zsh)"' >> ${HOME}/.zshrc
     echo 'eval "$(uvx --generate-shell-completion zsh)"' >> ${HOME}/.zshrc   
 EOT
+
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 
 
 # Diretório padrão para quando o VS Code plugar no Dev Container
 WORKDIR /workspaces/Assistente-Estudos

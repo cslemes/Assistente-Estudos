@@ -7,9 +7,13 @@ Usage:
 
 import argparse
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from api_client import api_request
+
 from app.config.settings import VIDEO_EXTENSIONS
 
 
@@ -23,9 +27,18 @@ def extract_audio(video_path: Path, ai_data_dir: Path) -> Path | None:
         subprocess.run(
             [
                 "ffmpeg",
-                "-i", str(video_path),
-                "-vn", "-ac", "1", "-ar", "44100", "-ab", "128k",
-                "-f", "mp3", str(audio_path),
+                "-i",
+                str(video_path),
+                "-vn",
+                "-ac",
+                "1",
+                "-ar",
+                "44100",
+                "-ab",
+                "128k",
+                "-f",
+                "mp3",
+                str(audio_path),
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -39,9 +52,17 @@ def extract_audio(video_path: Path, ai_data_dir: Path) -> Path | None:
 
 def find_videos(folder: Path, recursive: bool) -> list[Path]:
     if recursive:
-        files = [p for p in folder.rglob("*") if p.is_file() and p.suffix.lower() in VIDEO_EXTENSIONS]
+        files = [
+            p
+            for p in folder.rglob("*")
+            if p.is_file() and p.suffix.lower() in VIDEO_EXTENSIONS
+        ]
     else:
-        files = [p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in VIDEO_EXTENSIONS]
+        files = [
+            p
+            for p in folder.iterdir()
+            if p.is_file() and p.suffix.lower() in VIDEO_EXTENSIONS
+        ]
     return sorted(files)
 
 
@@ -50,8 +71,12 @@ def main():
         description="Extract audio from videos and send each to the transcription API."
     )
     parser.add_argument("folder", type=Path, help="Folder to scan for video files")
-    parser.add_argument("--recursive", action="store_true", help="Scan subfolders recursively")
-    parser.add_argument("--dry-run", action="store_true", help="List files without processing")
+    parser.add_argument(
+        "--recursive", action="store_true", help="Scan subfolders recursively"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="List files without processing"
+    )
     args = parser.parse_args()
 
     folder = args.folder.resolve()

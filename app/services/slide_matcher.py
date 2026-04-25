@@ -60,10 +60,13 @@ def render_slides_to_png(pptx_path: str, output_dir: str) -> list[str] | None:
 
 
 def _embed_image(path: str, classifier) -> "torch.Tensor":
-    import torch
+    from PIL import Image
 
-    inputs = classifier.processor(images=path, return_tensors="pt")
-    emb = classifier.model.get_image_features(**inputs)
+    image = Image.open(path).convert("RGB")
+    inputs = classifier.processor(images=image, return_tensors="pt").to(classifier.device)
+    with classifier._torch.no_grad():
+        vision_out = classifier.model.vision_model(pixel_values=inputs["pixel_values"])
+        emb = classifier.model.visual_projection(vision_out.pooler_output)
     norm = emb.norm(dim=-1, keepdim=True)
     return emb / norm if norm.item() > 0 else emb
 
@@ -76,26 +79,20 @@ def match_slides_to_frames(
 ) -> list[dict]:
     import torch
 
+    # Pre-embed all frames once, then do a single matmul per slide
+    frame_embs = torch.cat([_embed_image(f["frame_path"], classifier) for f in slide_frames])
+
     results = []
     for slide_index, slide_png in enumerate(slide_pngs):
         slide_emb = _embed_image(slide_png, classifier)
-
-        best_score = -1.0
-        best_frame = None
-        for frame in slide_frames:
-            frame_emb = _embed_image(frame["frame_path"], classifier)
-            score = float(torch.nn.functional.cosine_similarity(slide_emb, frame_emb).item())
-            if score > best_score:
-                best_score = score
-                best_frame = frame
-
-        if best_frame is not None:
-            results.append({
-                "slide_index": slide_index,
-                "frame_path": best_frame["frame_path"],
-                "start_time": frame_number_to_timestamp(best_frame["frame"], interval),
-                "similarity": best_score,
-            })
+        scores = (slide_emb @ frame_embs.T).squeeze(0)
+        best_idx = int(scores.argmax())
+        results.append({
+            "slide_index": slide_index,
+            "frame_path": slide_frames[best_idx]["frame_path"],
+            "start_time": frame_number_to_timestamp(slide_frames[best_idx]["frame"], interval),
+            "similarity": float(scores[best_idx]),
+        })
 
     return results
 
@@ -116,7 +113,9 @@ def ingest_pptx(
         upload_in_batches,
         _get_qdrant_client,
     )
-    from app.services.clip_classifier import CLIPFrameClassifier
+    from app.services.clip_classifier import get_classifier
+    from app.services.r2_storage import upload_thumbnail, thumbnail_key
+    from app.database import get_video_url_by_video_path
 
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
 
@@ -126,10 +125,8 @@ def ingest_pptx(
     if not slide_frames:
         return {"ingested": 0, "message": "No slide frames found in classifications"}
 
-    classifier = CLIPFrameClassifier(
-        model_name="openai/clip-vit-base-patch16",
-        device="cpu",
-    )
+    classifier = get_classifier()
+    video_url = get_video_url_by_video_path(video_path)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         pngs = render_slides_to_png(pptx_path, tmp_dir)
@@ -137,6 +134,14 @@ def ingest_pptx(
             return {"ingested": 0, "message": "LibreOffice rendering failed"}
 
         matches = match_slides_to_frames(pngs, slide_frames, classifier, interval=interval)
+
+        # Upload thumbnails while temp PNGs still exist
+        thumb_urls: dict[int, str | None] = {}
+        for match in matches:
+            idx = match["slide_index"]
+            if idx < len(pngs):
+                key = thumbnail_key(video_path, idx)
+                thumb_urls[idx] = upload_thumbnail(pngs[idx], key)
 
     class_meta = _extract_class_meta(video_path)
     embedding_models = _get_embedding_models()
@@ -153,11 +158,13 @@ def ingest_pptx(
         payload = {
             "source_type": "slide",
             "file_path": pptx_path,
-            "video_url": _build_deep_link(None, match["start_time"]),
+            "video_url": _build_deep_link(video_url, match["start_time"]),
             "slide_index": idx,
             "start_time": match["start_time"],
             **class_meta,
         }
+        if thumb_urls.get(idx):
+            payload["slide_thumb"] = thumb_urls[idx]
         points.append(_build_point(text, embedding_models, ner_pipeline, payload))
 
     if points:
