@@ -68,6 +68,44 @@ function LessonCard({ lesson, onClick }: LessonCardProps) {
   );
 }
 
+interface CourseCardProps {
+  name: string;
+  lessons: Lesson[];
+  onClick: () => void;
+}
+
+function CourseCard({ name, lessons, onClick }: CourseCardProps) {
+  const summarized = lessons.filter((l) => l.summary !== null).length;
+  const pct = lessons.length > 0 ? Math.round((summarized / lessons.length) * 100) : 0;
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left p-6 rounded-xl bg-slate-800 border border-slate-700 hover:border-sky-400/60 hover:bg-slate-700/60 transition-all group"
+    >
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <h2 className="text-base font-bold text-slate-100 group-hover:text-white leading-snug">
+          {name}
+        </h2>
+        <span className="shrink-0 text-xs text-slate-400 mt-0.5">
+          {lessons.length} aula{lessons.length !== 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden mb-2">
+        <div
+          className="h-full bg-sky-500 rounded-full transition-all"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-xs text-slate-500">
+        {summarized} de {lessons.length} resumidas
+      </p>
+    </button>
+  );
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -77,94 +115,94 @@ export default function Home() {
 
   useEffect(() => {
     fetchLessons()
-      .then((data) => {
-        setLessons(data);
-        // Default to the first course alphabetically
-        const courses = [...new Set(data.map((l) => l.course ?? 'Sem curso'))].sort();
-        if (courses.length > 0) setSelectedCourse(courses[0]);
-      })
+      .then(setLessons)
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Erro ao carregar aulas');
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const courses = [...new Set(lessons.map((l) => l.course ?? 'Sem curso'))].sort();
+  const byCourse = groupBy(lessons, (l) => l.course ?? 'Sem curso');
+  const courseLessons = selectedCourse ? (byCourse[selectedCourse] ?? []) : [];
+  const byTopic = groupBy(courseLessons, (l) => l.topic ?? 'Sem tópico');
 
-  const filtered = selectedCourse
-    ? lessons.filter((l) => (l.course ?? 'Sem curso') === selectedCourse)
-    : lessons;
-
-  const summarizedCount = filtered.filter((l) => l.summary !== null).length;
-  const totalCount = filtered.length;
-
-  const byTopic = groupBy(filtered, (l) => l.topic ?? 'Sem tópico');
+  const summarizedCount = lessons.filter((l) => l.summary !== null).length;
 
   return (
     <div className="min-h-screen bg-slate-900">
-      <TopBar completedCount={summarizedCount} totalCount={totalCount} />
+      <TopBar completedCount={summarizedCount} totalCount={lessons.length} />
 
       <main className="pt-13 px-6 pb-12 max-w-5xl mx-auto">
-        <div className="mt-8 mb-6">
-          <h1 className="text-2xl font-bold text-slate-100">Minhas Aulas</h1>
-          <p className="mt-1 text-slate-400 text-sm">
-            {summarizedCount} de {totalCount} aulas resumidas
-          </p>
-        </div>
 
-        {/* Course filter pills */}
-        {!loading && !error && courses.length > 1 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {courses.map((course) => (
-              <button
-                key={course}
-                onClick={() => setSelectedCourse(course)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                  selectedCourse === course
-                    ? 'bg-sky-500 border-sky-500 text-white'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-sky-400/60 hover:text-sky-400'
-                }`}
-              >
-                {course}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {loading && <LoadingSpinner />}
+        {loading && <div className="mt-16"><LoadingSpinner /></div>}
 
         {error && (
-          <div className="p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">
+          <div className="mt-8 p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">
             {error}
           </div>
         )}
 
-        {!loading && !error && filtered.length === 0 && (
-          <p className="text-slate-400 text-sm">Nenhuma aula encontrada.</p>
+        {/* Course cards grid */}
+        {!loading && !error && selectedCourse === null && (
+          <>
+            <div className="mt-8 mb-6">
+              <h1 className="text-2xl font-bold text-slate-100">Meus Cursos</h1>
+              <p className="mt-1 text-slate-400 text-sm">
+                {Object.keys(byCourse).length} curso{Object.keys(byCourse).length !== 1 ? 's' : ''} · {summarizedCount} de {lessons.length} aulas resumidas
+              </p>
+            </div>
+            {lessons.length === 0 && (
+              <p className="text-slate-400 text-sm">Nenhum curso encontrado.</p>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(byCourse).sort(([a], [b]) => a.localeCompare(b)).map(([name, cls]) => (
+                <CourseCard
+                  key={name}
+                  name={name}
+                  lessons={cls}
+                  onClick={() => setSelectedCourse(name)}
+                />
+              ))}
+            </div>
+          </>
         )}
 
-        {!loading && !error && Object.entries(byTopic).map(([topicName, topicLessons]) => {
-          const sorted = [...topicLessons].sort(
-            (a, b) => (a.aula_number ?? 0) - (b.aula_number ?? 0),
-          );
-
-          return (
-            <div key={topicName} className="mb-8">
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-sky-400 mb-3 pl-0.5">
-                {topicName}
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {sorted.map((lesson) => (
-                  <LessonCard
-                    key={lesson.id}
-                    lesson={lesson}
-                    onClick={() => navigate(`/lesson/${lesson.id}`)}
-                  />
-                ))}
-              </div>
+        {/* Lesson list for selected course */}
+        {!loading && !error && selectedCourse !== null && (
+          <>
+            <div className="mt-8 mb-6 flex items-center gap-4">
+              <button
+                onClick={() => setSelectedCourse(null)}
+                className="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-1"
+              >
+                ← Cursos
+              </button>
+              <h1 className="text-2xl font-bold text-slate-100">{selectedCourse}</h1>
             </div>
-          );
-        })}
+
+            {Object.entries(byTopic).map(([topicName, topicLessons]) => {
+              const sorted = [...topicLessons].sort(
+                (a, b) => (a.aula_number ?? 0) - (b.aula_number ?? 0),
+              );
+              return (
+                <div key={topicName} className="mb-8">
+                  <h3 className="text-xs font-semibold uppercase tracking-widest text-sky-400 mb-3">
+                    {topicName}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {sorted.map((lesson) => (
+                      <LessonCard
+                        key={lesson.id}
+                        lesson={lesson}
+                        onClick={() => navigate(`/lesson/${lesson.id}`)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </>
+        )}
       </main>
     </div>
   );
