@@ -52,9 +52,7 @@ export default function Player() {
     );
   }
 
-  const sidebarLessons = lessons.filter(
-    (l) => l.course === currentLesson.course && l.topic === currentLesson.topic,
-  );
+  const sidebarLessons = lessons.filter((l) => l.course === currentLesson.course);
 
   const completedCount = sidebarLessons.filter((l) => l.summary !== null).length;
 

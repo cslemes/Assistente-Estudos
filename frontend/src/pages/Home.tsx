@@ -4,7 +4,6 @@ import { fetchLessons } from '../api';
 import type { Lesson } from '../types';
 import TopBar from '../components/TopBar';
 
-// Group an array of lessons by a string key derived from each item.
 function groupBy<T>(items: T[], key: (item: T) => string): Record<string, T[]> {
   return items.reduce<Record<string, T[]>>((acc, item) => {
     const k = key(item);
@@ -13,58 +12,17 @@ function groupBy<T>(items: T[], key: (item: T) => string): Record<string, T[]> {
   }, {});
 }
 
+function firstLessonId(lessons: Lesson[]): number | null {
+  const sorted = [...lessons].sort((a, b) => (a.aula_number ?? 0) - (b.aula_number ?? 0));
+  return sorted[0]?.id ?? null;
+}
+
 function LoadingSpinner() {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-24">
       <div className="w-10 h-10 rounded-full border-2 border-slate-600 border-t-sky-400 animate-spin" />
       <p className="text-slate-400 text-sm">Carregando aulas…</p>
     </div>
-  );
-}
-
-function SummaryBadge({ hasSummary }: { hasSummary: boolean }) {
-  if (hasSummary) {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-900/50 text-emerald-400 border border-emerald-700/50">
-        Resumido ✓
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-900/40 text-amber-400 border border-amber-700/40">
-      Pendente
-    </span>
-  );
-}
-
-interface LessonCardProps {
-  lesson: Lesson;
-  onClick: () => void;
-}
-
-function LessonCard({ lesson, onClick }: LessonCardProps) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full text-left p-4 rounded-lg bg-slate-800 border border-slate-700 hover:border-sky-400/60 hover:bg-slate-700/70 transition-all group"
-    >
-      {/* Course badge */}
-      {lesson.course && (
-        <span className="inline-block mb-2 px-2 py-0.5 rounded text-xs text-sky-400 bg-sky-900/40 border border-sky-700/40 font-medium">
-          {lesson.course}
-        </span>
-      )}
-
-      {/* Title */}
-      <p className="text-slate-100 font-semibold text-sm group-hover:text-white transition-colors">
-        Aula {lesson.aula_number ?? '—'} — {lesson.topic ?? 'Sem tópico'}
-      </p>
-
-      {/* Footer row */}
-      <div className="mt-3 flex items-center justify-between">
-        <SummaryBadge hasSummary={lesson.summary !== null} />
-      </div>
-    </button>
   );
 }
 
@@ -100,7 +58,6 @@ export default function Home() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLessons()
@@ -111,10 +68,6 @@ export default function Home() {
 
   const byCourse = groupBy(lessons, (l) => l.course ?? 'Sem curso');
   const summarizedCount = lessons.filter((l) => l.summary !== null).length;
-
-  // Lesson view for a selected course
-  const courseLessons = selectedCourse ? (byCourse[selectedCourse] ?? []) : [];
-  const byTopic = groupBy(courseLessons, (l) => l.topic ?? 'Sem tópico');
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -127,8 +80,7 @@ export default function Home() {
           <div className="mt-8 p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">{error}</div>
         )}
 
-        {/* Course cards */}
-        {!loading && !error && selectedCourse === null && (
+        {!loading && !error && (
           <>
             <div className="mt-8 mb-6">
               <h1 className="text-2xl font-bold text-slate-100">Meus Cursos</h1>
@@ -138,40 +90,18 @@ export default function Home() {
             </div>
             {lessons.length === 0 && <p className="text-slate-400 text-sm">Nenhum curso encontrado.</p>}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(byCourse).sort(([a], [b]) => a.localeCompare(b)).map(([name, cls]) => (
-                <CourseCard key={name} name={name} lessons={cls} onClick={() => setSelectedCourse(name)} />
-              ))}
+              {Object.entries(byCourse).sort(([a], [b]) => a.localeCompare(b)).map(([name, cls]) => {
+                const id = firstLessonId(cls);
+                return (
+                  <CourseCard
+                    key={name}
+                    name={name}
+                    lessons={cls}
+                    onClick={() => id != null && navigate(`/lesson/${id}`)}
+                  />
+                );
+              })}
             </div>
-          </>
-        )}
-
-        {/* Lessons for selected course */}
-        {!loading && !error && selectedCourse !== null && (
-          <>
-            <div className="mt-8 mb-6 flex items-center gap-3">
-              <button
-                onClick={() => setSelectedCourse(null)}
-                className="text-slate-400 hover:text-sky-400 transition-colors text-sm"
-              >
-                ← Cursos
-              </button>
-              <span className="text-slate-600">/</span>
-              <h1 className="text-xl font-bold text-slate-100">{selectedCourse}</h1>
-            </div>
-
-            {Object.entries(byTopic).map(([topicName, topicLessons]) => {
-              const sorted = [...topicLessons].sort((a, b) => (a.aula_number ?? 0) - (b.aula_number ?? 0));
-              return (
-                <div key={topicName} className="mb-8">
-                  <h3 className="text-xs font-semibold uppercase tracking-widest text-sky-400 mb-3">{topicName}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {sorted.map((lesson) => (
-                      <LessonCard key={lesson.id} lesson={lesson} onClick={() => navigate(`/lesson/${lesson.id}`)} />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
           </>
         )}
       </main>
