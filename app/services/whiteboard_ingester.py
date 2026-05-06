@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from app.services.notebook_matcher import ocr_frame, _get_ocr_reader
+from app.services.notebook_matcher import _make_ocr_callable
 from app.services.slide_matcher import frame_number_to_timestamp
 
 
@@ -16,12 +16,12 @@ def load_whiteboard_frames(frames_dir: str) -> list[dict]:
 
 def frames_to_chunks(
     whiteboard_frames: list[dict],
-    ocr_reader,
+    ocr_fn,
     interval: int = 5,
 ) -> list[dict]:
     chunks = []
     for frame in whiteboard_frames:
-        text = ocr_frame(frame["frame_path"], ocr_reader)
+        text = ocr_fn(frame["frame_path"])
         if not text.strip():
             continue
         chunks.append({
@@ -38,6 +38,7 @@ def ingest_whiteboard(
     interval: int = 5,
     collection_name: str = None,
 ) -> dict:
+    from app.config.settings import Settings
     from app.services.ingestion import (
         _build_point,
         _build_deep_link,
@@ -50,20 +51,25 @@ def ingest_whiteboard(
 
     from app.database import get_video_url_by_video_path
 
+    settings = Settings()
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
 
     whiteboard_frames = load_whiteboard_frames(frames_dir)
     if not whiteboard_frames:
         return {"ingested": 0, "message": "No whiteboard frames found in classifications"}
 
-    ocr_reader = _get_ocr_reader()
-    chunks = frames_to_chunks(whiteboard_frames, ocr_reader, interval=interval)
+    ocr_fn = _make_ocr_callable(settings)
+    chunks = frames_to_chunks(whiteboard_frames, ocr_fn, interval=interval)
     if not chunks:
         return {"ingested": 0, "message": "No text extracted from whiteboard frames"}
 
     class_meta = _extract_class_meta(video_path)
-    embedding_models = _get_embedding_models()
-    ner_pipeline = _get_ner_pipeline()
+    if settings.use_runpod:
+        embedding_arg = settings
+        ner_arg = settings
+    else:
+        embedding_arg = _get_embedding_models()
+        ner_arg = _get_ner_pipeline()
     client = _get_qdrant_client()
     video_url = get_video_url_by_video_path(video_path)
 
@@ -76,7 +82,7 @@ def ingest_whiteboard(
             "start_time": chunk["start_time"],
             **class_meta,
         }
-        points.append(_build_point(chunk["text"], embedding_models, ner_pipeline, payload))
+        points.append(_build_point(chunk["text"], embedding_arg, ner_arg, payload))
 
     upload_in_batches(client, collection_name, points)
     return {"ingested": len(points)}

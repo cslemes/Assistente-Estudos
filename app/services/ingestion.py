@@ -74,6 +74,41 @@ def create_embeddings(text: str, dense_model, bm25_model, colbert_model) -> dict
     return {"dense": dense, "sparse": sparse, "colbertv2.0": colbert}
 
 
+def _extract_entities_dispatch(text: str, ner_pipeline_or_settings) -> dict:
+    """Call NER locally or via RunPod depending on settings."""
+    from app.config.settings import Settings
+    if isinstance(ner_pipeline_or_settings, Settings):
+        settings = ner_pipeline_or_settings
+        if settings.use_runpod:
+            from app.services.runpod_client import RunPodClient
+            client = RunPodClient(settings)
+            result = client.call(settings.runpod_ner_endpoint_id, {"text": text})
+            return result.get("entities", {})
+        # local fallback — lazy load
+        ner_pipeline_or_settings = _get_ner_pipeline()
+    return extract_entities(text, ner_pipeline_or_settings)
+
+
+def _create_embeddings_dispatch(text: str, embedding_models_or_settings) -> dict:
+    """Embed locally or via RunPod depending on settings."""
+    from app.config.settings import Settings
+    if isinstance(embedding_models_or_settings, Settings):
+        settings = embedding_models_or_settings
+        if settings.use_runpod:
+            from app.services.runpod_client import RunPodClient
+            client = RunPodClient(settings)
+            result = client.call(settings.runpod_embed_endpoint_id, {"text": text, "mode": "passage"})
+            sparse = result["sparse"]
+            return {
+                "dense": result["dense"],
+                "sparse": sparse,
+                "colbertv2.0": result["colbert"],
+            }
+        embedding_models_or_settings = _get_embedding_models()
+    dense_model, bm25_model, colbert_model = embedding_models_or_settings
+    return create_embeddings(text, dense_model, bm25_model, colbert_model)
+
+
 def chunk_segments(items: list, max_chars: int = CHUNK_SIZE) -> list:
     """
     Chunk transcription data into RAG chunks.
@@ -172,18 +207,17 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE) -> list[str]:
     return chunks
 
 
-def _build_point(text: str, embedding_models, ner_pipeline, payload: dict):
-    dense_model, bm25_model, colbert_model = embedding_models
-    embeddings = create_embeddings(text, dense_model, bm25_model, colbert_model)
+def _build_point(text: str, embedding_models_or_settings, ner_pipeline_or_settings, payload: dict):
+    from qdrant_client.http.models import PointStruct
+    embeddings = _create_embeddings_dispatch(text, embedding_models_or_settings)
 
     entities = {}
     if len(text.split()) > 20:
         try:
-            entities = extract_entities(text, ner_pipeline)
+            entities = _extract_entities_dispatch(text, ner_pipeline_or_settings)
         except Exception:
             pass
 
-    from qdrant_client.http.models import PointStruct
     return PointStruct(
         id=str(uuid.uuid4()),
         vector={
@@ -251,6 +285,8 @@ def _build_points_for_row(row: dict, embedding_models, ner_pipeline) -> list:
 
 
 def ingest_pending_transcriptions(collection_name: str = None) -> dict:
+    from app.config.settings import Settings
+    settings = Settings()
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
     pending = get_pending()
 
@@ -258,14 +294,19 @@ def ingest_pending_transcriptions(collection_name: str = None) -> dict:
         return {"ingested": 0, "message": "No pending transcriptions"}
 
     client = _get_qdrant_client()
-    embedding_models = _get_embedding_models()
-    ner_pipeline = _get_ner_pipeline()
+
+    if settings.use_runpod:
+        embedding_arg = settings
+        ner_arg = settings
+    else:
+        embedding_arg = _get_embedding_models()
+        ner_arg = _get_ner_pipeline()
 
     print(f"Processing {len(pending)} transcriptions...")
     points = []
     processed_ids = []
     for row in tqdm(pending):
-        points.extend(_build_points_for_row(row, embedding_models, ner_pipeline))
+        points.extend(_build_points_for_row(row, embedding_arg, ner_arg))
         processed_ids.append(row["id"])
 
     upload_in_batches(client, collection_name, points)

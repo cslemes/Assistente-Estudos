@@ -74,3 +74,30 @@ def get_classifier() -> "CLIPFrameClassifier":
     if settings.clip_device != "auto":
         device = settings.clip_device
     return CLIPFrameClassifier(settings.clip_model_name, device)
+
+
+def classify_frame_via_runpod(frame_path: str, client, endpoint_id: str) -> dict:
+    import base64
+    with open(frame_path, "rb") as f:
+        image_b64 = base64.b64encode(f.read()).decode()
+    return client.call(endpoint_id, {"op": "classify_frame", "image_b64": image_b64})
+
+
+def embed_image_via_runpod(image_path: str, client, endpoint_id: str) -> list:
+    import base64
+    with open(image_path, "rb") as f:
+        image_b64 = base64.b64encode(f.read()).decode()
+    return client.call(endpoint_id, {"op": "embed_image", "image_b64": image_b64})["embedding"]
+
+
+def classify_directory_runpod(frames_dir: str, client, endpoint_id: str) -> list:
+    from tqdm import tqdm
+    frames = sorted(Path(frames_dir).glob("frame_*.jpg"))
+    results = []
+    for f in tqdm(frames, desc=Path(frames_dir).name, unit="frame"):
+        try:
+            r = classify_frame_via_runpod(str(f), client, endpoint_id)
+            results.append({"frame": f.name, "frame_path": str(f), **r})
+        except Exception as e:
+            logger.error("RunPod CLIP failed for %s: %s", f.name, e)
+    return results

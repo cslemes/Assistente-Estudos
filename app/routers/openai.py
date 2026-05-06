@@ -8,7 +8,7 @@ from langsmith import traceable
 
 from app.config.settings import Settings
 from app.models.api import OpenAIRequest, OpenAIResponse
-from app.services.embedder import QueryEmbedder
+from app.services.embedder import get_embedder_for_settings
 from app.services.retriever import QdrantRetriever
 from app.services.openai_service import OpenAIService
 
@@ -21,11 +21,7 @@ def get_settings():
 
 
 def get_embedder(settings: Settings = Depends(get_settings)):
-    return QueryEmbedder(
-        dense_model_name=settings.dense_model_name,
-        bm25_model_name=settings.bm25_model_name,
-        late_interaction_model_name=settings.late_interaction_model_name,
-    )
+    return get_embedder_for_settings(settings)
 
 
 def get_retriever(settings: Settings = Depends(get_settings)):
@@ -40,7 +36,7 @@ def get_openai_service(settings: Settings = Depends(get_settings)):
 @router.post("", response_model=OpenAIResponse)
 async def ask(
     request: OpenAIRequest,
-    embedder: QueryEmbedder = Depends(get_embedder),
+    embedder=Depends(get_embedder),
     retriever: QdrantRetriever = Depends(get_retriever),
     openai_service: OpenAIService = Depends(get_openai_service),
 ):
@@ -74,7 +70,7 @@ async def ask(
 @router.post("/stream")
 async def ask_stream(
     request: OpenAIRequest,
-    embedder: QueryEmbedder = Depends(get_embedder),
+    embedder=Depends(get_embedder),
     retriever: QdrantRetriever = Depends(get_retriever),
     openai_service: OpenAIService = Depends(get_openai_service),
 ):

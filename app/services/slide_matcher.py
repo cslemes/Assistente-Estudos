@@ -97,6 +97,32 @@ def match_slides_to_frames(
     return results
 
 
+def match_slides_to_frames_runpod(
+    slide_pngs: list[str],
+    slide_frames: list[dict],
+    client,
+    endpoint_id: str,
+    interval: int = 5,
+) -> list[dict]:
+    import numpy as np
+    from app.services.clip_classifier import embed_image_via_runpod
+
+    frame_embs = [embed_image_via_runpod(f["frame_path"], client, endpoint_id) for f in slide_frames]
+    frame_matrix = np.array(frame_embs)  # (N, D)
+    results = []
+    for slide_index, slide_png in enumerate(slide_pngs):
+        slide_emb = np.array(embed_image_via_runpod(slide_png, client, endpoint_id))
+        scores = frame_matrix @ slide_emb
+        best_idx = int(scores.argmax())
+        results.append({
+            "slide_index": slide_index,
+            "frame_path": slide_frames[best_idx]["frame_path"],
+            "start_time": frame_number_to_timestamp(slide_frames[best_idx]["frame"], interval),
+            "similarity": float(scores[best_idx]),
+        })
+    return results
+
+
 def ingest_pptx(
     pptx_path: str,
     video_path: str,
@@ -104,6 +130,7 @@ def ingest_pptx(
     interval: int = 5,
     collection_name: str = None,
 ) -> dict:
+    from app.config.settings import Settings
     from app.services.ingestion import (
         _build_point,
         _build_deep_link,
@@ -113,10 +140,10 @@ def ingest_pptx(
         upload_in_batches,
         _get_qdrant_client,
     )
-    from app.services.clip_classifier import get_classifier
     from app.services.r2_storage import upload_thumbnail, thumbnail_key
     from app.database import get_video_url_by_video_path
 
+    settings = Settings()
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
 
     slide_texts = extract_slide_texts(pptx_path)
@@ -125,27 +152,42 @@ def ingest_pptx(
     if not slide_frames:
         return {"ingested": 0, "message": "No slide frames found in classifications"}
 
-    classifier = get_classifier()
     video_url = get_video_url_by_video_path(video_path)
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        pngs = render_slides_to_png(pptx_path, tmp_dir)
-        if not pngs:
-            return {"ingested": 0, "message": "LibreOffice rendering failed"}
+    if settings.use_runpod:
+        from app.services.runpod_client import RunPodClient
+        clip_client = RunPodClient(settings)
+        clip_endpoint = settings.runpod_clip_endpoint_id
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pngs = render_slides_to_png(pptx_path, tmp_dir)
+            if not pngs:
+                return {"ingested": 0, "message": "LibreOffice rendering failed"}
+            matches = match_slides_to_frames_runpod(pngs, slide_frames, clip_client, clip_endpoint, interval=interval)
+            thumb_urls: dict[int, str | None] = {}  # skip thumbnail upload in RunPod mode for now
+        embedding_arg = settings
+        ner_arg = settings
+    else:
+        from app.services.clip_classifier import get_classifier
+        classifier = get_classifier()
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            pngs = render_slides_to_png(pptx_path, tmp_dir)
+            if not pngs:
+                return {"ingested": 0, "message": "LibreOffice rendering failed"}
 
-        matches = match_slides_to_frames(pngs, slide_frames, classifier, interval=interval)
+            matches = match_slides_to_frames(pngs, slide_frames, classifier, interval=interval)
 
-        # Upload thumbnails while temp PNGs still exist
-        thumb_urls: dict[int, str | None] = {}
-        for match in matches:
-            idx = match["slide_index"]
-            if idx < len(pngs):
-                key = thumbnail_key(video_path, idx)
-                thumb_urls[idx] = upload_thumbnail(pngs[idx], key)
+            # Upload thumbnails while temp PNGs still exist
+            thumb_urls = {}
+            for match in matches:
+                idx = match["slide_index"]
+                if idx < len(pngs):
+                    key = thumbnail_key(video_path, idx)
+                    thumb_urls[idx] = upload_thumbnail(pngs[idx], key)
+
+        embedding_arg = _get_embedding_models()
+        ner_arg = _get_ner_pipeline()
 
     class_meta = _extract_class_meta(video_path)
-    embedding_models = _get_embedding_models()
-    ner_pipeline = _get_ner_pipeline()
     client = _get_qdrant_client()
 
     slide_text_map = {s["slide_index"]: s["text"] for s in slide_texts}
@@ -165,7 +207,7 @@ def ingest_pptx(
         }
         if thumb_urls.get(idx):
             payload["slide_thumb"] = thumb_urls[idx]
-        points.append(_build_point(text, embedding_models, ner_pipeline, payload))
+        points.append(_build_point(text, embedding_arg, ner_arg, payload))
 
     if points:
         upload_in_batches(client, collection_name, points)
