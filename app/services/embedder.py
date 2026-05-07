@@ -25,3 +25,29 @@ class QueryEmbedder:
             sparse_bm25=SparseVector(**sparse_vector.as_object()),
             late=late_vector,
         )
+
+
+class RunPodQueryEmbedder:
+    def __init__(self, settings):
+        from app.services.runpod_client import RunPodClient
+        self._client = RunPodClient(settings)
+        self._endpoint_id = settings.runpod_embed_endpoint_id
+
+    def embed_query(self, query: str) -> "QueryEmbeddings":
+        result = self._client.call(self._endpoint_id, {"text": query, "mode": "query"})
+        sparse = result["sparse"]
+        return QueryEmbeddings(
+            dense=result["dense"],
+            sparse_bm25=SparseVector(indices=sparse["indices"], values=sparse["values"]),
+            late=result["colbert"],
+        )
+
+
+def get_embedder_for_settings(settings) -> "QueryEmbedder | RunPodQueryEmbedder":
+    if settings.use_runpod:
+        return RunPodQueryEmbedder(settings)
+    return QueryEmbedder(
+        dense_model_name=settings.dense_model_name,
+        bm25_model_name=settings.bm25_model_name,
+        late_interaction_model_name=settings.late_interaction_model_name,
+    )

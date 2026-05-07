@@ -13,7 +13,7 @@ from app.models.api import (
     ExtractFramesRequest,
 )
 from app.config.settings import VIDEO_EXTENSIONS
-from app.services.clip_classifier import CLIPFrameClassifier, get_classifier
+from app.services.clip_classifier import get_classifier
 from app.services.frame_extractor import extract_frames_from_video
 
 router = APIRouter(tags=["frames"])
@@ -85,7 +85,20 @@ def extract_frames_batch(payload: ExtractFramesBatchRequest):
     }
 
 
-def _get_classifier() -> CLIPFrameClassifier:
+def _get_classifier_or_runpod():
+    from app.config.settings import Settings
+    settings = Settings()
+    if settings.use_runpod:
+        from app.services.clip_classifier import classify_directory_runpod
+        from app.services.runpod_client import RunPodClient
+        client = RunPodClient(settings)
+        endpoint_id = settings.runpod_clip_endpoint_id
+
+        class _RunPodClassifier:
+            def classify_directory(self, frames_dir: str) -> list:
+                return classify_directory_runpod(frames_dir, client, endpoint_id)
+
+        return _RunPodClassifier()
     return get_classifier()
 
 
@@ -94,7 +107,7 @@ def classify_frames_job(payload: ClassifyFramesRequest):
     if not os.path.isdir(payload.frames_dir):
         raise HTTPException(status_code=404, detail="Frames directory not found")
 
-    results = _get_classifier().classify_directory(payload.frames_dir)
+    results = _get_classifier_or_runpod().classify_directory(payload.frames_dir)
 
     out = os.path.join(payload.frames_dir, "classifications.json")
     with open(out, "w", encoding="utf-8") as f:
@@ -122,7 +135,7 @@ def classify_frames_batch(payload: ClassifyFramesBatchRequest):
     if not frames_dirs:
         raise HTTPException(status_code=404, detail="No *_frames directories found")
 
-    classifier = _get_classifier()
+    classifier = _get_classifier_or_runpod()
     results = []
     skipped = []
     failed = []

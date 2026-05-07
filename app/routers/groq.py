@@ -10,7 +10,7 @@ from functools import lru_cache
 
 from app.config.settings import Settings
 from app.models.api import OpenAIRequest, OpenAIResponse
-from app.services.embedder import QueryEmbedder
+from app.services.embedder import get_embedder_for_settings
 from app.services.retriever import QdrantRetriever
 from app.services.groq_service import GroqService
 
@@ -26,11 +26,7 @@ def get_settings():
 @lru_cache
 def get_embedder():
     settings = get_settings()
-    return QueryEmbedder(
-        dense_model_name=settings.dense_model_name,
-        bm25_model_name=settings.bm25_model_name,
-        late_interaction_model_name=settings.late_interaction_model_name,
-    )
+    return get_embedder_for_settings(settings)
 
 
 @lru_cache

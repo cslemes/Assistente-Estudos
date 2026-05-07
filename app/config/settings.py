@@ -129,4 +129,14 @@ Responda em português, de forma didática e completa."""
     langsmith_endpoint: str = "https://api.smith.langchain.com"
     langsmith_tracing: bool = False
 
+    # RunPod Serverless GPU Workers
+    use_runpod: bool = False
+    runpod_api_key: Optional[str] = None
+    runpod_timeout: int = 120
+    runpod_base_url: str = "https://api.runpod.ai/v2"
+    runpod_clip_endpoint_id: Optional[str] = None
+    runpod_embed_endpoint_id: Optional[str] = None
+    runpod_ner_endpoint_id: Optional[str] = None
+    runpod_ocr_endpoint_id: Optional[str] = None
+
     model_config = {"env_file": ".env", "extra": "allow"}

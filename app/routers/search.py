@@ -1,11 +1,10 @@
 import logging
-from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.config.settings import Settings
 from app.models.api import SearchRequest, SearchResponse
-from app.services.embedder import QueryEmbedder
+from app.services.embedder import get_embedder_for_settings
 from app.services.retriever import QdrantRetriever
 
 logger = logging.getLogger(__name__)
@@ -16,13 +15,8 @@ def get_settings():
     return Settings()
 
 
-@lru_cache(maxsize=1)
-def _get_embedder(dense: str, bm25: str, late: str) -> QueryEmbedder:
-    return QueryEmbedder(dense_model_name=dense, bm25_model_name=bm25, late_interaction_model_name=late)
-
-
 def get_embedder(settings: Settings = Depends(get_settings)):
-    return _get_embedder(settings.dense_model_name, settings.bm25_model_name, settings.late_interaction_model_name)
+    return get_embedder_for_settings(settings)
 
 
 def get_retriever(settings: Settings = Depends(get_settings)):
@@ -32,7 +26,7 @@ def get_retriever(settings: Settings = Depends(get_settings)):
 @router.post("", response_model=SearchResponse)
 async def search_documents(
     request: SearchRequest,
-    embedder: QueryEmbedder = Depends(get_embedder),
+    embedder=Depends(get_embedder),
     retriever: QdrantRetriever = Depends(get_retriever),
 ):
     try:

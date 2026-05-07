@@ -45,6 +45,25 @@ def ocr_frame(frame_path: str, ocr_reader) -> str:
     return " ".join(text for _, text, _ in results)
 
 
+def ocr_frame_via_runpod(frame_path: str, client, endpoint_id: str) -> str:
+    import base64
+    with open(frame_path, "rb") as f:
+        image_b64 = base64.b64encode(f.read()).decode()
+    result = client.call(endpoint_id, {"image_b64": image_b64})
+    return result.get("text", "")
+
+
+def _make_ocr_callable(settings):
+    """Return a Callable[[frame_path: str], str] regardless of use_runpod."""
+    if settings.use_runpod:
+        from app.services.runpod_client import RunPodClient
+        client = RunPodClient(settings)
+        endpoint_id = settings.runpod_ocr_endpoint_id
+        return lambda frame_path: ocr_frame_via_runpod(frame_path, client, endpoint_id)
+    reader = _get_ocr_reader()
+    return lambda frame_path: ocr_frame(frame_path, reader)
+
+
 def _token_overlap(a: str, b: str) -> float:
     tokens_a = set(a.lower().split())
     tokens_b = set(b.lower().split())
@@ -56,12 +75,12 @@ def _token_overlap(a: str, b: str) -> float:
 def match_cells_to_frames(
     cells: list[dict],
     notebook_frames: list[dict],
-    ocr_reader,
+    ocr_fn,
     interval: int = 5,
     min_overlap: float = 0.1,
 ) -> list[dict]:
     frame_texts = [
-        (frame, ocr_frame(frame["frame_path"], ocr_reader))
+        (frame, ocr_fn(frame["frame_path"]))
         for frame in notebook_frames
     ]
 
@@ -94,6 +113,7 @@ def ingest_notebook(
     interval: int = 5,
     collection_name: str = None,
 ) -> dict:
+    from app.config.settings import Settings
     from app.services.ingestion import (
         _build_point,
         _build_deep_link,
@@ -106,6 +126,7 @@ def ingest_notebook(
 
     from app.database import get_video_url_by_video_path
 
+    settings = Settings()
     collection_name = collection_name or os.getenv("COLLECTION_NAME", "aulas")
 
     cells = extract_notebook_cells(ipynb_path)
@@ -114,15 +135,19 @@ def ingest_notebook(
     if not notebook_frames:
         return {"ingested": 0, "message": "No notebook frames found in classifications"}
 
-    ocr_reader = _get_ocr_reader()
-    matches = match_cells_to_frames(cells, notebook_frames, ocr_reader, interval=interval)
+    ocr_fn = _make_ocr_callable(settings)
+    matches = match_cells_to_frames(cells, notebook_frames, ocr_fn, interval=interval)
 
     if not matches:
         return {"ingested": 0, "message": "No cells matched to frames"}
 
     class_meta = _extract_class_meta(video_path)
-    embedding_models = _get_embedding_models()
-    ner_pipeline = _get_ner_pipeline()
+    if settings.use_runpod:
+        embedding_arg = settings
+        ner_arg = settings
+    else:
+        embedding_arg = _get_embedding_models()
+        ner_arg = _get_ner_pipeline()
     client = _get_qdrant_client()
     video_url = get_video_url_by_video_path(video_path)
 
@@ -139,7 +164,7 @@ def ingest_notebook(
             "start_time": match["start_time"],
             **class_meta,
         }
-        points.append(_build_point(text, embedding_models, ner_pipeline, payload))
+        points.append(_build_point(text, embedding_arg, ner_arg, payload))
 
     upload_in_batches(client, collection_name, points)
     return {"ingested": len(points)}
