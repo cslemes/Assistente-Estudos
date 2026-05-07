@@ -11,8 +11,8 @@ from app.services.llm_client import get_chat_client
 
 logger = logging.getLogger(__name__)
 
-MAX_SAMPLE_CHUNKS = 40
-CHUNK_MAX_CHARS = 800
+MAX_SAMPLE_CHUNKS = 20
+CHUNK_MAX_CHARS = 300
 
 FLASHCARD_SYSTEM_PROMPT = """\
 Você é um criador especializado de flashcards acadêmicos para o curso de \
@@ -74,7 +74,12 @@ class FlashcardService:
             client_params["api_key"] = settings.qdrant_api_key
         self.qdrant = QdrantClient(**client_params)
         self.collection_name = settings.collection_name
-        self.llm, self.model, self._temperature, self._max_tokens = get_chat_client(settings)
+        self.llm, _, self._temperature, self._max_tokens = get_chat_client(settings)
+        self.model = (
+            settings.flashcard_groq_model
+            if settings.llm_provider != "openai"
+            else settings.flashcard_openai_model
+        )
 
     def _build_filter(
         self,
@@ -188,7 +193,7 @@ class FlashcardService:
         return Filter(must=conditions) if conditions else None
 
     def _sample_chunks(self, docs: list[Document], num_cards: int) -> list[Document]:
-        target = min(len(docs), max(num_cards * 2, 10))
+        target = min(len(docs), MAX_SAMPLE_CHUNKS, max(num_cards, 8))
         return random.sample(docs, target) if len(docs) > target else docs
 
     def _build_context(self, docs: list[Document]) -> str:
@@ -219,16 +224,20 @@ class FlashcardService:
             ],
             temperature=0.4,
             max_tokens=self._max_tokens,
-            response_format={"type": "json_object"},
         )
         raw = response.choices[0].message.content or "{}"
         return self._parse_llm_output(raw)
 
     def _parse_llm_output(self, raw: str) -> list[dict]:
+        # Strip markdown code fences if present
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.splitlines()
+            cleaned = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
         try:
-            data = json.loads(raw)
+            data = json.loads(cleaned)
         except json.JSONDecodeError as e:
-            logger.error("LLM returned invalid JSON: %s", e)
+            logger.error("LLM returned invalid JSON: %s\nRaw: %s", e, raw[:500])
             return []
 
         if isinstance(data, list):

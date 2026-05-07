@@ -1,6 +1,13 @@
+import logging
 import os
 
 from dotenv import load_dotenv
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,6 +23,7 @@ from app.routers.search import router as search_router
 from app.routers.summarize import router as summarize_router
 from app.routers.sync import router as sync_router
 from app.routers.transcriptions import router as transcriptions_router
+from app.routers.visual import router as visual_router
 from app.routers.youtube import router as youtube_router
 
 load_dotenv()
@@ -40,6 +48,7 @@ app.include_router(groq_router)
 app.include_router(flashcards_router)
 app.include_router(summarize_router, prefix="/summarize")
 app.include_router(highlights_router)
+app.include_router(visual_router)
 app.include_router(transcriptions_router, prefix="/transcriptions")
 
 

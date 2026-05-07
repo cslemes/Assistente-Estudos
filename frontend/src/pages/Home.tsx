@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchLessons } from '../api';
 import type { Lesson } from '../types';
 import TopBar from '../components/TopBar';
+import AiChat from '../components/AiChat';
 
 function groupBy<T>(items: T[], key: (item: T) => string): Record<string, T[]> {
   return items.reduce<Record<string, T[]>>((acc, item) => {
@@ -53,11 +54,14 @@ function CourseCard({ name, lessons, onClick }: { name: string; lessons: Lesson[
   );
 }
 
+type HomeTab = 'courses' | 'chat';
+
 export default function Home() {
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<HomeTab>('courses');
 
   useEffect(() => {
     fetchLessons()
@@ -74,35 +78,61 @@ export default function Home() {
       <TopBar completedCount={summarizedCount} totalCount={lessons.length} />
 
       <main className="pt-13 px-6 pb-12 max-w-5xl mx-auto">
-        {loading && <div className="mt-16"><LoadingSpinner /></div>}
+        <div className="mt-6 flex gap-1 border-b border-slate-700">
+          {(['courses', 'chat'] as HomeTab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                activeTab === tab
+                  ? 'border-sky-400 text-sky-400'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {tab === 'courses' ? 'Cursos' : 'Chat'}
+            </button>
+          ))}
+        </div>
 
-        {error && (
-          <div className="mt-8 p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">{error}</div>
+        {activeTab === 'courses' && (
+          <>
+            {loading && <div className="mt-16"><LoadingSpinner /></div>}
+
+            {error && (
+              <div className="mt-8 p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">{error}</div>
+            )}
+
+            {!loading && !error && (
+              <>
+                <div className="mt-8 mb-6">
+                  <h1 className="text-2xl font-bold text-slate-100">Meus Cursos</h1>
+                  <p className="mt-1 text-slate-400 text-sm">
+                    {Object.keys(byCourse).length} curso{Object.keys(byCourse).length !== 1 ? 's' : ''} · {summarizedCount} de {lessons.length} aulas resumidas
+                  </p>
+                </div>
+                {lessons.length === 0 && <p className="text-slate-400 text-sm">Nenhum curso encontrado.</p>}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(byCourse).sort(([a], [b]) => a.localeCompare(b)).map(([name, cls]) => {
+                    const id = firstLessonId(cls);
+                    return (
+                      <CourseCard
+                        key={name}
+                        name={name}
+                        lessons={cls}
+                        onClick={() => id != null && navigate(`/lesson/${id}`)}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </>
         )}
 
-        {!loading && !error && (
-          <>
-            <div className="mt-8 mb-6">
-              <h1 className="text-2xl font-bold text-slate-100">Meus Cursos</h1>
-              <p className="mt-1 text-slate-400 text-sm">
-                {Object.keys(byCourse).length} curso{Object.keys(byCourse).length !== 1 ? 's' : ''} · {summarizedCount} de {lessons.length} aulas resumidas
-              </p>
-            </div>
-            {lessons.length === 0 && <p className="text-slate-400 text-sm">Nenhum curso encontrado.</p>}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(byCourse).sort(([a], [b]) => a.localeCompare(b)).map(([name, cls]) => {
-                const id = firstLessonId(cls);
-                return (
-                  <CourseCard
-                    key={name}
-                    name={name}
-                    lessons={cls}
-                    onClick={() => id != null && navigate(`/lesson/${id}`)}
-                  />
-                );
-              })}
-            </div>
-          </>
+        {activeTab === 'chat' && (
+          <div className="mt-6">
+            <AiChat />
+          </div>
         )}
       </main>
     </div>

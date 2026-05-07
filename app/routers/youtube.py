@@ -2,8 +2,8 @@ import os
 
 from fastapi import APIRouter, HTTPException
 
-from app.models.api import UploadYoutubeRequest
 from app.config.settings import VIDEO_EXTENSIONS
+from app.models.api import UploadYoutubeRequest
 from app.services.google_auth import get_google_services
 from app.services.youtube import upload_to_youtube
 
@@ -44,7 +44,7 @@ def upload_youtube_job(payload: UploadYoutubeRequest):
 
 
 @router.post("/upload/batch")
-def upload_batch(limit: int = 6):
+def upload_batch(limit: int = 15):
     _, youtube = get_google_services()
     pending = _find_pending_videos(DOWNLOADS_DIR)[:limit]
 

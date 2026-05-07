@@ -1,5 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import type { KeyboardEvent } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useAskStream } from '../hooks/useAskStream';
 import SourceChip from './SourceChip';
 
@@ -99,17 +101,33 @@ export default function AiChat({ course, topic }: AiChatProps) {
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <div className="text-slate-200 text-sm leading-relaxed">
-                    {msg.content}
+                  <div className="text-slate-200 text-sm leading-relaxed prose prose-sm prose-invert max-w-none
+                    prose-p:my-1 prose-headings:text-slate-100 prose-headings:font-semibold
+                    prose-h1:text-base prose-h2:text-sm prose-h3:text-sm
+                    prose-strong:text-slate-100 prose-em:text-slate-300
+                    prose-code:text-sky-300 prose-code:bg-slate-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:before:content-none prose-code:after:content-none
+                    prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-700 prose-pre:rounded-lg prose-pre:text-xs
+                    prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+                    prose-blockquote:border-sky-500 prose-blockquote:text-slate-400
+                    prose-a:text-sky-400 prose-a:no-underline hover:prose-a:underline
+                    prose-table:text-xs prose-th:text-slate-300 prose-td:text-slate-400">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.content}
+                    </ReactMarkdown>
                     {isLast && isStreaming && <StreamingDots />}
                   </div>
 
-                  {/* Source chips */}
+                  {/* Source chips — deduplicated by url+timestamp */}
                   {msg.sources && msg.sources.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
-                      {msg.sources.map((doc, docIdx) => (
-                        <SourceChip key={docIdx} document={doc} />
-                      ))}
+                      {msg.sources
+                        .filter((doc, i, arr) => {
+                          const key = `${doc.metadata.video_url}|${doc.metadata.start_time}`;
+                          return arr.findIndex(d => `${d.metadata.video_url}|${d.metadata.start_time}` === key) === i;
+                        })
+                        .map((doc, docIdx) => (
+                          <SourceChip key={docIdx} document={doc} />
+                        ))}
                     </div>
                   )}
                 </div>

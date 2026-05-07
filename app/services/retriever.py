@@ -4,7 +4,7 @@ from typing import List
 from fastapi import HTTPException
 from qdrant_client import QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+from qdrant_client.http.models import Filter, FieldCondition, MatchValue, MatchAny
 
 from app.config.settings import Settings
 from app.models.embeddings import Document, QueryEmbeddings
@@ -69,3 +69,48 @@ class QdrantRetriever:
         except Exception as e:
             logger.error("Unexpected error during search: %s", e)
             raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+    def scroll_visual(
+        self,
+        course: str,
+        topic: str,
+        aula_number: int,
+    ) -> list[dict]:
+        """Return all non-transcript chunks for a specific lesson, sorted by start_time."""
+        conditions = [
+            FieldCondition(key="course", match=MatchValue(value=course)),
+            FieldCondition(key="topic", match=MatchValue(value=topic)),
+            FieldCondition(key="aula_number", match=MatchValue(value=aula_number)),
+            FieldCondition(key="source_type", match=MatchAny(any=["slide", "notebook", "whiteboard"])),
+        ]
+        query_filter = Filter(must=conditions)
+
+        results = []
+        offset = None
+        try:
+            while True:
+                points, next_offset = self.client.scroll(
+                    collection_name=self.collection_name,
+                    scroll_filter=query_filter,
+                    limit=100,
+                    offset=offset,
+                    with_payload=True,
+                    with_vectors=False,
+                )
+                for p in points:
+                    payload = p.payload or {}
+                    results.append({
+                        "source_type": payload.get("source_type"),
+                        "text": payload.get("text", ""),
+                        "start_time": payload.get("start_time"),
+                        "video_url": payload.get("video_url"),
+                        "slide_thumb": payload.get("slide_thumb"),
+                    })
+                if next_offset is None:
+                    break
+                offset = next_offset
+        except Exception as e:
+            logger.error("Qdrant scroll_visual failed: %s", e)
+            raise HTTPException(status_code=503, detail=f"Qdrant error: {e}")
+
+        return sorted(results, key=lambda x: (x["start_time"] is None, x["start_time"] or 0))

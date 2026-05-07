@@ -146,6 +146,7 @@ def step_slides(video_path: Path, frames_dir: Path, pptx_files: list[Path], inte
             })
             n = result.get("ingested", 0)
             total += n
+            frames_dir.mkdir(parents=True, exist_ok=True)
             marker.touch()
             print(f"    slides   → {n} chunks ({pptx.name})", flush=True)
         except RuntimeError as exc:
@@ -186,6 +187,7 @@ def step_notebooks(video_path: Path, frames_dir: Path, ipynb_files: list[Path], 
             })
             n = result.get("ingested", 0)
             total += n
+            frames_dir.mkdir(parents=True, exist_ok=True)
             marker.touch()
             print(f"    notebooks → {n} chunks ({ipynb.name})", flush=True)
         except RuntimeError as exc:
@@ -219,6 +221,7 @@ def step_whiteboards(video_path: Path, frames_dir: Path, interval: int, dry_run:
             "interval": interval,
         })
         n = result.get("ingested", 0)
+        frames_dir.mkdir(parents=True, exist_ok=True)
         marker.touch()
         print(f"    whiteboards → {n} chunks", flush=True)
         return n

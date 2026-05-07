@@ -122,5 +122,5 @@ async def ask_groq_stream(
         )
 
     except Exception as e:
-        logger.error("Groq stream setup failed", extra={"error": str(e), "query": request.query})
+        logger.exception("Groq stream setup failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to start stream: {str(e)}")

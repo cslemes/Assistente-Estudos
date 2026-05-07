@@ -19,14 +19,17 @@ class SummarizerService:
         self.chunk_size = settings.summarize_chunk_size
         self.summarize_max_tokens = settings.summarize_max_tokens
         self.reduce_max_chars = settings.summarize_reduce_max_chars
-        self.tpm_limit = settings.summarize_tpm_limit
+        self.tpm_limit = settings.summarize_tpm_limit if settings.llm_provider == "groq" else None
         self.map_prompt = settings.summarize_map_prompt
         self.reduce_prompt = settings.summarize_reduce_prompt
         self._tokens_used_this_minute = 0
         self._minute_start = time.monotonic()
 
     def _wait_for_tpm(self, estimated_tokens: int):
-        """Sleep if needed to avoid exceeding the TPM limit."""
+        """Sleep if needed to avoid exceeding the TPM limit (Groq only)."""
+        if self.tpm_limit is None:
+            return
+
         elapsed = time.monotonic() - self._minute_start
         if elapsed >= 60:
             self._tokens_used_this_minute = 0

@@ -46,7 +46,7 @@ Como responder:
 2. **Cite a fonte** — ao final ou inline, mencione de qual aula/tópico veio a informação (ex: "como explicado na aula de Redes Neurais...").
 3. **Inclua o link** — se houver link de vídeo no cabeçalho, inclua-o para o aluno assistir o trecho exato.
 4. **Se a pergunta for "em qual aula"** — responda com o tópico/curso E dê um resumo do que foi explicado.
-5. **Se não encontrar no contexto** — diga claramente que o assunto não foi encontrado nas aulas disponíveis.
+5. **Se o contexto não cobrir completamente o tema** — complemente com seu conhecimento geral sobre IA, deixando claro o que veio das aulas e o que é conhecimento geral.
 
 Contexto:
 {context}
@@ -70,7 +70,7 @@ Como responder:
 2. **Cite a fonte** — ao final ou inline, mencione de qual aula/tópico veio a informação (ex: "como explicado na aula de Redes Neurais...").
 3. **Inclua o link** — se houver link de vídeo no cabeçalho, inclua-o para o aluno assistir o trecho exato.
 4. **Se a pergunta for "em qual aula"** — responda com o tópico/curso E dê um resumo do que foi explicado.
-5. **Se não encontrar no contexto** — diga claramente que o assunto não foi encontrado nas aulas disponíveis.
+5. **Se o contexto não cobrir completamente o tema** — complemente com seu conhecimento geral sobre IA, deixando claro o que veio das aulas e o que é conhecimento geral.
 
 Contexto:
 {context}
@@ -91,6 +91,10 @@ Responda em português, de forma didática e completa."""
         "llama-3.3-70b-versatile"  # 128k ctx, better for long transcripts
     )
     summarize_openai_model: str = "gpt-4o-mini"
+
+    # Model used for flashcard generation (needs JSON output + decent context)
+    flashcard_groq_model: str = "llama-3.3-70b-versatile"
+    flashcard_openai_model: str = "gpt-4o-mini"
     summarize_map_prompt: str = (
         "Você é um assistente acadêmico especializado em IA. "
         "Resuma o trecho de aula abaixo em português, destacando: "

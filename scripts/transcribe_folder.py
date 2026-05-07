@@ -77,6 +77,11 @@ def main():
     parser.add_argument(
         "--dry-run", action="store_true", help="List files without processing"
     )
+    parser.add_argument(
+        "--uploaded-only",
+        action="store_true",
+        help="Only transcribe videos that have a .uploaded marker (already on YouTube)",
+    )
     args = parser.parse_args()
 
     folder = args.folder.resolve()
@@ -87,6 +92,12 @@ def main():
     if not videos:
         print(f"No video files found in {folder}")
         return
+
+    if args.uploaded_only:
+        videos = [v for v in videos if (v.parent / (v.name + ".uploaded")).exists()]
+        if not videos:
+            print("No uploaded videos found (no .uploaded markers).")
+            return
 
     print(f"Found {len(videos)} video(s) in {folder}\n")
 

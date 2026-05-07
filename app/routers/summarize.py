@@ -56,23 +56,6 @@ def list_transcriptions():
     return result
 
 
-@router.post("/{transcription_id}", response_model=SummarizeResponse)
-def summarize_one(transcription_id: int, settings: Settings = Depends(get_settings)):
-    row = get_transcription(transcription_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="Transcription not found")
-
-    summary, chunks = SummarizerService(settings).summarize(row["text"])
-    set_summary(transcription_id, summary)
-
-    return SummarizeResponse(
-        id=row["id"],
-        file_path=row["file_path"],
-        summary=summary,
-        chunks_processed=chunks,
-    )
-
-
 @router.post("/all", response_model=list[SummarizeResponse])
 def summarize_all(settings: Settings = Depends(get_settings)):
     rows = get_unsummarized()
@@ -98,3 +81,20 @@ def summarize_all(settings: Settings = Depends(get_settings)):
             logger.error("Failed to summarize transcription %d: %s", row["id"], exc)
 
     return results
+
+
+@router.post("/{transcription_id:int}", response_model=SummarizeResponse)
+def summarize_one(transcription_id: int, settings: Settings = Depends(get_settings)):
+    row = get_transcription(transcription_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="Transcription not found")
+
+    summary, chunks = SummarizerService(settings).summarize(row["text"])
+    set_summary(transcription_id, summary)
+
+    return SummarizeResponse(
+        id=row["id"],
+        file_path=row["file_path"],
+        summary=summary,
+        chunks_processed=chunks,
+    )

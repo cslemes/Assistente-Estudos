@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchLessons } from '../api';
+import { fetchLessons, generateSummary } from '../api';
 import AiChat from '../components/AiChat';
 import CourseSidebar from '../components/CourseSidebar';
+import FlashcardsTab from '../components/FlashcardsTab';
 import HighlightsTab from '../components/HighlightsTab';
+import VisualTab from '../components/VisualTab';
 import TopBar from '../components/TopBar';
 import TranscriptTab from '../components/TranscriptTab';
 import VideoPlayer from '../components/VideoPlayer';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { Lesson } from '../types';
 
-type ActiveTab = 'transcript' | 'highlights';
+type ActiveTab = 'transcript' | 'highlights' | 'visual' | 'flashcards' | 'resumo';
 
 function LoadingSpinner() {
   return (
@@ -29,16 +33,22 @@ export default function Player() {
   const [loading, setLoading] = useState(true);
   const [seekTo, setSeekTo] = useState<number | undefined>(undefined);
   const [activeTab, setActiveTab] = useState<ActiveTab>('transcript');
+  const [summary, setSummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLessons().then(setLessons).catch(console.error).finally(() => setLoading(false));
   }, []);
 
-  // Reset per-lesson state when lesson id changes
+  // Reset per-lesson state and load summary when lesson changes
   useEffect(() => {
     setSeekTo(undefined);
     setActiveTab('transcript');
-  }, [currentId]);
+    setSummaryError(null);
+    const lesson = lessons.find((l) => l.id === currentId);
+    setSummary(lesson?.summary ?? null);
+  }, [currentId, lessons]);
 
   if (loading) return <LoadingSpinner />;
 
@@ -64,7 +74,6 @@ export default function Player() {
         topicName={currentLesson.topic ?? undefined}
         completedCount={completedCount}
         totalCount={sidebarLessons.length}
-        lessonId={currentId}
       />
 
       {/* 3-column layout below TopBar */}
@@ -126,15 +135,89 @@ export default function Player() {
               >
                 Highlights
               </button>
+              <button
+                onClick={() => setActiveTab('visual')}
+                className={[
+                  'px-4 py-2 text-sm font-medium transition-colors',
+                  activeTab === 'visual'
+                    ? 'border-b-2 border-sky-400 text-sky-400'
+                    : 'text-slate-400 hover:text-slate-200',
+                ].join(' ')}
+              >
+                Visual
+              </button>
+              <button
+                onClick={() => setActiveTab('flashcards')}
+                className={[
+                  'px-4 py-2 text-sm font-medium transition-colors',
+                  activeTab === 'flashcards'
+                    ? 'border-b-2 border-sky-400 text-sky-400'
+                    : 'text-slate-400 hover:text-slate-200',
+                ].join(' ')}
+              >
+                Flashcards
+              </button>
+              <button
+                onClick={() => setActiveTab('resumo')}
+                className={[
+                  'px-4 py-2 text-sm font-medium transition-colors',
+                  activeTab === 'resumo'
+                    ? 'border-b-2 border-sky-400 text-sky-400'
+                    : 'text-slate-400 hover:text-slate-200',
+                ].join(' ')}
+              >
+                Resumo
+              </button>
             </div>
           </div>
 
           {/* Tab content */}
           <div className="flex-1 px-4 pb-4">
-            {activeTab === 'transcript' ? (
+            {activeTab === 'transcript' && (
               <TranscriptTab lessonId={currentId} onSeek={setSeekTo} />
-            ) : (
+            )}
+            {activeTab === 'highlights' && (
               <HighlightsTab lessonId={currentId} onSeek={setSeekTo} />
+            )}
+            {activeTab === 'visual' && (
+              <VisualTab lessonId={currentId} onSeek={setSeekTo} />
+            )}
+            {activeTab === 'flashcards' && (
+              <FlashcardsTab lesson={currentLesson} />
+            )}
+            {activeTab === 'resumo' && (
+              <div className="py-4">
+                {summary ? (
+                  <div className="prose prose-invert prose-sm max-w-none prose-headings:text-slate-100 prose-p:text-slate-300 prose-strong:text-slate-100 prose-li:text-slate-300">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-start gap-4">
+                    <p className="text-slate-400 text-sm">Nenhum resumo disponível para esta aula.</p>
+                    {summaryError && (
+                      <p className="text-red-400 text-sm">{summaryError}</p>
+                    )}
+                    <button
+                      disabled={summaryLoading}
+                      onClick={async () => {
+                        setSummaryLoading(true);
+                        setSummaryError(null);
+                        try {
+                          const res = await generateSummary(currentId);
+                          setSummary(res.summary);
+                        } catch (e) {
+                          setSummaryError(e instanceof Error ? e.message : 'Erro ao gerar resumo');
+                        } finally {
+                          setSummaryLoading(false);
+                        }
+                      }}
+                      className="px-4 py-2 bg-sky-500 hover:bg-sky-400 disabled:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors"
+                    >
+                      {summaryLoading ? 'Gerando…' : 'Gerar Resumo'}
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

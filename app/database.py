@@ -122,6 +122,17 @@ def get_highlights(transcription_id: int) -> list[dict] | None:
     return json.loads(row["highlights_json"])
 
 
+def set_video_url_by_stem(stem: str, video_url: str) -> int:
+    """Update video_url for all transcriptions whose audio filename stem matches. Returns rows updated."""
+    with get_connection() as conn:
+        cur = conn.execute(
+            "UPDATE transcriptions SET video_url = ? WHERE LOWER(REPLACE(REPLACE(file_path, '\\', '/'), '.mp3', '')) LIKE ?",
+            (video_url, f"%/{stem.lower()}"),
+        )
+        conn.commit()
+        return cur.rowcount
+
+
 def get_video_url_by_video_path(video_path: str) -> str | None:
     """Return the YouTube URL for a video by looking up its derived audio path."""
     from pathlib import Path
