@@ -1,5 +1,46 @@
+# Local deployment — two modes:
+#
+#   Real RunPod (no local GPU):
+#     Set USE_RUNPOD=true + RUNPOD_API_KEY + endpoint IDs in .env
+#     docker compose up
+#
+#   Local GPU mock (nvidia-container-toolkit required):
+#     docker compose --profile gpu up
+
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8080"
+    env_file: .env
+    environment:
+      USE_RUNPOD: ${USE_RUNPOD:-false}
+      RUNPOD_BASE_URL: ${RUNPOD_BASE_URL:-https://api.runpod.ai/v2}
+      RUNPOD_CLIP_ENDPOINT_ID: ${RUNPOD_CLIP_ENDPOINT_ID:-}
+      RUNPOD_EMBED_ENDPOINT_ID: ${RUNPOD_EMBED_ENDPOINT_ID:-}
+      RUNPOD_NER_ENDPOINT_ID: ${RUNPOD_NER_ENDPOINT_ID:-}
+      RUNPOD_OCR_ENDPOINT_ID: ${RUNPOD_OCR_ENDPOINT_ID:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
   gpu-workers:
+    profiles: [gpu]
     build:
       context: runpod_workers
       dockerfile: Dockerfile.local
@@ -12,29 +53,3 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8080"
-    depends_on:
-      - gpu-workers
-    env_file: .env
-    environment:
-      USE_RUNPOD: "true"
-      RUNPOD_BASE_URL: "http://gpu-workers:8001/v2"
-      RUNPOD_CLIP_ENDPOINT_ID: "clip"
-      RUNPOD_EMBED_ENDPOINT_ID: "embed"
-      RUNPOD_NER_ENDPOINT_ID: "ner"
-      RUNPOD_OCR_ENDPOINT_ID: "ocr"
-
-  frontend:
-    build:
-      context: frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api

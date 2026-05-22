@@ -160,6 +160,7 @@ def test_render_slides_to_png_returns_none_on_failure(tmp_path):
 
 def test_match_slides_to_frames_returns_best_match_per_slide(tmp_path):
     import torch
+    from unittest.mock import patch
 
     slide_pngs = [str(tmp_path / "slide_0.png")]
     Path(slide_pngs[0]).touch()
@@ -171,33 +172,29 @@ def test_match_slides_to_frames_returns_best_match_per_slide(tmp_path):
     for f in slide_frames:
         Path(f["frame_path"]).touch()
 
-    # Mock classifier: first frame has higher similarity
     mock_classifier = MagicMock()
-    high_sim = torch.tensor([[1.0, 0.0]])   # normalized: points in same direction as slide
-    low_sim  = torch.tensor([[0.0, 1.0]])
-    slide_emb = torch.tensor([[1.0, 0.0]])
+    mock_classifier.device = "cpu"
+    mock_classifier._torch = torch
 
-    def fake_features(pixel_values=None, **_):
-        class _Emb:
-            def __init__(self, t): self._t = t
-            def __truediv__(self, other): return self
-            def norm(self, **kw): return torch.tensor(1.0)
-        return _Emb(slide_emb)
+    # Frames are embedded first, then the slide.
+    # frame_0010 → [1,0], frame_0020 → [0,1], slide → [1,0]
+    # cosine_sim(slide, frame_0010) = 1.0 > cosine_sim(slide, frame_0020) = 0.0
+    frame0010_emb = torch.tensor([[1.0, 0.0]])
+    frame0020_emb = torch.tensor([[0.0, 1.0]])
+    slide_emb     = torch.tensor([[1.0, 0.0]])
 
-    mock_classifier.processor = MagicMock(return_value={"pixel_values": torch.zeros(1, 3, 224, 224)})
-    # Return slide_emb for slide, high_sim for frame 1, low_sim for frame 2
-    embs = [slide_emb, high_sim, low_sim]
+    embs = [frame0010_emb, frame0020_emb, slide_emb]
     call_count = [0]
 
-    def fake_get_image_features(**kwargs):
+    def fake_visual_projection(pooler_output):
         emb = embs[call_count[0] % len(embs)]
         call_count[0] += 1
-        norm = emb.norm(dim=-1, keepdim=True)
-        return emb / norm if norm > 0 else emb
+        return emb
 
-    mock_classifier.model.get_image_features = fake_get_image_features
+    mock_classifier.model.visual_projection.side_effect = fake_visual_projection
 
-    result = match_slides_to_frames(slide_pngs, slide_frames, mock_classifier, interval=5)
+    with patch("PIL.Image.open"):
+        result = match_slides_to_frames(slide_pngs, slide_frames, mock_classifier, interval=5)
 
     assert len(result) == 1
     assert result[0]["slide_index"] == 0

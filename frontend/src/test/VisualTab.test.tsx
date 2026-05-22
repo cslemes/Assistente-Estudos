@@ -3,8 +3,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import VisualTab from '../components/VisualTab';
 import * as api from '../api';
+import type { VisualChunk } from '../types';
 
-const chunks = [
+const chunks: VisualChunk[] = [
   { source_type: 'slide',      text: 'Intro to CNN',     start_time: 60,  video_url: 'https://youtu.be/abc?t=60',  slide_thumb: null },
   { source_type: 'notebook',   text: 'model.fit(X, y)',  start_time: 120, video_url: 'https://youtu.be/abc?t=120', slide_thumb: null },
   { source_type: 'whiteboard', text: 'Loss = CE + L2',   start_time: 180, video_url: 'https://youtu.be/abc?t=180', slide_thumb: null },

@@ -5,6 +5,7 @@ export interface Lesson {
   video_url: string | null;
   status: string;
   summary: string | null;
+  summarized: boolean;
   created_at: string;
   course: string | null;
   topic: string | null;

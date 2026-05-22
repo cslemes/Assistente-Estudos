@@ -172,14 +172,10 @@ def test_match_cells_to_frames_returns_best_match_per_cell(tmp_path):
         {"frame": "frame_0005.jpg", "frame_path": "/f/frame_0005.jpg", "classification": "notebook"},
         {"frame": "frame_0010.jpg", "frame_path": "/f/frame_0010.jpg", "classification": "notebook"},
     ]
-    mock_reader = MagicMock()
-    # frame 0005 has text that overlaps with cell, frame 0010 does not
-    mock_reader.readtext.side_effect = [
-        [(None, "import numpy as np", 0.99)],  # frame_0005
-        [(None, "something else entirely", 0.99)],  # frame_0010
-    ]
+    # ocr_fn is a plain callable: frame_path -> text
+    mock_ocr_fn = MagicMock(side_effect=["import numpy as np", "something else entirely"])
 
-    result = match_cells_to_frames(cells, frames, mock_reader, interval=5)
+    result = match_cells_to_frames(cells, frames, mock_ocr_fn, interval=5)
 
     assert len(result) == 1
     assert result[0]["cell_index"] == 0
@@ -193,10 +189,9 @@ def test_match_cells_to_frames_skips_cells_with_no_overlap(tmp_path):
     frames = [
         {"frame": "frame_0001.jpg", "frame_path": "/f/frame_0001.jpg", "classification": "notebook"},
     ]
-    mock_reader = MagicMock()
-    mock_reader.readtext.return_value = [(None, "completely different text", 0.99)]
+    mock_ocr_fn = MagicMock(return_value="completely different text")
 
-    result = match_cells_to_frames(cells, frames, mock_reader, interval=5)
+    result = match_cells_to_frames(cells, frames, mock_ocr_fn, interval=5)
 
     assert result == []
 
@@ -206,9 +201,8 @@ def test_match_cells_to_frames_computes_start_time_from_frame_name():
     frames = [
         {"frame": "frame_0011.jpg", "frame_path": "/f/frame_0011.jpg", "classification": "notebook"},
     ]
-    mock_reader = MagicMock()
-    mock_reader.readtext.return_value = [(None, "x = 1", 0.99)]
+    mock_ocr_fn = MagicMock(return_value="x = 1")
 
-    result = match_cells_to_frames(cells, frames, mock_reader, interval=5)
+    result = match_cells_to_frames(cells, frames, mock_ocr_fn, interval=5)
 
     assert result[0]["start_time"] == 50  # (11 - 1) * 5

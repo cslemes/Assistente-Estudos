@@ -1,6 +1,9 @@
 # Git worktrees
 .worktrees/
 .superpowers/
+.claude
+.pytest_cache/
+.worktrees/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

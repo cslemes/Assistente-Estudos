@@ -61,13 +61,10 @@ def test_frames_to_chunks_returns_one_chunk_per_frame_with_text(tmp_path):
         {"frame": "frame_0005.jpg", "frame_path": "/f/frame_0005.jpg", "classification": "whiteboard"},
         {"frame": "frame_0010.jpg", "frame_path": "/f/frame_0010.jpg", "classification": "whiteboard"},
     ]
-    mock_reader = MagicMock()
-    mock_reader.readtext.side_effect = [
-        [(None, "derivada parcial", 0.99)],
-        [(None, "gradiente descendente", 0.95)],
-    ]
+    # ocr_fn is a plain callable: frame_path -> text
+    mock_ocr_fn = MagicMock(side_effect=["derivada parcial", "gradiente descendente"])
 
-    result = frames_to_chunks(frames, mock_reader, interval=5)
+    result = frames_to_chunks(frames, mock_ocr_fn, interval=5)
 
     assert len(result) == 2
     assert result[0]["text"] == "derivada parcial"
@@ -81,13 +78,9 @@ def test_frames_to_chunks_skips_frames_with_no_text(tmp_path):
         {"frame": "frame_0001.jpg", "frame_path": "/f/frame_0001.jpg", "classification": "whiteboard"},
         {"frame": "frame_0002.jpg", "frame_path": "/f/frame_0002.jpg", "classification": "whiteboard"},
     ]
-    mock_reader = MagicMock()
-    mock_reader.readtext.side_effect = [
-        [],                                   # frame_0001: no text
-        [(None, "backpropagation", 0.99)],    # frame_0002: has text
-    ]
+    mock_ocr_fn = MagicMock(side_effect=["", "backpropagation"])
 
-    result = frames_to_chunks(frames, mock_reader, interval=5)
+    result = frames_to_chunks(frames, mock_ocr_fn, interval=5)
 
     assert len(result) == 1
     assert result[0]["text"] == "backpropagation"
@@ -97,10 +90,9 @@ def test_frames_to_chunks_computes_correct_start_time():
     frames = [
         {"frame": "frame_0021.jpg", "frame_path": "/f/frame_0021.jpg", "classification": "whiteboard"},
     ]
-    mock_reader = MagicMock()
-    mock_reader.readtext.return_value = [(None, "some text", 0.99)]
+    mock_ocr_fn = MagicMock(return_value="some text")
 
-    result = frames_to_chunks(frames, mock_reader, interval=10)
+    result = frames_to_chunks(frames, mock_ocr_fn, interval=10)
 
     assert result[0]["start_time"] == 200   # (21-1)*10
 
@@ -109,9 +101,8 @@ def test_frames_to_chunks_returns_frame_path_in_result():
     frames = [
         {"frame": "frame_0001.jpg", "frame_path": "/f/frame_0001.jpg", "classification": "whiteboard"},
     ]
-    mock_reader = MagicMock()
-    mock_reader.readtext.return_value = [(None, "text", 0.99)]
+    mock_ocr_fn = MagicMock(return_value="text")
 
-    result = frames_to_chunks(frames, mock_reader, interval=5)
+    result = frames_to_chunks(frames, mock_ocr_fn, interval=5)
 
     assert result[0]["frame_path"] == "/f/frame_0001.jpg"
