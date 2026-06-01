@@ -5,7 +5,6 @@ import AiChat from '../components/AiChat';
 import CourseSidebar from '../components/CourseSidebar';
 import FlashcardsTab from '../components/FlashcardsTab';
 import HighlightsTab from '../components/HighlightsTab';
-import VisualTab from '../components/VisualTab';
 import TopBar from '../components/TopBar';
 import TranscriptTab from '../components/TranscriptTab';
 import VideoPlayer from '../components/VideoPlayer';
@@ -13,7 +12,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Lesson } from '../types';
 
-type ActiveTab = 'transcript' | 'highlights' | 'visual' | 'flashcards' | 'resumo';
+type ActiveTab = 'transcript' | 'highlights' | 'flashcards' | 'resumo';
 
 function LoadingSpinner() {
   return (
@@ -136,17 +135,6 @@ export default function Player() {
                 Highlights
               </button>
               <button
-                onClick={() => setActiveTab('visual')}
-                className={[
-                  'px-4 py-2 text-sm font-medium transition-colors',
-                  activeTab === 'visual'
-                    ? 'border-b-2 border-sky-400 text-sky-400'
-                    : 'text-slate-400 hover:text-slate-200',
-                ].join(' ')}
-              >
-                Visual
-              </button>
-              <button
                 onClick={() => setActiveTab('flashcards')}
                 className={[
                   'px-4 py-2 text-sm font-medium transition-colors',
@@ -178,9 +166,6 @@ export default function Player() {
             )}
             {activeTab === 'highlights' && (
               <HighlightsTab lessonId={currentId} onSeek={setSeekTo} />
-            )}
-            {activeTab === 'visual' && (
-              <VisualTab lessonId={currentId} onSeek={setSeekTo} />
             )}
             {activeTab === 'flashcards' && (
               <FlashcardsTab lesson={currentLesson} />

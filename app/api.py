@@ -15,7 +15,6 @@ from app.database import init_db
 from app.routers.audio import router as audio_router
 from app.routers.highlights import router as highlights_router
 from app.routers.flashcards import router as flashcards_router
-from app.routers.frames import router as frames_router
 from app.routers.groq import router as groq_router
 from app.routers.ingestion import router as ingestion_router
 from app.routers.openai import router as openai_router
@@ -23,7 +22,6 @@ from app.routers.search import router as search_router
 from app.routers.summarize import router as summarize_router
 from app.routers.sync import router as sync_router
 from app.routers.transcriptions import router as transcriptions_router
-from app.routers.visual import router as visual_router
 from app.routers.youtube import router as youtube_router
 
 load_dotenv()
@@ -39,7 +37,6 @@ app.add_middleware(
 
 app.include_router(sync_router)
 app.include_router(audio_router)
-app.include_router(frames_router)
 app.include_router(youtube_router)
 app.include_router(ingestion_router)
 app.include_router(search_router)
@@ -48,7 +45,6 @@ app.include_router(groq_router)
 app.include_router(flashcards_router)
 app.include_router(summarize_router, prefix="/summarize")
 app.include_router(highlights_router)
-app.include_router(visual_router)
 app.include_router(transcriptions_router, prefix="/transcriptions")
 
 

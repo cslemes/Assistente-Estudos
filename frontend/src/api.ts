@@ -5,7 +5,6 @@ import type {
   Lesson,
   Segment,
   SummarizeResponse,
-  VisualChunk,
 } from './types';
 
 export async function fetchLessons(): Promise<Lesson[]> {
@@ -31,12 +30,6 @@ export async function generateHighlights(id: number, n?: number): Promise<Highli
   const res = await fetch(url, { method: 'POST' });
   if (!res.ok) throw new Error(`generateHighlights failed: ${res.status}`);
   return res.json() as Promise<HighlightsResponse>;
-}
-
-export async function fetchVisualChunks(lessonId: number): Promise<VisualChunk[]> {
-  const res = await fetch(`/api/visual/${lessonId}`);
-  if (!res.ok) throw new Error(`fetchVisualChunks failed: ${res.status}`);
-  return res.json() as Promise<VisualChunk[]>;
 }
 
 export async function generateSummary(id: number): Promise<SummarizeResponse> {

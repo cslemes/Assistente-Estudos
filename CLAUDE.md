@@ -18,7 +18,7 @@ O projeto replica as seis colunas principais de inteligência da interface origi
 * **Estrutura:** Geração automática de títulos e descrições para momentos-chave.
 * **Navegação:** Botões no Discord que funcionam como "capítulos" do vídeo.
 
-### 3. Visual Intelligence (CLIP + OCR Pipeline)
+### 3. Visual Intelligence (PLANNED)
 
 * **Frame Extraction:** FFmpeg extrai frames do vídeo a cada N segundos.
 * **Frame Classification:** CLIP zero-shot classifica cada frame como `slide`, `notebook`, `whiteboard` ou `camera`.
@@ -37,6 +37,7 @@ O projeto replica as seis colunas principais de inteligência da interface origi
 * **Automação:** Extração de conceitos atômicos para gerar decks `.apkg` via `genanki`.
 * **Estudo Ativo:** Suporte a Cloze Deletions e fórmulas em LaTeX.
 
+---
 
 ## Stack Cloud (Serverless First)
 
@@ -45,6 +46,7 @@ O projeto replica as seis colunas principais de inteligência da interface origi
 * **Storage:** Cloudflare R2 (Hospedagem de áudio Opus e imagens de slides com Zero Egress).
 * **Video:** YouTube API (Hosting gratuito de vídeos não listados).
 
+---
 
 ## Esquema de Dados (Qdrant Payload)
 
@@ -53,11 +55,9 @@ Cada entrada no banco de vetores contém o contexto completo para replicar a UI:
 ```json
 {
   "text": "Conteúdo do trecho...",
-  "source_type": "transcript | slide | notebook",
+  "source_type": "transcript",
   "start_time": 348,
   "video_url": "https://youtu.be/ID?t=348",
-  "slide_index": 4,
-  "slide_thumb": "https://r2.cloudflare.com/slide_0548.jpg",
   "topic": "Autoencoder",
   "course": "DL Python 25.1",
   "entities": {}
@@ -70,6 +70,7 @@ Cada entrada no banco de vetores contém o contexto completo para replicar a UI:
 2. **Notify:** O bot posta o **Summary** e abre uma **Thread** com os **Highlights**.
 3. **Interact:** O usuário faz perguntas no chat e recebe respostas baseadas nos slides e na fala do professor.
 
+---
 
 ## Project Structure (Current)
 
@@ -98,8 +99,8 @@ app/
     ├── ingestion.py         # Embed + NER + upload to Qdrant (transcript)
     ├── summarizer.py        # Map-Reduce summarization
     ├── flashcard_service.py # Anki .apkg generation via genanki
-    ├── frame_extractor.py   # FFmpeg → frames every Ns
-    ├── clip_classifier.py   # CLIP zero-shot: slide/notebook/whiteboard/camera
+    ├── frame_extractor.py   # FFmpeg → frames every Ns [PLANNED]
+    ├── clip_classifier.py   # CLIP zero-shot: slide/notebook/whiteboard/camera [PLANNED]
     ├── slide_matcher.py     # LibreOffice render + CLIP similarity → timestamp [PLANNED]
     ├── ocr.py               # EasyOCR wrapper for notebook/whiteboard frames [PLANNED]
     ├── whiteboard.py        # Whiteboard frames → text chunks → Qdrant [PLANNED]
@@ -112,6 +113,7 @@ scripts/
 main.py                      # CLI trigger
 ```
 
+---
 
 ## Running the Server
 
@@ -121,6 +123,7 @@ uvicorn app.api:app --reload
 
 > Note: changed from `uvicorn api:app` after package restructure.
 
+---
 
 ## REST API Endpoints
 
@@ -132,10 +135,10 @@ POST /scrape                       # Download from Drive/Forms URL
 POST /transcribe                   # Deepgram transcription
 POST /extract-audio                # FFmpeg audio extraction (single)
 POST /extract-audio/batch          # FFmpeg audio extraction (batch)
-POST /extract-frames               # FFmpeg frame extraction (single)
-POST /extract-frames/batch         # FFmpeg frame extraction (batch)
-POST /classify-frames              # CLIP zero-shot frame classification (single)
-POST /classify-frames/batch        # CLIP zero-shot frame classification (batch)
+POST /extract-frames               # FFmpeg frame extraction (single) [PLANNED]
+POST /extract-frames/batch         # FFmpeg frame extraction (batch) [PLANNED]
+POST /classify-frames              # CLIP zero-shot frame classification (single) [PLANNED]
+POST /classify-frames/batch        # CLIP zero-shot frame classification (batch) [PLANNED]
 POST /upload                       # Upload single video to YouTube
 POST /upload/batch?limit=6         # Batch upload (default 6/day)
 POST /ingest                       # Embed + NER + send to Qdrant (transcripts)
@@ -154,6 +157,7 @@ POST /summarize/{id}               # Map-Reduce summarize one transcription
 POST /summarize/all                # Map-Reduce summarize all pending
 POST /flashcards/generate          # Generate Anki .apkg deck
 ```
+
 ## Pipeline Flow
 
 ```text
@@ -162,14 +166,16 @@ POST /extract-audio     → FFmpeg: video → .mp3 in ai_data/
 POST /transcribe        → Deepgram → .txt + .json (utterances) + SQLite (status=pending)
 POST /ingest            → NER + embed transcripts → Qdrant (status=sent)
 POST /summarize/{id}    → Map-Reduce → summary stored in SQLite
-POST /extract-frames    → FFmpeg: video → ai_data/{stem}_frames/frame_XXXX.jpg
-POST /classify-frames   → CLIP: frames → classifications.json (slide/notebook/whiteboard/camera)
+POST /extract-frames    → FFmpeg: video → ai_data/{stem}_frames/frame_XXXX.jpg [PLANNED]
+POST /classify-frames   → CLIP: frames → classifications.json (slide/notebook/whiteboard/camera) [PLANNED]
 POST /ingest/slides     → LibreOffice render + CLIP similarity → timestamp → Qdrant [PLANNED]
 POST /ingest/notebook   → EasyOCR → cell match → Qdrant [PLANNED]
 POST /ingest/whiteboard → EasyOCR → Qdrant [PLANNED]
 POST /ask               → Query → hybrid search → LLM → answer
 POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 ```
+
+---
 
 ## Implementation Status
 
@@ -189,8 +195,8 @@ POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 | FFmpeg audio extraction endpoint | Implemented |
 | Summary / Map-Reduce (`summarizer.py`) | Implemented |
 | Flashcards (Anki/genanki) | Implemented |
-| Frame extraction (FFmpeg) | Implemented |
-| CLIP zero-shot frame classifier (`openai/clip-vit-base-patch16`) | Implemented |
+| Frame extraction (FFmpeg) | Planned |
+| CLIP zero-shot frame classifier (`openai/clip-vit-base-patch16`) | Planned |
 | PowerPoint ingestion — LibreOffice render + CLIP similarity matching | Planned |
 | Jupyter notebook ingestion — EasyOCR + cell text match | Planned |
 | Whiteboard ingestion — EasyOCR → Qdrant chunks | Planned |
@@ -213,7 +219,6 @@ POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 | Qdrant Cloud | Vector DB for RAG search | Implemented |
 | OpenAI GPT-4o-mini | RAG answer generation | Implemented |
 | Groq (llama-3.3-70b) | RAG answer generation (fast/free) | Implemented |
-| CLIP (`openai/clip-vit-base-patch16`) | Zero-shot frame classification | Implemented |
 | Anki/genanki | Flashcard .apkg generation | Implemented |
 | LibreOffice headless | Render .pptx slides → PNG images | Planned |
 | python-pptx | PowerPoint slide text extraction | Planned |

@@ -20,15 +20,6 @@ export interface Segment {
   speaker: number | null;
 }
 
-// VisualChunk — from GET /visual/{lesson_id}
-export interface VisualChunk {
-  source_type: 'slide' | 'notebook' | 'whiteboard';
-  text: string;
-  start_time: number | null;
-  video_url: string | null;
-  slide_thumb: string | null;
-}
-
 // Highlight — individual highlight item
 export interface Highlight {
   title: string;

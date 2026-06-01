@@ -31,6 +31,9 @@ dependencies = [
     "onnxruntime-gpu>=1.25.0",
     "langsmith>=0.7.36",
     "fastembed>=0.8.0",
+    "torchaudio>=2.11.0",
+    "rapidfuzz>=3.14.5",
+    "torchcodec>=0.13.0",
 ]
 
 [dependency-groups]

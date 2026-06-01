@@ -2,78 +2,59 @@
 
 End-to-end academic intelligence system for capturing, processing, and retrieving knowledge from classes at the **AI Post-Graduation Program at PUC-Rio**.
 
-## Feature Architecture (Jamworks Mapping)
-
-The project replicates the six main intelligence columns of the original interface:
+## Feature Architecture
 
 ### 1. Transcripts & Search (RAG)
 
 * **Engine:** Transcription via **Deepgram Nova-3** with speaker diarization.
-* **Search:** Chunk storage in **Qdrant Cloud** with OpenAI embeddings.
+* **Search:** Chunk storage in **Qdrant Cloud** with hybrid embeddings (dense + BM25 + ColBERT reranking).
 * **Deep Link:** Each retrieved excerpt points to the exact second on YouTube (`?t=X`).
 
 ### 2. Highlights & Key Points
 
-* **Intelligence:** LLM analyzes the transcript to identify information density peaks.
-* **Structure:** Automatic generation of titles and descriptions for key moments.
-* **Navigation:** Discord buttons that work as video "chapters".
+* **Intelligence:** Map-Reduce LLM pipeline over utterances to identify information density peaks.
+* **Structure:** Automatic generation of titles, descriptions, and timestamps for key moments.
+* **Navigation:** Clickable highlight cards in the web UI that seek the video to the exact moment.
 
-### 3. Visual Intelligence (CLIP + OCR Pipeline)
-
-* **Frame Extraction:** FFmpeg extracts frames from the video every N seconds.
-* **Frame Classification:** CLIP zero-shot classifies each frame as `slide`, `notebook`, `whiteboard`, or `camera`.
-* **Slide Matching:** LibreOffice renders `.pptx` slides as images; CLIP embedding of each slide vs. classified frames → cosine similarity → exact timestamp when each slide was shown.
-* **Notebook Matching:** EasyOCR extracts text from frames classified as `notebook`; matched against `.ipynb` cells by text overlap.
-* **Whiteboard:** EasyOCR extracts handwritten content from frames classified as `whiteboard` → new chunk (`source_type=whiteboard`) with timestamp.
-* **Unified payload:** all chunks share the same schema in Qdrant with `source_type`, `start_time`, `video_url` (`?t=X`), and `slide_thumb`.
-
-### 4. Summary & Notes
+### 3. Summary & Notes
 
 * **Summary:** *Map-Reduce* technique to condense 3-hour classes into an executive study guide.
-* **Notes:** Temporal annotation system via Discord Threads, allowing users to add observations linked to the video timestamp.
+* **Format:** Markdown rendered inline in the web player.
 
-### 5. Flashcards (Anki Integration)
+### 4. Flashcards (Anki Integration)
 
-* **Automation:** Extraction of atomic concepts to generate `.apkg` decks via `genanki`.
+* **Automation:** Atomic concept extraction → `.apkg` decks via `genanki`.
 * **Active Study:** Support for Cloze Deletions and LaTeX formulas.
+
+### 5. Visual Intelligence (Postponed)
+
+CLIP + OCR pipeline for slide/notebook/whiteboard frame matching is designed but not yet implemented. The Qdrant payload schema already reserves `source_type`, `slide_thumb`, and related fields for when this ships.
 
 ---
 
-## Cloud Stack (Serverless First)
+## Cloud Stack
 
-* **Compute:** Google Cloud Run (Python Worker Orchestration).
-* **Vector DB:** Qdrant Cloud (Semantic Memory).
-* **Storage:** Cloudflare R2 (Opus audio and slide image hosting with Zero Egress).
-* **Video:** YouTube API (Free hosting for unlisted videos).
+* **Compute:** Google Cloud Run (Python API) + RunPod Serverless (GPU workers for embed/NER/OCR).
+* **Vector DB:** Qdrant Cloud (semantic memory).
+* **Storage:** Cloudflare R2 (audio and slide images, zero egress cost).
+* **Video:** YouTube API (unlisted video hosting).
 
 ---
 
 ## Data Schema (Qdrant Payload)
 
-Each vector database entry contains the full context needed to replicate the UI:
-
 ```json
 {
   "text": "Chunk content...",
-  "source_type": "transcript | slide | notebook | whiteboard",
+  "source_type": "transcript",
   "start_time": 348,
   "video_url": "https://youtu.be/ID?t=348",
-  "slide_index": 4,
-  "slide_thumb": "https://r2.cloudflare.com/slide_0548.jpg",
   "topic": "Autoencoder",
   "course": "DL Python 25.1",
   "aula_number": 7,
   "entities": {}
 }
 ```
-
----
-
-## User Flow (Discord Interface)
-
-1. **Sync:** The bot detects a new class in Classroom and starts the pipeline.
-2. **Notify:** The bot posts the **Summary** and opens a **Thread** with the **Highlights**.
-3. **Interact:** The user asks questions in chat and receives answers grounded in slides and the professor's speech.
 
 ---
 
@@ -91,12 +72,13 @@ app/
 │   ├── search.py            # POST /search
 │   ├── openai.py            # POST /ask, POST /ask/stream
 │   ├── groq.py              # POST /ask/groq, POST /ask/groq/stream
-│   ├── frames.py            # POST /extract-frames, POST /classify-frames
-│   ├── summarize.py         # POST /summarize/{id}, POST /summarize/all
-│   ├── flashcards.py        # POST /flashcards/generate
+│   ├── ingestion.py         # POST /ingest, GET /classes
+│   ├── highlights.py        # GET/POST /highlights/{id}
+│   ├── summarize.py         # GET /summarize, POST /summarize/{id}
+│   ├── flashcards.py        # POST /flashcards
 │   ├── audio.py             # POST /extract-audio, POST /transcribe
-│   ├── ingestion.py         # POST /ingest
 │   ├── sync.py              # POST /sync, POST /scrape
+│   ├── transcriptions.py    # GET /transcriptions/{id}/segments
 │   └── youtube.py           # POST /upload, POST /upload/batch
 └── services/
     ├── sync.py              # Google Classroom → Drive download
@@ -108,21 +90,35 @@ app/
     ├── openai_service.py    # OpenAI sync + streaming
     ├── groq_service.py      # Groq sync + streaming
     ├── llm_client.py        # Provider-agnostic chat client factory
-    ├── ingestion.py         # Embed + NER + upload to Qdrant (transcript)
+    ├── ingestion.py         # Embed + NER + upload to Qdrant
     ├── summarizer.py        # Map-Reduce summarization
+    ├── highlights_service.py# Map-Reduce highlights extraction
     ├── flashcard_service.py # Anki .apkg generation via genanki
-    ├── frame_extractor.py   # FFmpeg → frames every Ns
-    ├── clip_classifier.py   # CLIP zero-shot: slide/notebook/whiteboard/camera
-    ├── slide_matcher.py     # LibreOffice render + CLIP similarity → timestamp [PLANNED]
-    ├── ocr.py               # EasyOCR wrapper for notebook/whiteboard frames [PLANNED]
-    ├── whiteboard.py        # Whiteboard frames → text chunks → Qdrant [PLANNED]
-    ├── notebook.py          # .ipynb cells + OCR match → Qdrant [PLANNED]
-    └── create_collection.py # One-time Qdrant collection setup
+    ├── runpod_client.py     # RunPod serverless GPU dispatch
+    └── r2_storage.py        # Cloudflare R2 upload helpers
+frontend/
+├── src/
+│   ├── pages/
+│   │   ├── Home.tsx         # Course grid + global chat
+│   │   └── Player.tsx       # 3-column lesson player
+│   ├── components/
+│   │   ├── VideoPlayer.tsx
+│   │   ├── TranscriptTab.tsx
+│   │   ├── HighlightsTab.tsx
+│   │   ├── FlashcardsTab.tsx
+│   │   ├── AiChat.tsx
+│   │   ├── CourseSidebar.tsx
+│   │   └── TopBar.tsx
+│   ├── api.ts               # Typed fetch helpers + SSE stream
+│   └── types.ts             # Shared TypeScript interfaces
+runpod_workers/              # Local mock GPU worker (Docker)
 scripts/
-    ├── rename_videos.py        # Rename videos to Aula_NN_Topic.mp4
-    ├── transcribe_folder.py    # Scan folder → POST /transcribe for each video
-    └── cleanup.py              # Reset ai_data/ and DB records
-streamlit_app.py             # Chat UI
+├── rename_videos.py         # Rename videos to Aula_NN_Topic.mp4
+├── transcribe_folder.py     # Batch transcription trigger
+├── sync_video_urls.py       # Backfill YouTube URLs in SQLite
+├── video_cutter.py          # Local video trimming utility
+└── cleanup.py               # Reset ai_data/ and DB records
+streamlit_app.py             # Legacy CLI chat UI
 main.py                      # CLI trigger
 ```
 
@@ -134,12 +130,14 @@ main.py                      # CLI trigger
 
 - [uv](https://docs.astral.sh/uv/) installed
 - Python 3.13+
-- A `.env` file with the required credentials (see `.env.template`)
+- Node.js 20+ (for the frontend)
+- A `.env` file with the required credentials (see below)
 
 ### Install dependencies
 
 ```bash
-uv sync
+uv sync                      # Python backend
+cd frontend && npm install   # React frontend
 ```
 
 ### Environment variables
@@ -150,24 +148,26 @@ Copy `.env.template` to `.env` and fill in the values:
 cp .env.template .env
 ```
 
-Required keys:
-
-| Variable | Description | Get it |
-|----------|-------------|--------|
-| `OPENAI_API_KEY` | OpenAI API key | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| `GROQ_API_KEY` | Groq API key | [console.groq.com/keys](https://console.groq.com/keys) |
-| `QDRANT_URL` | Qdrant Cloud cluster URL | [cloud.qdrant.io](https://cloud.qdrant.io) |
-| `QDRANT_API_KEY` | Qdrant Cloud API key | [cloud.qdrant.io](https://cloud.qdrant.io) |
-| `DEEPGRAM_API_KEY` | Deepgram API key | [console.deepgram.com](https://console.deepgram.com) |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | [console.cloud.google.com](https://console.cloud.google.com) — see GCP Setup below |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | [console.cloud.google.com](https://console.cloud.google.com) — see GCP Setup below |
-| `YOUTUBE_CHANNEL_ID` | Target YouTube channel | [youtube.com/account_advanced](https://www.youtube.com/account_advanced) |
+| Variable | Description |
+|----------|-------------|
+| `OPENAI_API_KEY` | OpenAI API key |
+| `GROQ_API_KEY` | Groq API key |
+| `QDRANT_URL` | Qdrant Cloud cluster URL |
+| `QDRANT_API_KEY` | Qdrant Cloud API key |
+| `DEEPGRAM_API_KEY` | Deepgram API key |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `YOUTUBE_CHANNEL_ID` | Target YouTube channel |
+| `USE_RUNPOD` | `true` to route embed/NER to RunPod workers |
+| `RUNPOD_API_KEY` | RunPod API key (if `USE_RUNPOD=true`) |
+| `RUNPOD_EMBED_ENDPOINT_ID` | RunPod endpoint for embeddings |
+| `RUNPOD_NER_ENDPOINT_ID` | RunPod endpoint for NER |
 
 ---
 
 ## Google Cloud Platform (GCP) Setup
 
-The sync pipeline requires a GCP OAuth 2.0 desktop client with four APIs enabled.
+The sync pipeline requires a GCP OAuth 2.0 desktop client with three APIs enabled.
 
 ### 1. Create a GCP Project
 
@@ -175,21 +175,17 @@ Go to [console.cloud.google.com](https://console.cloud.google.com) and create a 
 
 ### 2. Enable the required APIs
 
-In **APIs & Services → Library**, enable all four:
+In **APIs & Services → Library**, enable:
 
 | API | Used for |
 |-----|----------|
-| **Google Classroom API** | List courses, topics, assignments (`courseWork`) and materials (`courseWorkMaterials`) |
+| **Google Classroom API** | List courses, topics, assignments and materials |
 | **Google Drive API** | Download attached files and traverse shared folders |
 | **YouTube Data API v3** | Upload class recordings as unlisted videos |
-| **Google Forms API** | *(optional)* — forms are scraped via Playwright; the API is not called directly |
 
 ### 3. Configure the OAuth consent screen
 
-Go to **APIs & Services → OAuth consent screen**:
-
-- User type: **External** (or Internal if using a Google Workspace org account)
-- Add the following scopes — these are the exact OAuth scopes the app requests at login:
+Go to **APIs & Services → OAuth consent screen** and add these scopes:
 
 ```
 https://www.googleapis.com/auth/classroom.courses.readonly
@@ -201,54 +197,43 @@ https://www.googleapis.com/auth/drive.readonly
 https://www.googleapis.com/auth/youtube.upload
 ```
 
-- Add your Google account as a **test user** (required while the app is in testing status).
+Add your Google account as a **test user**.
 
 ### 4. Create OAuth credentials
 
-Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
-
-- Application type: **Desktop app**
-- Download the JSON file and save it as **`credentials.json`** in the project root.
+Go to **Credentials → Create Credentials → OAuth client ID → Desktop app**, download the JSON, and save it as `credentials.json` in the project root.
 
 ### 5. First-time authentication
 
-On the first run of `POST /sync`, the app opens a browser window asking you to log in and grant permissions. After approval, a `token.json` file is saved locally and reused on subsequent runs.
-
-```
-project root/
-├── credentials.json   ← downloaded from GCP (do not commit)
-└── token.json         ← auto-generated after first login (do not commit)
-```
-
-> Both files are sensitive and are already listed in `.gitignore`.
+On the first `POST /sync`, the app opens a browser to grant permissions. A `token.json` is saved and reused on subsequent runs. Both files are in `.gitignore`.
 
 ---
 
-## Running the API Server
+## Running Locally
+
+### API server
 
 ```bash
 uv run uvicorn app.api:app --reload
 ```
 
-The API will be available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
+Available at `http://localhost:8000`. Docs at `http://localhost:8000/docs`.
 
----
-
-## Running the Chat UI (Streamlit)
-
-With the API server already running, open a second terminal:
+### Frontend (dev)
 
 ```bash
-uv run streamlit run streamlit_app.py
+cd frontend && npm run dev
 ```
 
-Open `http://localhost:8501` in your browser.
+Available at `http://localhost:3000`.
 
-**Features:**
+### Full stack (Docker Compose)
 
-- Select LLM provider (Groq — fast, or OpenAI — precise)
-- Filter answers by course and topic
-- Streaming responses with source citations and YouTube deep links
+Spins up the API, the React frontend, and the local RunPod GPU worker mock:
+
+```bash
+docker compose up
+```
 
 ---
 
@@ -256,33 +241,29 @@ Open `http://localhost:8501` in your browser.
 
 ```text
 GET  /health
-GET  /status
 POST /sync                         # Download from Classroom
 POST /scrape                       # Download from Drive/Forms URL
 POST /transcribe                   # Deepgram transcription
 POST /extract-audio                # FFmpeg audio extraction (single)
 POST /extract-audio/batch          # FFmpeg audio extraction (batch)
-POST /extract-frames               # FFmpeg frame extraction (single)
-POST /extract-frames/batch         # FFmpeg frame extraction (batch)
-POST /classify-frames              # CLIP zero-shot classification (single)
-POST /classify-frames/batch        # CLIP zero-shot classification (batch)
 POST /upload                       # Upload single video to YouTube
 POST /upload/batch?limit=6         # Batch upload (default 6/day)
-POST /ingest                       # Embed + NER + send to Qdrant (transcripts)
-POST /ingest/slides                # CLIP match pptx slides → Qdrant [PLANNED]
-POST /ingest/notebook              # EasyOCR match .ipynb cells → Qdrant [PLANNED]
-POST /ingest/whiteboard            # EasyOCR whiteboard frames → Qdrant [PLANNED]
+POST /ingest                       # Embed + NER + send to Qdrant
+GET  /classes                      # List distinct classes in Qdrant
 GET  /transcriptions/pending       # List pending for embedding
-PATCH /transcriptions/{id}/status  # Update status
+GET  /transcriptions/{id}/segments # Utterance segments for a lesson
+PATCH /transcriptions/{id}/status  # Update transcription status
 POST /search                       # Hybrid vector search
 POST /ask                          # RAG answer (sync, OpenAI)
 POST /ask/stream                   # RAG answer (SSE streaming, OpenAI)
 POST /ask/groq                     # RAG answer (sync, Groq)
 POST /ask/groq/stream              # RAG answer (SSE streaming, Groq)
+GET  /highlights/{id}              # Fetch stored highlights
+POST /highlights/{id}              # Generate highlights via Map-Reduce LLM
 GET  /summarize                    # List transcriptions with summary status
 POST /summarize/{id}               # Map-Reduce summarize one transcription
 POST /summarize/all                # Map-Reduce summarize all pending
-POST /flashcards/generate          # Generate Anki .apkg deck from Qdrant
+POST /flashcards                   # Generate Anki .apkg deck
 ```
 
 ---
@@ -291,17 +272,14 @@ POST /flashcards/generate          # Generate Anki .apkg deck from Qdrant
 
 ```text
 POST /sync              → Download files from Google Classroom
-POST /extract-audio     → FFmpeg: video → .mp3 in ai_data/
+POST /extract-audio     → FFmpeg: video → .mp3
 POST /transcribe        → Deepgram → .txt + .json (utterances) + SQLite (status=pending)
 POST /ingest            → NER + embed transcripts → Qdrant (status=sent)
+POST /upload            → Upload video to YouTube, store URL in SQLite
+POST /highlights/{id}   → Map-Reduce → highlights stored in SQLite
 POST /summarize/{id}    → Map-Reduce → summary stored in SQLite
-POST /extract-frames    → FFmpeg: video → ai_data/{stem}_frames/frame_XXXX.jpg
-POST /classify-frames   → CLIP: frames → classifications.json (slide/notebook/whiteboard/camera)
-POST /ingest/slides     → LibreOffice render + CLIP similarity → timestamp → Qdrant [PLANNED]
-POST /ingest/notebook   → EasyOCR → cell match → Qdrant [PLANNED]
-POST /ingest/whiteboard → EasyOCR → Qdrant [PLANNED]
-POST /ask               → Query → hybrid search → LLM → answer
-POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
+POST /flashcards        → Qdrant chunks → LLM → Anki .apkg
+POST /ask/groq/stream   → Query → hybrid search → streaming LLM answer
 ```
 
 ---
@@ -309,50 +287,44 @@ POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 ## Implementation Status
 
 | Feature | Status |
-| --------- | -------- |
-| Transcripts & Search (RAG) | ✅ Implemented |
-| SQLite staging DB (pending → embedded → sent) | ✅ Implemented |
-| NER enrichment (`lfcc/bert-portuguese-ner`) | ✅ Implemented |
-| Utterance-level chunking with timestamps | ✅ Implemented |
-| Qdrant Cloud — ingestion + retrieval | ✅ Implemented |
-| Hybrid search (dense + BM25 + ColBERT rerank) | ✅ Implemented |
-| Streaming RAG (SSE) | ✅ Implemented |
-| Google Classroom sync (with download manifest) | ✅ Implemented |
-| Deepgram Nova-3 PT-BR diarization | ✅ Implemented |
-| YouTube resumable upload (auto token refresh) | ✅ Implemented |
-| Groq LLM (llama-3.3-70b) sync + streaming | ✅ Implemented |
-| FFmpeg audio extraction | ✅ Implemented |
-| Streamlit chat UI | ✅ Implemented |
-| Summary / Map-Reduce | ✅ Implemented |
-| Flashcards (Anki/genanki) | ✅ Implemented |
-| Frame extraction (FFmpeg) | ✅ Implemented |
-| CLIP zero-shot frame classifier (`openai/clip-vit-base-patch16`) | ✅ Implemented |
-| PowerPoint ingestion — LibreOffice render + CLIP similarity matching | 🔜 Planned |
-| Jupyter notebook ingestion — EasyOCR + cell text match | 🔜 Planned |
-| Whiteboard ingestion — EasyOCR → Qdrant chunks | 🔜 Planned |
-| Slide thumbnail capture + R2 upload | 🔜 Planned |
-| Discord Bot | ❌ Not started |
-| Highlights / Key Points | ❌ Not started |
+|---------|--------|
+| Transcripts & Search (RAG) | Implemented |
+| SQLite staging DB (pending → embedded → sent) | Implemented |
+| NER enrichment (`lfcc/bert-portuguese-ner`) | Implemented |
+| Utterance-level chunking with timestamps | Implemented |
+| Qdrant Cloud — ingestion + retrieval | Implemented |
+| Hybrid search (dense + BM25 + ColBERT rerank) | Implemented |
+| Streaming RAG (SSE) | Implemented |
+| Google Classroom sync | Implemented |
+| Deepgram Nova-3 PT-BR diarization | Implemented |
+| YouTube resumable upload (auto token refresh) | Implemented |
+| Groq LLM sync + streaming | Implemented |
+| FFmpeg audio extraction | Implemented |
+| Summary / Map-Reduce | Implemented |
+| Highlights / Key Points | Implemented |
+| Flashcards (Anki/genanki) | Implemented |
+| React web player (transcript, highlights, flashcards, resumo tabs) | Implemented |
+| RunPod GPU worker dispatch (embed + NER) | Implemented |
+| Visual Intelligence (CLIP + OCR frame pipeline) | Postponed |
+| Discord Bot | Not started |
 
 ---
 
 ## External Services
 
 | Service | Purpose | Status |
-| --------- | --------- | -------- |
-| Deepgram Nova-3 | Speech-to-text (PT-BR) + diarization | ✅ Implemented |
-| Google Classroom API | Courses, topics, assignments | ✅ Implemented |
-| Google Drive API | File download/listing | ✅ Implemented |
-| YouTube Data API | Unlisted video upload | ✅ Implemented |
-| Playwright/Chromium | Google Forms scraping | ✅ Implemented |
-| FFmpeg | Audio + frame extraction | ✅ Implemented |
-| Qdrant Cloud | Vector DB for RAG search | ✅ Implemented |
-| OpenAI GPT-4o-mini | RAG answer generation | ✅ Implemented |
-| Groq (llama-3.3-70b) | RAG answer generation (fast) | ✅ Implemented |
-| Anki/genanki | Flashcard .apkg generation | ✅ Implemented |
-| CLIP (`openai/clip-vit-base-patch16`) | Zero-shot frame classification | ✅ Implemented |
-| LibreOffice headless | Render .pptx slides → PNG images | 🔜 Planned |
-| python-pptx | PowerPoint slide text extraction | 🔜 Planned |
-| EasyOCR | Notebook + whiteboard text extraction from frames | 🔜 Planned |
-| Cloudflare R2 | Slide thumbnail storage | 🔜 Planned |
-| Discord Bot | User interface | ❌ Not started |
+|---------|---------|--------|
+| Deepgram Nova-3 | Speech-to-text (PT-BR) + diarization | Implemented |
+| Google Classroom API | Courses, topics, assignments | Implemented |
+| Google Drive API | File download/listing | Implemented |
+| YouTube Data API | Unlisted video upload | Implemented |
+| Playwright/Chromium | Google Forms scraping | Implemented |
+| FFmpeg | Audio extraction | Implemented |
+| Qdrant Cloud | Vector DB for RAG search | Implemented |
+| OpenAI GPT-4o-mini | RAG answer generation | Implemented |
+| Groq (llama-3.3-70b) | RAG answer generation (fast) | Implemented |
+| Anki/genanki | Flashcard .apkg generation | Implemented |
+| RunPod Serverless | GPU workers for embed + NER | Implemented |
+| Cloudflare R2 | Asset storage | Configured |
+| LangSmith | LLM tracing (optional) | Configured |
+| LibreOffice / EasyOCR / CLIP | Visual intelligence pipeline | Postponed |

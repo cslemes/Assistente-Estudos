@@ -62,51 +62,11 @@ class ExtractAudioBatchRequest(BaseModel):
     recursive: bool = False
 
 
-class ExtractFramesRequest(BaseModel):
-    file_path: str
-    interval: int = 5  # seconds between frames
-
-
-class ExtractFramesBatchRequest(BaseModel):
-    folder: str
-    interval: int = 5
-    recursive: bool = False
-
-
-class ClassifyFramesRequest(BaseModel):
-    frames_dir: str
-
-
-class ClassifyFramesBatchRequest(BaseModel):
-    folder: str
-    recursive: bool = False
-
-
 class SummarizeResponse(BaseModel):
     id: int
     file_path: str
     summary: str
     chunks_processed: int
-
-
-class IngestSlidesRequest(BaseModel):
-    pptx_path: str
-    video_path: str
-    frames_dir: str
-    interval: int = 5
-
-
-class IngestNotebookRequest(BaseModel):
-    ipynb_path: str
-    video_path: str
-    frames_dir: str
-    interval: int = 5
-
-
-class IngestWhiteboardRequest(BaseModel):
-    video_path: str
-    frames_dir: str
-    interval: int = 5
 
 
 class Highlight(BaseModel):

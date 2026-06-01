@@ -86,7 +86,7 @@ Responda em português, de forma didática e completa."""
     summarize_tpm_limit: int = (
         7500  # token-per-minute budget (leave headroom below provider limit)
     )
-    # Use a large-context model for summarization, independent of the chat model
+    # Use a large-context model for summarization, independent of chat model
     summarize_groq_model: str = (
         "llama-3.3-70b-versatile"  # 128k ctx, better for long transcripts
     )
@@ -109,13 +109,6 @@ Responda em português, de forma didática e completa."""
         "definições e exemplos práticos.\n\n{partial_summaries}"
     )
 
-    # Frame Extraction
-    frame_interval_seconds: int = 5  # seconds between extracted frames
-
-    # CLIP Frame Classification
-    clip_model_name: str = "openai/clip-vit-base-patch16"
-    clip_device: str = "auto"  # "auto" → cuda if available, else cpu
-
     # Cloudflare R2 Storage
     cloudflare_account_id: Optional[str] = None
     cloudflare_r2_access_key_id: Optional[str] = None
@@ -134,7 +127,6 @@ Responda em português, de forma didática e completa."""
     runpod_api_key: Optional[str] = None
     runpod_timeout: int = 120
     runpod_base_url: str = "https://api.runpod.ai/v2"
-    runpod_clip_endpoint_id: Optional[str] = None
     runpod_embed_endpoint_id: Optional[str] = None
     runpod_ner_endpoint_id: Optional[str] = None
     runpod_ocr_endpoint_id: Optional[str] = None

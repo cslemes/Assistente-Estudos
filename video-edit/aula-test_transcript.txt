@@ -1,0 +1,2464 @@
+[00:00] [Orador 0]: Show Luciano, obrigada.
+[00:01] [Orador 0]: Bom gente,
+[00:02] [Orador 0]: show de bola.
+[00:03] [Orador 0]: Então vamos lá, hoje vocês começam 1 disciplina nova.
+[00:08] [Orador 0]: Essa disciplina não é só minha, é 1 disciplina dividida entre eu,
+[00:12] [Orador 0]: Evelyn e Leonardo.
+[00:15] [Orador 0]: Eu vou dar a parte inicial
+[00:16] [Orador 0]: e vou falar pra vocês qual que é o meu planejamento aqui.
+[00:20] [Orador 0]: Na aula de hoje eu vou apresentar
+[00:23] [Orador 0]: 2 arquiteturas diferentes que foram marcantes
+[00:26] [Orador 0]: no processo de desenvolvimento dos modelos generativos.
+[00:29] [Orador 0]: Vou dar 1 focada mais pra visão, mais pra frente a gente vai focar,
+[00:34] [Orador 0]: daqui a pouco na verdade a gente vai focar mais em processamento
+[00:37] [Orador 0]: de linguagem natural.
+[00:39] [Orador 0]: E aí essas 2 arquiteturas que eu vou apresentar na aula de hoje são as GANS e os Variational Authincoders,
+[00:46] [Orador 0]: tá? Isso aqui vai ser a base pra vocês entenderem a próxima aula,
+[00:51] [Orador 0]: vai ser sobre modelos de fusão. Modelos de fusão
+[00:54] [Orador 0]: são o estado da arte pra geração de imagens,
+[00:57] [Orador 0]: tá?
+[00:59] [Orador 0]: Outros tópicos que a gente tem na aula, na nesse curso é
+[01:03] [Orador 0]: generativo,
+[01:05] [Orador 0]: reinforcement
+[01:06] [Orador 0]: learning, que aí já vai ser dada pela Evelin ou pelo Leonardo, eles são especialistas nessa parte de,
+[01:12] [Orador 0]: ambos fizeram doutorado
+[01:14] [Orador 0]: nessa área.
+[01:16] [Orador 0]: E tem mais 1 tópico agora eu não estou lembrando mas aí já vai ser com eles.
+[01:21] [Orador 0]: Então o que eu estou planejando,
+[01:23] [Orador 0]: GANT,
+[01:24] [Orador 0]: Variation Out Encoder hoje,
+[01:26] [Orador 0]: modelos de fusão na próxima semana,
+[01:30] [Orador 0]: vou ver com Leonardo se quem vai dar transformer generativo sou eu ou ou eles,
+[01:35] [Orador 0]: e também pretendo fazer pelo menos 1 aula de 1 coisa que eu havia prometido pra vocês algumas aulas atrás,
+[01:42] [Orador 0]: que é fazer 1 aula só sobre o uso de ferramenta,
+[01:45] [Orador 0]: tá? Ferramentas,
+[01:47] [Orador 0]: vou selecionar ainda as ferramentas que eu quero apresentar pra vocês, mas vou tentar buscar as ferramentas que são mais relevantes hoje
+[01:55] [Orador 0]: no uso de inteligência artificial
+[01:57] [Orador 0]: sem código né?
+[01:59] [Orador 0]: É claro saindo do chatbot, chatbot vocês já tiveram aula com a Evelin de engenheira de prompt, vou focar mais em soluções de agente, de automação,
+[02:09] [Orador 0]: ainda estou
+[02:10] [Orador 0]: pensando aqui o que seria mais interessante apresentar pra vocês, aceito sugestão também, se vocês tiverem alguma sugestão, tá?
+[02:17] [Orador 0]: Bom, então vamos lá.
+[02:18] [Orador 0]: Eu vou começar aqui fazendo 1 introdução à IA generativa, mas acho que isso já está claro pra todo mundo, esse curso é sobre IA generativa, a gente tem usado muitos modelos generativos
+[02:29] [Orador 0]: em outras disciplinas,
+[02:31] [Orador 0]: mas vamos dar 1 lembrada né, o próprio nome é a
+[02:34] [Orador 0]: ideia da IA generativa é que seja 1 IA que consiga gerar dados.
+[02:39] [Orador 0]: Antes da proposição desses modelos, que começou
+[02:42] [Orador 0]: basicamente em 2014,
+[02:44] [Orador 0]: 1 grande marco com o Yandr Felllow, a gente tinha modelos que eram preditivos
+[02:49] [Orador 0]: simplesmente.
+[02:50] [Orador 0]: O que a gente viu na disciplina anterior, que vocês viram comigo na disciplina anterior, na disciplina de processamento e análise de imagens. Que que que são aqueles modelos que a gente viu? São preditivos,
+[03:00] [Orador 0]: ele vai inferir 1 classe, vai inferir 1 valor contínuo,
+[03:04] [Orador 0]: ele vai fazer o vai inferir 1 máscara de segmentação, que seja pro leitor, ou 1 né,
+[03:10] [Orador 0]: ele faz alguma predição.
+[03:12] [Orador 0]: Aliás, generativo ela já gera dados,
+[03:15] [Orador 0]: né? E aí, pô, o exemplo mais óbvio para todo mundo é o chatbot, ele gera texto.
+[03:21] [Orador 0]: Esses modelos em geral eles têm que ser treinados numa grande quantidade de de dados, têm diversos problemas que vocês já sabem de alucinação,
+[03:29] [Orador 0]: enfim.
+[03:29] [Orador 0]: Mas normalmente eles são treinados
+[03:32] [Orador 0]: em tarefas mais
+[03:34] [Orador 0]: gerais,
+[03:35] [Orador 0]: o ChatGPT, a predição da próxima palavra, e como ele é treinado numa grande quantidade de dados,
+[03:40] [Orador 0]: consegue 1 entendimento profundo acerca daquele problema,
+[03:44] [Orador 0]: e na hora que você faz 1 pergunta pra ele, ele tem ali 1 distribuição de probabilidade, qual a palavra mais mais ou dove né, mais provável de sair em seguida e com isso ele vai gerando
+[03:53] [Orador 0]: mais e mais dados. Tá. Então é 1 tecnologia que aprende padrões complexos
+[03:59] [Orador 0]: a partir de grandes volumes de dados e a partir deles cria conteúdo novo e original,
+[04:05] [Orador 0]: como textos, imagens, áudios, código, vídeo.
+[04:08] [Orador 0]: Quando que eu uso IA generativa?
+[04:11] [Orador 0]: Bom, basicamente quando eu quero por exemplo criar conteúdo,
+[04:14] [Orador 0]: gerar texto, imagem, apresentação,
+[04:17] [Orador 0]: pra diversas necessidades,
+[04:19] [Orador 0]: gerar código, acelerar o desenvolvimento de software, automatizar
+[04:23] [Orador 0]: tarefas de programação.
+[04:24] [Orador 0]: Não sei se se vocês viram, mas recentemente teve 1
+[04:28] [Orador 0]: 1 entrevista com
+[04:31] [Orador 0]: o Jensen,
+[04:32] [Orador 0]: em que ele não só afirmar que afirmou que a já existe, a inteligência inteligente
+[04:38] [Orador 0]: já existe, mas com ressalvas.
+[04:41] [Orador 0]: Como ele já falou sobre a supremacia na geração de código né das IAs,
+[04:47] [Orador 0]: quão mais,
+[04:48] [Orador 0]: quão mais eficientes
+[04:49] [Orador 0]: e mais assertivas que elas são do que
+[04:52] [Orador 0]: os os programadores
+[04:54] [Orador 0]: mais,
+[04:57] [Orador 0]: os melhores programadores.
+[04:59] [Orador 0]: O, acho que foi o,
+[05:01] [Orador 0]: o da OpenAI, o Sam Altman, ele fez 1 post no Twitter também acho que foi essa semana, a semana passada,
+[05:06] [Orador 0]: agradecendo
+[05:08] [Orador 0]: a comunidade que
+[05:10] [Orador 0]: até o ponto de hoje escreveu tantas linhas de código pra ter novos modelos que hoje superam todos esses programadores.
+[05:17] [Orador 0]: Enfim,
+[05:19] [Orador 0]: pra design prototipagem
+[05:20] [Orador 0]: também, enviar ideias visuais rapidamente sem necessidade de ferramentas complexas.
+[05:26] [Orador 0]: E pra síntese de informação,
+[05:28] [Orador 0]: reduzir, traduzir, extrair insights valiosos de grandes volumes de dados.
+[05:32] [Orador 0]: Isso aqui com certeza é algo que vocês vão ver com
+[05:35] [Orador 0]: com o Leonardo de síntese de informação. A gente tem muito projeto que a gente fez
+[05:40] [Orador 0]: coisas desse tipo. Talvez ele já tenha até comentado com vocês de 1 projeto que a gente fez de patente pra Petrobras, que ela estava querendo analisar,
+[05:48] [Orador 0]: era 1 quantidade absurda de artigo de de patentes desculpa era coisa de, sei lá, 60000 patentes.
+[05:56] [Orador 0]: E obviamente
+[05:58] [Orador 0]: não existe h o suficiente pra analisar todas essas patentes e fazer 1 análise mais global de como as patentes se distribuírem entre áreas entre
+[06:07] [Orador 0]: petroleiras,
+[06:08] [Orador 0]: a gente fez isso com processamento de linguagem oral com certeza o Leonardo deve falar sobre isso no estudo de caso,
+[06:14] [Orador 0]: em alguma das aulas dele.
+[06:16] [Orador 0]: Bom então é isso. E a questão é claro, a IA generativa
+[06:20] [Orador 0]: ela se popularizou com o ChatGPT.
+[06:22] [Orador 0]: E depois que as outras empresas que chegaram né criando o seu chatbot, melhorando
+[06:27] [Orador 0]: os seus modelos, criando modelos cada vez mais profundos.
+[06:32] [Orador 0]: Mas a pergunta é, pô, e a genativa começou com o chatbot?
+[06:36] [Orador 0]: Não,
+[06:37] [Orador 0]: não foi com o chatbot, tudo. Pra chegar num modelo como esse, pra chegar em qualquer
+[06:43] [Orador 0]: modelo ou solução disruptiva como essa tem 1 longo caminho antes de muita gente pesquisando,
+[06:50] [Orador 0]: desenvolvendo modelos,
+[06:51] [Orador 0]: trabalhando em cima
+[06:53] [Orador 0]: de 1 aplicação específica pra tentar melhorar, resolver problemas.
+[06:57] [Orador 0]: Então não, não surgiu com o ChatGPT, mas a verdade é que se popularizou
+[07:01] [Orador 0]: de fato com o ChatGPT.
+[07:04] [Orador 0]: não surgiu com o ChatGPT e antes bem antes disso,
+[07:07] [Orador 0]: acho que o ChatGPT foi em 2022
+[07:09] [Orador 0]: né, se não me engano, final de 2022, novembro de 2022,
+[07:13] [Orador 0]: mas desde 2014
+[07:16] [Orador 0]: já tinham muitas pesquisas
+[07:18] [Orador 0]: dentro de a generativa. Como é que a gente pode fazer
+[07:22] [Orador 0]: para gerar
+[07:23] [Orador 0]: conteúdo?
+[07:24] [Orador 0]: As GANS é 1 grande marco que eu vou apresentar para vocês hoje, mas tinham outras empresas grandes
+[07:30] [Orador 0]: trabalhando nesse tipo de conteúdo. Acho que até comentei com vocês na aula inaugural inaugural não, na aula na aula introdutória em inteligência artificial
+[07:39] [Orador 0]: sobre por exemplo 1 projeto da Google chamada DeepDream,
+[07:42] [Orador 0]: que na época foi bem controverso porque era 1 modelo que gerava arte,
+[07:47] [Orador 0]: E aí o resto é história né, porque tudo
+[07:50] [Orador 0]: que envolve agora geração de vídeo, arte,
+[07:55] [Orador 0]: é bem controverso né.
+[07:58] [Orador 0]: Mas nesse deep tream o que eles fizeram foi gerar quadros e
+[08:02] [Orador 0]: leiloaram os quadros num leilão beneficente.
+[08:06] [Orador 0]: Mas isso aí já já rolava bem antes, então a IA já criava por exemplo rostos
+[08:11] [Orador 0]: hiperrealistas
+[08:12] [Orador 0]: anos antes.
+[08:14] [Orador 0]: Inclusive,
+[08:15] [Orador 0]: 1 solução que ficou bem famosa na época foi
+[08:19] [Orador 0]: 1 modelo da NVIDIA chamado Syllgun.
+[08:22] [Orador 0]: Syllgun foi proposto 1 pouco depois do das das GANS, mas em cima da ideia do Youngfellow
+[08:29] [Orador 0]: das das generativas,
+[08:31] [Orador 0]: que é 1 arquitetura que trouxe controle sobre o estilo
+[08:35] [Orador 0]: em diferentes escalas, então você podia controlar a questão como textura, forma, identidade, que marcou 1 salto enorme
+[08:42] [Orador 0]: na evolução
+[08:44] [Orador 0]: das gangues anteriores.
+[08:46] [Orador 0]: E aí o que aconteceu? Esse projeto aqui na época as pessoas nem acreditavam que que era verdade. Ele utilizava o modelo SkyOgun,
+[08:54] [Orador 0]: esse modelo da NVIDIA, o Philip Wernig,
+[08:56] [Orador 0]: ele criou 1 site
+[08:58] [Orador 0]: chamado Dispersion Does Natazists
+[09:00] [Orador 0]: ponto com, ele está no ar ainda,
+[09:03] [Orador 0]: que gerava
+[09:04] [Orador 0]: rostos
+[09:05] [Orador 0]: hiperrealistas
+[09:06] [Orador 0]: de pessoas
+[09:07] [Orador 0]: completamente falsos né, pessoas que não existiam. E cada vez que você dá f 5
+[09:12] [Orador 0]: nesse nesse site, ele gera o rosto de 1 outra pessoa, de 1 outra pessoa que não existe. Então na época as pessoas falavam, espera aí, mas o que me garante que isso aqui é o rosto de 1 pessoa que não existe né? Porque enfim essa tecnologia ainda está engatinhando, estava muito no começo, acho que hoje ninguém te duvida da capacidade da IA de gerar coisas como essa né, gerar 1 rosto hoje já é 1 coisa simples
+[09:37] [Orador 0]: né? Hoje em dia já se fala em gerar,
+[09:41] [Orador 0]: já se faz na verdade, geração de vídeos
+[09:44] [Orador 0]: com preocupação
+[09:46] [Orador 0]: de como funciona a física, a dinâmica das coisas, dinâmica de fluidos, pra representar isso da melhor forma na geração do conteúdo, né?
+[09:56] [Orador 0]: Inclusive falando sobre isso, só 1 observação porque semana passada eu estava no GTCE
+[10:01] [Orador 0]: esse foi 1 ponto que foi muito falado em várias das palestras.
+[10:07] [Orador 0]: O que a gente chama de, eu não sei se eu nem sei eu coloquei 1 slide sobre isso aqui. Agora eu não lembro e olha que eu fiz slides essa semana.
+[10:16] [Orador 0]: Mas
+[10:18] [Orador 0]: o tópico foi muito em alta lá além além de LLN,
+[10:22] [Orador 0]: agente,
+[10:23] [Orador 0]: enfim,
+[10:24] [Orador 0]: o que a gente chama de World Models, inclusive
+[10:27] [Orador 0]: o não sei se vocês viram mas o Yanlepoon
+[10:31] [Orador 0]: esse ano, acho, não, final do ano passado
+[10:34] [Orador 0]: ele deixou a Meta,
+[10:36] [Orador 0]: ele era diretor de pesquisa da Meta,
+[10:38] [Orador 0]: há 12 anos já se eu não me engano, e ele deixou a Meta pra lançar sua própria startup,
+[10:43] [Orador 0]: AMILabs,
+[10:45] [Orador 0]: que vai focar exatamente
+[10:47] [Orador 0]: nessa ideia de modelos
+[10:49] [Orador 0]: generativos
+[10:51] [Orador 0]: focados em né,
+[10:53] [Orador 0]: modelos do mundo,
+[10:55] [Orador 0]: Porque o que ele defende, a visão dele é que
+[10:59] [Orador 0]: essas essas grandes empresas que
+[11:02] [Orador 0]: fazem essas LLNs, esses modelos generativos
+[11:05] [Orador 0]: gigantescos,
+[11:06] [Orador 0]: eles estão investindo muito dinheiro em simplesmente
+[11:09] [Orador 0]: aumentar a complexidade do modelo, aumentar número de parâmetros, aumentar número de neurônios,
+[11:14] [Orador 0]: mas aumentar número de parâmetros né? Então você já chega a modelos hoje que chegam a trilhões de parâmetros, modelos
+[11:22] [Orador 0]: absurdamente
+[11:23] [Orador 0]: gigantescos.
+[11:25] [Orador 0]: E o que ele defende é que a gente chegou num,
+[11:28] [Orador 0]: num limite.
+[11:29] [Orador 0]: Não é mais aumentando
+[11:31] [Orador 0]: complexidade
+[11:32] [Orador 0]: do modelo que a gente vai conseguir disruptar,
+[11:36] [Orador 0]: subir mais 1 degrau no na evolução da da inteligência artificial.
+[11:41] [Orador 0]: Ele acredita que é exatamente na na
+[11:44] [Orador 0]: no desenvolvimento
+[11:45] [Orador 0]: desses modelos do mundo que entendem como o mundo funciona.
+[11:49] [Orador 0]: Então ele está apostando
+[11:50] [Orador 0]: aí numa outra vertente que sai dessas grandes que essas grandes empresas
+[11:55] [Orador 0]: estão fazendo hoje e
+[11:57] [Orador 0]: tem muita gente apostando nele, né? Acho que ele conseguiu
+[12:01] [Orador 0]: investimentos de venture capital em coisa de
+[12:04] [Orador 0]: 4.5 bilhões de dólares.
+[12:06] [Orador 0]: muita gente está acreditando nessa ideia
+[12:09] [Orador 0]: do
+[12:10] [Orador 0]: Yanleko.
+[12:11] [Orador 0]: Enfim, eu acho que eu coloquei 1 slide sobre isso aqui mais pra frente. Então a gente está saindo de IA pra
+[12:18] [Orador 0]: IA generativa.
+[12:19] [Orador 0]: Então como eu falei IA preditiva
+[12:22] [Orador 0]: seria, ah eu vou usar o meu modelo pra classificar imagens,
+[12:25] [Orador 0]: pra prever valores,
+[12:27] [Orador 0]: pra detectar padrões,
+[12:28] [Orador 0]: pra gerar 1 máscara, pra tirar 1 pra fazer algum tipo de predição.
+[12:33] [Orador 0]: Na IA generativa a gente cria novos dados, inventa novos rojos,
+[12:37] [Orador 0]: recria o mundo.
+[12:39] [Orador 0]: Então não é mais sobre entender o mundo, sobre recriálo,
+[12:42] [Orador 0]: tá? Essa ideia
+[12:44] [Orador 0]: fundamental da IA generativa. E aí como a gente faz isso existem abordagens diferentes,
+[12:50] [Orador 0]: né pra fazer o estado da arte hoje pra somente linguagem natural são modelos baseados em transtornos,
+[12:55] [Orador 0]: né? Então como é que eu gero algo real ou algo que seja
+[13:00] [Orador 0]: tão real quanto o que de fato é real?
+[13:04] [Orador 0]: Ah o Eduardo mandou aí, obrigado Eduardo.
+[13:06] [Orador 0]: O o artigo do Ian Lepun do do Ventio Captor que ele fez
+[13:10] [Orador 0]: ali pra
+[13:12] [Orador 0]: Ai meu Deus, me fugiu pra startup que é lanço.
+[13:14] [Orador 0]: esse é o desafio central da IA generativa.
+[13:17] [Orador 0]: Sem regras explícitas, você não vai numa IA generativa escrever,
+[13:22] [Orador 0]: olha só, 1 face ela tem 2 olhos, tem 1 nariz, o olho pode ser de tal tal cor, você não vai descrever.
+[13:28] [Orador 0]: Nunca é isso que a gente quer fazer no modelo de inteligência artificial né, até se for 1 IA preditiva.
+[13:34] [Orador 0]: Sem rótulos de geração, então os dados não vêm com instruções de como criálos, como IA preditiva né, IA preditiva a gente tem que ter o rótulo ali, o que a gente quer que no final a real preveja né,
+[13:44] [Orador 0]: na generativa não.
+[13:46] [Orador 0]: E apenas exemplos reais, modelo aprende
+[13:48] [Orador 0]: só vendo o que existe.
+[13:50] [Orador 0]: E é claro que,
+[13:51] [Orador 0]: também discutese muito hoje na questão de a gente está estagnado
+[13:56] [Orador 0]: na quantidade de dados
+[13:58] [Orador 0]: orgânicos que a gente tem à disposição.
+[14:00] [Orador 0]: Por isso essa briga enorme por dados, todo mundo está,
+[14:04] [Orador 0]: você tem grandes empresas como OpenAI,
+[14:07] [Orador 0]: Aribaba, Deetsick,
+[14:11] [Orador 0]: Antropy,
+[14:12] [Orador 0]: Percpleft,
+[14:14] [Orador 0]: fazendo scraping em sites de que
+[14:18] [Orador 0]: têm informação orgânica de que humanos escreveram.
+[14:22] [Orador 0]: E você vê também 1 briga muito grande entre empresas chinesas e empresas americanas,
+[14:28] [Orador 0]: e as empresas americanas
+[14:31] [Orador 0]: acusando as empresas chinesas por exemplo de fazerem o que a gente chama de destilação de conhecimento
+[14:36] [Orador 0]: né. Então usar por exemplo o modelo da OpenAI,
+[14:40] [Orador 0]: gerar prompt atrás de prompt a a partir desses modelos pra alimentar o treinamento das IAs delas.
+[14:47] [Orador 0]: Então a gente vê 1 briga muito grande
+[14:50] [Orador 0]: em relação a essa questão e 1 estagnação na quantidade de dados, as pessoas,
+[14:55] [Orador 0]: agora eu não lembro de estatísticas mas dizem que daqui a pouco a quantidade
+[14:59] [Orador 0]: de dados gerada por IA já vai ser absurdamente maior comparada
+[15:03] [Orador 0]: com a quantidade de dados
+[15:05] [Orador 0]: gerados por humanos, né?
+[15:07] [Orador 0]: Eu acho que a gente já passou da metade, se eu não me engano.
+[15:11] [Orador 0]: Esses modelos generativos,
+[15:13] [Orador 0]: eu acho que vai muito na linha do que o
+[15:17] [Orador 0]: representa
+[15:18] [Orador 0]: também,
+[15:19] [Orador 0]: que é você
+[15:21] [Orador 0]: conseguir recriar esse mundo
+[15:23] [Orador 0]: na simulação.
+[15:24] [Orador 0]: E essa recriação desse mundo
+[15:27] [Orador 0]: destravaria aí essa questão de
+[15:29] [Orador 0]: dados
+[15:31] [Orador 0]: sintéticos disponíveis, dados orgânicos disponíveis.
+[15:34] [Orador 0]: Então também é 1 aposta dentro dessa
+[15:37] [Orador 0]: parte de world models.
+[15:39] [Orador 0]: Bom, e qual que é a ideia chave quando a gente pensa em IA generativa?
+[15:44] [Orador 0]: De forma,
+[15:45] [Orador 0]: do ponto de vista matemático,
+[15:47] [Orador 0]: 1 IA generativa
+[15:49] [Orador 0]: ela não faz nada mais do que aprender 1 distribuição de probabilidade.
+[15:54] [Orador 0]: O ChatGPT aprende a distribuição de probabilidade desconhecida
+[15:57] [Orador 0]: que é pra gerar,
+[15:59] [Orador 0]: por exemplo, 1 texto.
+[16:01] [Orador 0]: O modelo de imagem ele aprende a distribuição daquele conjunto de imagens que você usa pra treinar aquele modelo.
+[16:08] [Orador 0]: E aí como isso é feito existem várias formas, eu vou apresentar 2 pra vocês hoje Se tiver ficado mais claro eu vou poder apresentar como é que funciona os modelos Então a lógica é simples, se o modelo entende como os dados se distribuem no espaço
+[16:20] [Orador 0]: ele consegue amostrar novos pontos dessa distribuição,
+[16:24] [Orador 0]: ou seja, gerar novos exemplos válidos.
+[16:26] [Orador 0]: E o que eu quero dizer com válidos aqui são exemplos
+[16:30] [Orador 0]: tão reais
+[16:31] [Orador 0]: quanto
+[16:32] [Orador 0]: os reais.
+[16:33] [Orador 0]: É engraçado que as empresas americanas fizeram gigante
+[16:36] [Orador 0]: de dados protegidos com direitos autorais e agora brigar porque as empresas fazem o mesmo exatamente.
+[16:42] [Orador 0]: É engraçado isso né?
+[16:45] [Orador 0]: E é aquela história ladrão que rouba de ladrão, né? É
+[16:49] [Orador 0]: bizarro mesmo isso.
+[16:50] [Orador 0]: Bom então começando aqui com as gangs.
+[16:52] [Orador 0]: Em 2014
+[16:54] [Orador 0]: surgiu essa ideia da GAN. GAN significa
+[16:57] [Orador 0]: Gerencie Adversarial
+[16:59] [Orador 0]: Nephilous.
+[17:00] [Orador 0]: E essa foi a ideia que mudou tudo. Aqui a gente pode considerar como 1 1
+[17:05] [Orador 0]: mudança de chave
+[17:07] [Orador 0]: pra pra pra evolução da IA generativa.
+[17:09] [Orador 0]: Assim como
+[17:11] [Orador 0]: na na última aula eu falei pra vocês, a última aula que eu dei de de processamento via análise de imagens,
+[17:16] [Orador 0]: eu comecei eu comentei sobre aquele modelo clip, o clip proposto pelo OpenAI também foi 1 mudança de chave em como a gente
+[17:23] [Orador 0]: começou a trabalhar com modelos multimodais.
+[17:26] [Orador 0]: E
+[17:27] [Orador 0]: por que né, porque destravou, antes a gente já falava em geração, antes a gente já falava em multimodalidade.
+[17:33] [Orador 0]: Só que era meio que gambiarras,
+[17:35] [Orador 0]: a gente não tinha 1 arquitetura, 1 coisa mais sólida pra pra pra avançar
+[17:39] [Orador 0]: com essas ideias, né? Então a GAN é 1 arquitetura elegante baseada em competição entre 2 modelos, vocês vão ver daqui a pouco quando eu apresentar essa arquitetura. Mas antes 1 1 curiosidade.
+[17:51] [Orador 0]: Esse aqui é o ele
+[17:53] [Orador 0]: estava fazendo doutorado dele quando ele propôs as ganches.
+[17:57] [Orador 0]: Ele,
+[17:58] [Orador 0]: fazer doutorado na Universidade Montreal se eu não me engano,
+[18:02] [Orador 0]: e ele era
+[18:03] [Orador 0]: orientado
+[18:04] [Orador 0]: por ninguém menos ninguém mais, o Yoasha Banjo,
+[18:08] [Orador 0]: que é 1 figura muito popular na área de E
+[18:11] [Orador 0]: ele teve essa ideia,
+[18:13] [Orador 0]: segundo relatos,
+[18:14] [Orador 0]: numa mesa de bar, num restaurante que ele estava confraternizando
+[18:18] [Orador 0]: com os amigos dele
+[18:19] [Orador 0]: num jantar
+[18:20] [Orador 0]: e 1 amigo dele
+[18:22] [Orador 0]: estava descrevendo 1 problema que ele estava enfrentando
+[18:26] [Orador 0]: pra propor 1 modelo generativo.
+[18:28] [Orador 0]: E ele estava propondo esse modelo baseado simplesmente em estatística.
+[18:33] [Orador 0]: Segundo o relato,
+[18:35] [Orador 0]: dizem que ele até tinha tentado algumas coisas com com com rede neurais mais especificamente,
+[18:41] [Orador 0]: mas ele não tinha conseguido resolver o problema, Os resultados não estavam,
+[18:46] [Orador 0]: ele até conseguia chegar chegar a resultados
+[18:49] [Orador 0]: razoavelmente
+[18:50] [Orador 0]: bons,
+[18:51] [Orador 0]: mas não eram consistentes,
+[18:53] [Orador 0]: nem sempre, era meio instável,
+[18:56] [Orador 0]: meio inconstante,
+[18:57] [Orador 0]: o modelo colapsava,
+[18:59] [Orador 0]: enfim, não era
+[19:01] [Orador 0]: era robusta a solução dele Então ele estava explicando isso pro Yang Muthella no jantar
+[19:06] [Orador 0]: E
+[19:07] [Orador 0]: enquanto o Yang Muthella estava pensando nesse problema,
+[19:12] [Orador 0]: ele
+[19:13] [Orador 0]: teve 1 Como é que se fala? Etifaria
+[19:15] [Orador 0]: E aí ele pensou
+[19:17] [Orador 0]: na ideia da GAN Ele falou poxa,
+[19:19] [Orador 0]: e se eu criar 2 redes neurais que competem entre si?
+[19:22] [Orador 0]: E 1 rede neural responsável por gerar
+[19:25] [Orador 0]: 1 dado, e a outra rede neural responsável por classificar,
+[19:29] [Orador 0]: saber se o dado que está sendo imputado nela é 1 dado real ou é 1 dado feito.
+[19:33] [Orador 0]: E aí ele pensando nisso chegou em casa,
+[19:37] [Orador 0]: depois desse jantar,
+[19:38] [Orador 0]: começou a implementar,
+[19:40] [Orador 0]: ficou algumas horas implementando aquilo e implementou 1 GAN numa noite, numa madrugada.
+[19:46] [Orador 0]: E segundo ele funcionou de primeira. Então
+[19:49] [Orador 0]: o resultado foi 1 dos papers mais citados na história de aprendizado de máquina
+[19:54] [Orador 0]: no mundo. E além dele ser,
+[19:57] [Orador 0]: além dele ter tido essa ideia ali com 1 epifania na hora que o amigo estava comentando sobre
+[20:02] [Orador 0]: sobre o problema que ele estava enfrentando,
+[20:05] [Orador 0]: como eu falei ele também era orientado pelo Yoshu Avênjo, cara muito popular na área, muito importante,
+[20:11] [Orador 0]: não só popular obviamente
+[20:13] [Orador 0]: na área de machine learning,
+[20:15] [Orador 0]: ele é considerado como 1 dos 3 mosqueteiros do deep learning,
+[20:20] [Orador 0]: Yoshio Abenjo,
+[20:21] [Orador 0]: Yanlekun,
+[20:22] [Orador 0]: e se eu não me engano Joff Rita.
+[20:24] [Orador 0]: Somos 3 considerados 3 meus piqueneiros.
+[20:27] [Orador 0]: Ele ele está fazendo doutorado na Universidade de Montreal e
+[20:32] [Orador 0]: isso aqui está na bibliografia recomendada do curso, ele é autor do
+[20:37] [Orador 0]: de 1 livro muito famoso referência na área de,
+[20:40] [Orador 0]: chamado de,
+[20:42] [Orador 0]: o
+[20:43] [Orador 0]: link está aqui, existem existe se vocês procurarem na internet existe 1 tradução pro português,
+[20:49] [Orador 0]: se eu não me engano chamase de Flearing Book ponto com ponto br
+[20:52] [Orador 0]: E esse livro está disponível gratuitamente
+[20:55] [Orador 0]: em HTML
+[20:56] [Orador 0]: Se você quiser 1 cópia
+[20:58] [Orador 0]: física ou Kindle aí eu acho que você tem que pagar, eu acho que tem disponível ali na Amazon por exemplo, mas 1
+[21:05] [Orador 0]: referência
+[21:06] [Orador 0]: aqui na área
+[21:07] [Orador 0]: E o impacto dessa
+[21:09] [Orador 0]: dessa proposta do Yankeld Ferrell chamou
+[21:13] [Orador 0]: atenção de muitos outros
+[21:15] [Orador 0]: outras
+[21:16] [Orador 0]: pessoas, cientistas muito renomados na área como o Yanlekun que eu acabei de comentar com vocês sobre
+[21:22] [Orador 0]: o AIMI Labs, a startup que ele lançou há pouco tempo.
+[21:27] [Orador 0]: Yanecum se eu não me engano ele fez essa postagem num fórum,
+[21:32] [Orador 0]: não sei se vocês conhecem chamado Quora.
+[21:35] [Orador 0]: é como 1 rede social de perguntas e respostas,
+[21:38] [Orador 0]: Fora.
+[21:39] [Orador 0]: E ele
+[21:40] [Orador 0]: escreveu lá que a ideia das gangues era 1 das ideias mais importantes
+[21:45] [Orador 0]: dos últimos 10 anos da área de machine learning.
+[21:48] [Orador 0]: Então coloquei aqui e atualizei
+[21:50] [Orador 0]: isso aqui.
+[21:52] [Orador 0]: Diretor de IA no na Meta até pouco tempo fundador da e
+[21:56] [Orador 0]: que
+[21:58] [Orador 0]: é considerado 1 prêmio Nobel
+[22:00] [Orador 0]: pra área de computação.
+[22:02] [Orador 0]: Bom, como é que funcionam as ganhos? As as ganhos são como 1 jogo,
+[22:07] [Orador 0]: tá? Teoria
+[22:08] [Orador 0]: dos Jogos aplicados
+[22:10] [Orador 0]: aplicada a IA.
+[22:11] [Orador 0]: São 2 modelos que fazem 1 competição direta. 1 modelo é o gerador.
+[22:16] [Orador 0]: O gerador ele recebe, isso aqui é 1 rede neural tá, essa caixinha está representando
+[22:21] [Orador 0]: 1 rede neural.
+[22:21] [Orador 0]: O gerador ele recebe 1 ruído aleatório.
+[22:24] [Orador 0]: É 1 dado aleatório gerado sei lá com distribuição normal, com distribuição uniforme,
+[22:30] [Orador 0]: não importa,
+[22:31] [Orador 0]: é 1 ruído qualquer.
+[22:32] [Orador 0]: E a gente imputa esse ruído na rede neural e a partir desse ruído ele aprende
+[22:38] [Orador 0]: a
+[22:39] [Orador 0]: gerar
+[22:39] [Orador 0]: 1 saída,
+[22:40] [Orador 0]: que durante o processo de treinamento,
+[22:43] [Orador 0]: vai ser classificada pelo discriminador.
+[22:46] [Orador 0]: Daqui a pouco eu explico essa parte, mas ele depois do treinamento o que ele quer é gerar esses dados falsos e como passar das interações,
+[22:54] [Orador 0]: eu quero que ele tenta,
+[22:56] [Orador 0]: o que ele está fazendo é tentar
+[22:58] [Orador 0]: gerar dados
+[23:00] [Orador 0]: tão reais
+[23:01] [Orador 0]: quanto os dados reais.
+[23:03] [Orador 0]: E repara que ele nem
+[23:04] [Orador 0]: vê esses dados reais,
+[23:06] [Orador 0]: tá? Como é que ele tem 1 feeling de que o que ele está gerando faz sentido ou não, é através da função de perda da rede neural. Porque apesar de serem 2 redes neurais,
+[23:18] [Orador 0]: ela tem 1 loss conjunta, 1 função de perda conjunta.
+[23:23] [Orador 0]: obviamente o que gerador quer quando ele gera 1 dado fake e depois é imputado no discriminador,
+[23:29] [Orador 0]: ele quer que o discriminador erre.
+[23:31] [Orador 0]: Repare que o discriminador ele tem acesso aos dados reais
+[23:34] [Orador 0]: e tem acesso aos dados fakes.
+[23:37] [Orador 0]: Então o que que no início o gerador vai, o o discriminador vai fazer? Vai ser muito fácil pra ele
+[23:42] [Orador 0]: distinguir o que é real do que é fake, porque o que é fake no início vai ser 1 monte de ruído, 1 monte de informação que não significa nada,
+[23:49] [Orador 0]: E os dados reais ali estão seguindo aquela distribuição, 1 foto, enfim.
+[23:55] [Orador 0]: Então vai ser muito fácil pra ele dizer que isso aqui é real e dizer que isso aqui é fake.
+[23:59] [Orador 0]: Só que na Loss,
+[24:01] [Orador 0]: O gerador ele vai ter acesso a isso. Espera aí, o discriminador está funcionando muito bem. Deixa eu mudar aqui a distribuição dos dados que eu estou gerando. Então ele vai mudando essa distribuição
+[24:13] [Orador 0]: e
+[24:15] [Orador 0]: sua voz vai melhorando conforme a voz do discriminador vai piorando.
+[24:20] [Orador 0]: Porque a voz do discriminador vai piorar
+[24:23] [Orador 0]: quando quando o meu gerador começar a gerar dados
+[24:27] [Orador 0]: que são tão reais quanto os reais, que o discriminador não consegue dizer
+[24:32] [Orador 0]: se aquilo que está sendo imputado nele é real ou não. E ele vai acabar dizendo que tudo é real. Então a voz dele vai lá pra cima,
+[24:39] [Orador 0]: a voz dele vai lá pra cima e a voz do gerador vai lá pra baixo.
+[24:42] [Orador 0]: Tá? Então são 2 modelos em competição direta, o gerador aprende a criar dados falsos convincentes
+[24:48] [Orador 0]: e o discriminador aprende a distinguir real de falso, o equilíbrio entre eles é o que leva à qualidade dos dados gerados.
+[24:56] [Orador 0]: Agora 1 dado de entrada, não entendi esse conceito. Exatamente.
+[24:59] [Orador 0]: Imagina se você tá,
+[25:01] [Orador 0]: você definiu aqui que o input aqui é 1
+[25:04] [Orador 0]: é 1 vetor
+[25:06] [Orador 0]: Espera aí deixa eu pegar minha meu mouse.
+[25:08] [Orador 0]: Imagina aqui que sua entrada
+[25:10] [Orador 0]: vou representar aqui o
+[25:12] [Orador 0]: gerador tá essa que é rede neural são minhas camadas de neurônios e aí você define que seu input é 1 vetor que tem os valores x1, x2, x3, xn.
+[25:23] [Orador 0]: E aí você gera isso aqui de forma aleatória.
+[25:25] [Orador 0]: Ah vou usar 1, por exemplo, np.randam
+[25:29] [Orador 0]: que a gente já usou,
+[25:31] [Orador 0]: random.normal
+[25:32] [Orador 0]: que ele gera 1 dado
+[25:35] [Orador 0]: o quê? Com média
+[25:39] [Orador 0]: 0
+[25:39] [Orador 0]: e desvio padrão
+[25:41] [Orador 0]: 1 né? Então ele gera ah x1 é é 05
+[25:46] [Orador 0]: x 2 é 03
+[25:50] [Orador 0]: x 3 tá? Então usando 1 função de geração de dados
+[25:54] [Orador 0]: aleatório como a instituição normal uniforme é o mais comum tá? É 1 dado aleatório, é muito gerado Ah,
+[25:59] [Orador 0]: Heitor já respondeu aí, eu não tinha visto
+[26:04] [Orador 0]: Professora, isso é teoria dos jogos do John Nash?
+[26:08] [Orador 0]: eu acho que foi inspirado nisso. Eu não não tenho conhecimento sobre teoria de jogos,
+[26:14] [Orador 0]: apesar de ter feito 1 disciplina de teoria dos jogos aqui na PUC no meu mestrado, mas não foi 1 disciplina que eu curti muito,
+[26:21] [Orador 0]: mas tem tem
+[26:23] [Orador 0]: 1
+[26:24] [Orador 0]: 1 semelhança né, tem 1 inspiração sim,
+[26:26] [Orador 0]: tá?
+[26:26] [Orador 0]: Poderia dar 1 exemplo prático do ruído?
+[26:29] [Orador 0]: Então o ruído é simplesmente.
+[26:31] [Orador 0]: 1 dado qualquer
+[26:33] [Orador 0]: gerado por 1 gerador aleatório.
+[26:36] [Orador 0]: Lá, se eu pegar por exemplo.
+[26:37] [Orador 0]: É isso aqui olha, eu posso criar 1
+[26:40] [Orador 0]: notebook agora
+[26:41] [Orador 0]: é 1 linha de código.
+[26:43] [Orador 0]: Que você usa 1 gerador qualquer.
+[26:45] [Orador 0]: Imagina você definiu você vai definir né qual shape da sua entrada e aí você definiu que o shape da sua entrada é tamanho 100 então o meu vetor é de tamanho 100 tá meu vetor é de tamanho 100 então o que você vai fazer
+[26:58] [Orador 0]: Primeiro né?
+[26:59] [Orador 0]: 1 porte num pai,
+[27:01] [Orador 0]: np,
+[27:02] [Orador 0]: np ponto Random ponto normal,
+[27:05] [Orador 0]: size,
+[27:06] [Orador 0]: igual a 100.
+[27:06] [Orador 0]: Que que isso aqui vai gerar? Vai me gerar 1 vetor de tamanho 100 com 100 números amostrados com distribuição normal média 0 de View padrão 1.
+[27:14] [Orador 0]: É isso, toda vez que eu rodar esse código aqui ele vai gerar 1 ruído diferente,
+[27:19] [Orador 0]: 1
+[27:20] [Orador 0]: conjunto de dados diferentes, eu rodar isso aqui diferente, eu creio que os valores vão mudar. E aí toda vez que eu vou imputar alguma coisa no gerador eu vou imputar 1 ruído diferente, como se eu rodasse essa linha de código novamente
+[27:32] [Orador 0]: com dados gerados.
+[27:34] [Orador 0]: Tá?
+[27:34] [Orador 0]: Esse ruído não significa nada, são dados gerados aleatoriamente,
+[27:37] [Orador 0]: Ou de forma pseudo aleatória.
+[27:39] [Orador 0]: Sem contexto nenhum.
+[27:41] [Orador 0]: Exatamente Rafael, sem contexto nenhum.
+[27:43] [Orador 0]: Tá?
+[27:43] [Orador 0]: Beleza, então
+[27:44] [Orador 0]: vamos lá,
+[27:46] [Orador 0]: vamos ver 1 exemplo
+[27:48] [Orador 0]: prático. Esse exemplo é 1 exemplo clássico, inclusive é o estudo de caso que eu vou fazer com vocês,
+[27:52] [Orador 0]: de 1 dor né. Então você vê aqui que você tem o seu gerador,
+[27:57] [Orador 0]: e o gerador
+[27:58] [Orador 0]: ele em geral
+[27:59] [Orador 0]: ele vai,
+[28:01] [Orador 0]: da entrada para saída ele vai crescendo em geral né, então ele vai crescendo, ele recebe 1 ruído aqui de tamanho menor, 1 shape menor,
+[28:09] [Orador 0]: e ele vai a partir desse ruído construindo
+[28:12] [Orador 0]: 1 imagem
+[28:13] [Orador 0]: que tenha,
+[28:15] [Orador 0]: que seja tão real quanto a real.
+[28:17] [Orador 0]: E essa imagem fake, por exemplo, 1 dígito 8
+[28:21] [Orador 0]: é imputada no discriminador, eu vou gerar vários ruivos aqui diferentes.
+[28:25] [Orador 0]: Cada ruído vai me gerar 1 imagem diferente, 1 ruído vai me gerar 1 8, outro ruído vai me gerar 1 0, outro ruído vai me gerar 1 2.
+[28:33] [Orador 0]: E aí a pergunta que o Rafael falou, fez né, sem contexto, sem contexto, então você também não tem controle.
+[28:39] [Orador 0]: Você não sabe se o ruído que você gerou vai gerar 1 imagem 0, 1 2 3 4 5 6 7 8 9, não tem controle nenhum,
+[28:46] [Orador 0]: tá? Não tem. Depois no vocês
+[28:49] [Orador 0]: vão ver que a gente já consegue controlar isso 1 pouco melhor, e modelos mais modernos como o seguinte que a gente vai ver se consegue controlar mais ainda,
+[28:56] [Orador 0]: tá? Mas é 1 ruído qualquer e você nunca vai saber que imagem que ele vai gerar aqui fora, aqui na saída.
+[29:02] [Orador 0]: E então eu vou gerar isso aqui, eu vou gerar vários ruídos diferentes, ele vai gerar várias imagens feitas, eu tenho meu meu de treino,
+[29:08] [Orador 0]: que eu tenho várias imagens reais, o discriminador é 1 classificador,
+[29:12] [Orador 0]: então poderia muito bem ser por exemplo 1 VGG
+[29:16] [Orador 0]: aqui,
+[29:17] [Orador 0]: como a gente viu na aula de processamento e análise de imagens, ela recebe 1 imagem, tem umas camadas convolucionais aqui, e na saída ele tem ali 2 neurônios onde 1 diz
+[29:27] [Orador 0]: real, o outro diz
+[29:29] [Orador 0]: falso,
+[29:30] [Orador 0]: tá?
+[29:30] [Orador 0]: Então o treinamento do gerador
+[29:32] [Orador 0]: tenta maximizar
+[29:34] [Orador 0]: a possibilidade
+[29:36] [Orador 0]: que o discriminador cometa 1 E. E como é que ele maximiza isso? Gerando imagens cada vez mais semelhantes
+[29:43] [Orador 0]: às reais.
+[29:43] [Orador 0]: E a estrutura é como 1 como de 1 jogo mini max de 2 jogadores, onde o modelo gerador é confrontado
+[29:50] [Orador 0]: com o modelo adversário.
+[29:52] [Orador 0]: Tá? Essa é a ideia.
+[29:54] [Orador 0]: como é que o ruído gera 1 imagem? O ruído gera a imagem depois de 1 processo de treinamento do modelo. Por quê?
+[30:01] [Orador 0]: O modelo,
+[30:02] [Orador 0]: ele,
+[30:03] [Orador 0]: como eu falei, ele tem 1 única.
+[30:06] [Orador 0]: Então quanto
+[30:07] [Orador 0]: 1 tenta
+[30:10] [Orador 0]: maximizar a sua a resultante,
+[30:12] [Orador 0]: o outro tenta minimizar. Então eles estão num jogo de confronto,
+[30:16] [Orador 0]: né?
+[30:17] [Orador 0]: Então o que acontece?
+[30:18] [Orador 0]: Essa estrutura aqui é feita
+[30:20] [Orador 0]: pra que o o gerador
+[30:22] [Orador 0]: minimize o seu erro e ele só vai conseguir minimizar o seu erro se ele chegar numa configuração de pesos
+[30:30] [Orador 0]: que gera imagens
+[30:31] [Orador 0]: tão reais quanto as reais.
+[30:33] [Orador 0]: Porque ele só consegue minimizar seu erro
+[30:36] [Orador 0]: se o erro do discriminador aumenta.
+[30:38] [Orador 0]: Como é que o erro do discriminador aumenta? O erro discriminador aumenta se ele não consegue distinguir o que é real do que é falso.
+[30:45] [Orador 0]: E ele só não vai conseguir distinguir o que é real e o que é falso se essas imagens falsas forem tão reais quanto as falsas. E aí tudo na saída dele ali, ele vai estar falando é real, é real, é real. Daí bom,
+[30:55] [Orador 0]: o discriminador, o gerador sabe que ele chegou numa distribuição,
+[30:59] [Orador 0]: na geração de 1 distribuição,
+[31:02] [Orador 0]: está conseguindo gerar
+[31:03] [Orador 0]: os dados dentro de 1 distribuição desconhecida que é a distribuição dos dados reais.
+[31:09] [Orador 0]: E é 1 é é 1 coisa que nasce naturalmente
+[31:13] [Orador 0]: pela forma como as como as como as coisas são estruturadas como a loss está definida, tá?
+[31:18] [Orador 0]: Porque ela vai sempre objetivar a minimização da loss do gerador.
+[31:22] [Orador 0]: Então talvez fique mais claro aqui José quando eu quando eu der os 2 os 2 próximos slides.
+[31:29] [Orador 0]: Então pensem no modelo gerador
+[31:31] [Orador 0]: como
+[31:33] [Orador 0]: 1 análogo a 1 equipe de falsificadores.
+[31:36] [Orador 0]: Os falsificadores estão tentando produzir 1 moeda falsa que não seja detectada.
+[31:41] [Orador 0]: Então o falsificador no início ele faz 1
+[31:45] [Orador 0]: nota que é grosseira né, o papel é muito diferente,
+[31:49] [Orador 0]: a a tinta é muito diferente,
+[31:51] [Orador 0]: não tem aquelas coisas de segurança.
+[31:54] [Orador 0]: Então o discriminador é o policial, quando ele está fazendo essa essa falsificação muito grosseira,
+[32:00] [Orador 0]: o que vai acontecer é que o discriminador
+[32:03] [Orador 0]: consegue detectar facilmente que aquela moeda é falsa.
+[32:06] [Orador 0]: E bom o que o o que o gerador quer, o que o falsificador quer é gerar 1 moeda que não seja detectada como falsa.
+[32:13] [Orador 0]: Então o que ele vai fazendo naturalmente é melhorando suas
+[32:17] [Orador 0]: capacidades
+[32:18] [Orador 0]: da de geração daquela
+[32:19] [Orador 0]: daquela daquela moeda.
+[32:21] [Orador 0]: a competição, esse jogo leva tuas aqui, as 2 equipes a melhorar seus métodos até que as falsificações sejam indistinguíveis
+[32:28] [Orador 0]: das moedas diminuídas.
+[32:30] [Orador 0]: Então os 2 vão se
+[32:32] [Orador 0]: aprimorando e desenvolvendo técnicas pra detectar,
+[32:36] [Orador 0]: 1 pra detectar se é falsa ou verdadeira e o outro pra gerar cada vez notas mais
+[32:41] [Orador 0]: mais reais.
+[32:43] [Orador 0]: Então pensa aqui, que que é o processo de treino da minha rede neural? No início minhas notas fakes, minhas notas falsas são muito,
+[32:51] [Orador 0]: muito grosseiras.
+[32:53] [Orador 0]: O discriminador aqui,
+[32:55] [Orador 0]: poxa, ah isso aqui é falso, aqui é real, tem problema nenhum pra ele dizer isso. Depois ele melhora mais 1 pouco, discriminador de novo, ah muito fácil, isso aqui é falso, aqui é real. Mas a partir do momento que o meu
+[33:06] [Orador 0]: gerador
+[33:07] [Orador 0]: se aprimora de 1 forma
+[33:09] [Orador 0]: que ele está gerando 1 dado que é exatamente igual ao real, 1 nota que é exatamente igual a real, ele está usando as mesmas tecnologias,
+[33:17] [Orador 0]: as mesmas coisas que a casa da moeda usa para gerar a moeda
+[33:21] [Orador 0]: Então pô, não tem mais mais nada a ser feito, não tenho como o discriminador
+[33:27] [Orador 0]: distinguir 1 da outra
+[33:28] [Orador 0]: Enfim,
+[33:30] [Orador 0]: Pra mim,
+[33:31] [Orador 0]: está mais pra 1 gerador e 1 verificador
+[33:34] [Orador 0]: indica
+[33:35] [Orador 0]: vai passar ou não na validação.
+[33:37] [Orador 0]: Quando não consegue mais detectar entre real e fake. E é isso,
+[33:42] [Orador 0]: é isso. No final das contas é isso.
+[33:44] [Orador 0]: Ela falou, isso não torna o processo de muito lento, já que o gerador não tem 1 treino inicial?
+[33:49] [Orador 0]: Sim.
+[33:49] [Orador 0]: Esse é 1 dos problemas,
+[33:51] [Orador 0]: né?
+[33:53] [Orador 0]: Não só das gangues, mas em geral dos modelos generativos.
+[33:56] [Orador 0]: O treinamento é muito mais lento, o treinamento é muito mais instável também,
+[34:03] [Orador 0]: é muito mais fácil
+[34:05] [Orador 0]: de dar problema no processo de treinamento, de instabilidade,
+[34:09] [Orador 0]: mas o quê? Você precisa de muito mais épocas em geral pra você treinar 1 modelo generativo você precisa de 1,
+[34:15] [Orador 0]: principalmente 1 avanço, de 1 ordem de grandeza de épocas de treinamento
+[34:20] [Orador 0]: absurdamente maior do que a gente está acostumado. Ali a gente estava treinando, por exemplo, sem fineturing, é claro, do 0, sei lá, 1 VGG por 100 épocas,
+[34:29] [Orador 0]: vai, 200 épocas talvez,
+[34:31] [Orador 0]: poucas centenas ou algumas
+[34:34] [Orador 0]: dezenas de épocas.
+[34:35] [Orador 0]: Aqui,
+[34:36] [Orador 0]: dependendo do seu problema, você vai ter que treinar por dezenas de centenas
+[34:40] [Orador 0]: de épocas. Desculpa,
+[34:42] [Orador 0]: dezenas de milhares de épocas ou centenas de milhares de épocas.
+[34:47] [Orador 0]: Então sim, é muito mais difícil para aprender,
+[34:49] [Orador 0]: E torna o processo muito mais lento. Inclusive aqui
+[34:53] [Orador 0]: com GAN,
+[34:54] [Orador 0]: dependendo do dado que você está tentando recriar,
+[34:57] [Orador 0]: é comum também que a gente quebre aquele conceito de época,
+[35:01] [Orador 0]: né? Que qual o conceito original de época? É você apresentar
+[35:05] [Orador 0]: todo o seu conjunto de dados.
+[35:07] [Orador 0]: Apresentou todo ele, mesmo que seja em
+[35:10] [Orador 0]: pronto, passei pra outra época. Aqui em Gun é comum que a gente inclusive
+[35:14] [Orador 0]: não apresente todo o conjunto de dados numa época,
+[35:17] [Orador 0]: tá então aqui também é usual que a gente quebra esse conceito de de
+[35:22] [Orador 0]: de época exatamente por isso, aí a gente apresenta parte do data 7 a cada época comum.
+[35:28] [Orador 0]: Tá.
+[35:29] [Orador 0]: Comparar qualquer coisa com 1 monte de coisa?
+[35:32] [Orador 0]: José não sei se eu entendi.
+[35:34] [Orador 0]: O Nilson falou apenas.
+[35:36] [Orador 0]: Foi
+[35:37] [Orador 0]: lá para cima.
+[35:37] [Orador 0]: Apenas o gerador aprende?
+[35:39] [Orador 0]: O discriminador não? Isso não é 1 erro conceitual? Não, os 2 aprendem.
+[35:44] [Orador 0]: Os 2 aprendem, só que vamos pegar esse exemplo aqui O
+[35:47] [Orador 0]: discriminador aprende
+[35:48] [Orador 0]: a discriminar o que é real no que é feito Mas como é que ele vai discriminar
+[35:52] [Orador 0]: se o que está sendo gerado é tão real quanto o real?
+[35:55] [Orador 0]: Essa moeda aqui do discriminador ele usou as mesmas tecnologias que a Casa da Moeda usou.
+[36:00] [Orador 0]: Como é que ele vai distinguir? É exatamente igual como é feito a moeda real.
+[36:05] [Orador 0]: Então não tem mais como distinguir. Não é que ele não aprende, chega numa hora que ele não consegue mais distinguir
+[36:10] [Orador 0]: o gerador ele se especializou tanto, ele está gerando os dados
+[36:14] [Orador 0]: tão
+[36:14] [Orador 0]: iguais aos reais
+[36:16] [Orador 0]: que não não tem mais como, não tem mais como ele conseguir distinguir entendeu?
+[36:20] [Orador 0]: É essa a ideia né?
+[36:21] [Orador 0]: Então qualquer coisa é igual a ruído. José falou como comparar ruído com 1 monte de coisa. Não, mas você não vai comparar ruído.
+[36:30] [Orador 0]: O ruído é só 1 input do seu modelo,
+[36:33] [Orador 0]: tá?
+[36:34] [Orador 0]: Esse modelo aprende a transformar 1 ruído qualquer
+[36:37] [Orador 0]: numa imagem
+[36:38] [Orador 0]: que seja tão real quanto a real. Então esse ruído é só,
+[36:44] [Orador 0]: considere ele como 1 aleatoriedade
+[36:46] [Orador 0]: no input dos dados
+[36:48] [Orador 0]: pra que ele possa gerar imagens diferentes.
+[36:51] [Orador 0]: Porque depois da rede neural treinada, esse é o modelo determinístico.
+[36:55] [Orador 0]: Depois que você treinar esse modelo, os pesos estão fixos.
+[36:58] [Orador 0]: Peso desse neurônio aqui é 0.015,
+[37:01] [Orador 0]: o peso desse outro neurônio aqui é 2.3,
+[37:04] [Orador 0]: tá? O baias é tal. Então o modelo é fixo. Se você pegar esse ruído aqui e sempre imputar
+[37:10] [Orador 0]: ele mesmo nesse modelo gerador, ele vai sempre gerar esse mesmo 8 aqui exatamente igual ao modelo determinístico depois de treinar, não em aristocálcio.
+[37:19] [Orador 0]: Então esse ruído é só 1 aleatoriedade
+[37:21] [Orador 0]: pra que esse modelo consiga gerar imagens
+[37:24] [Orador 0]: diferentes.
+[37:25] [Orador 0]: É o que gera essa aleatoriedade na geração.
+[37:28] [Orador 0]: Gente eu poderia dar 1 exemplo prático de ruído?
+[37:31] [Orador 0]: Acho que eu já tinha respondido essa né?
+[37:32] [Orador 0]: Veio aqui pra baixo.
+[37:34] [Orador 0]: Acho que é porque o pessoal respondeu né.
+[37:36] [Orador 0]: Deixa eu ver que tem 1 monte de,
+[37:37] [Orador 0]: de resposta aqui.
+[37:38] [Orador 0]: Ao Heitor, a Fernanda, achei essa imagem mais confusa. Vou ficar com a definição que é 1 informação
+[37:45] [Orador 0]: aleatória.
+[37:46] [Orador 0]: Show.
+[37:47] [Orador 0]: Tá.
+[37:47] [Orador 0]: Beleza. Então,
+[37:48] [Orador 0]: mais alguma dúvida até aqui gente?
+[37:50] [Orador 0]: Não? Então beleza, então vou seguir. Então como é que funciona na prática? Essa questão de
+[37:55] [Orador 0]: aproximar 1 distribuição de probabilidade.
+[37:58] [Orador 0]: as grandes tentam replicar 1 distribuição de probabilidade,
+[38:01] [Orador 0]: a função custo deve refletir a distância entre a distribuição dos dados gerados pela GAN e a distribuição dos dados reais.
+[38:07] [Orador 0]: Então você gerou seu ruído aqui que são dados
+[38:10] [Orador 0]: aleatórios
+[38:12] [Orador 0]: gerados com num pai da vida com
+[38:16] [Orador 0]: módulo
+[38:17] [Orador 0]: Random com
+[38:19] [Orador 0]: distribuição uniforme aqui até se gera usar uniforme esse uniforme porque esse é normal enfim,
+[38:24] [Orador 0]: dados gerados de forma aleatória.
+[38:26] [Orador 0]: E lembrando,
+[38:28] [Orador 0]: responsável por adicionar
+[38:30] [Orador 0]: essa aleatoriedade na rede neural porque ela é 1 rede determinística
+[38:33] [Orador 0]: e possibilitar a geração de imagens diferentes a cada vez que eu que eu chamo. Então a partir do momento que eu passo esse modelo pro pro
+[38:42] [Orador 0]: modelo generativo,
+[38:44] [Orador 0]: o que que que a gente está vendo aqui nessa saída?
+[38:47] [Orador 0]: Essa aqui,
+[38:48] [Orador 0]: a a essa distribuição
+[38:50] [Orador 0]: azul aqui,
+[38:51] [Orador 0]: considerem como a distribuição dos meus dados reais.
+[38:55] [Orador 0]: Então o que que está acontecendo aqui? Eu dei esse ruído pra minha rede, ela fez todo o processamento matemático aqui dentro dela, e a distribuição de probabilidade dos dados que ela gerou foi essa aqui laranja.
+[39:07] [Orador 0]: Então a loss dela
+[39:08] [Orador 0]: tem que refletir
+[39:10] [Orador 0]: essa diferença na distribuição.
+[39:12] [Orador 0]: Agora não é mais 1 medida de erro,
+[39:15] [Orador 0]: tá? Não é mais o real menos o credito, é 1 diferença de distribuição. A gente tem várias funções que calculam
+[39:21] [Orador 0]: diferenças de distribuição,
+[39:23] [Orador 0]: tá?
+[39:25] [Orador 0]: Inclusive a proposta aqui pelo Youngfellow.
+[39:27] [Orador 0]: Então você tem essa distribuição, o que que a gente quer no final? A gente quer que para minha loss do meu modelo gerador abaixar,
+[39:34] [Orador 0]: ele precisa
+[39:35] [Orador 0]: que a distribuição laranja,
+[39:37] [Orador 0]: que é a distribuição gerada,
+[39:39] [Orador 0]: fique assim.
+[39:40] [Orador 0]: Parecida com a distribuição
+[39:43] [Orador 0]: real.
+[39:43] [Orador 0]: Quando ele chegar aqui, o que que vai acontecer no discriminador? Ele vai ter 1 erro maior possível, que ele vai dizer que tudo
+[39:50] [Orador 0]: é real,
+[39:52] [Orador 0]: quando na verdade o que a gente faz é botar metade real metade
+[39:55] [Orador 0]: metade fake,
+[39:56] [Orador 0]: tá?
+[39:57] [Orador 0]: E aí ele sabe que ele atingiu ali
+[39:59] [Orador 0]: aquela aquele aprendizado da distribuição dos dados
+[40:02] [Orador 0]: reais.
+[40:03] [Orador 0]: Então lembrando,
+[40:04] [Orador 0]: não tenho rótulo nenhum, eu só tenho 1 conjunto de dados que eu quero
+[40:10] [Orador 0]: recriar.
+[40:11] [Orador 0]: Eu acho que eu já comentei com vocês A gente
+[40:14] [Orador 0]: na época que
+[40:16] [Orador 0]: poucos anos depois que a GAN foi proposta
+[40:18] [Orador 0]: Não,
+[40:19] [Orador 0]: pouco depois, né? Acho foi lá para 2019,
+[40:21] [Orador 0]: 2020 que a gente já tinha alguns modelos em cima da da da ideia da GAN que eram mais,
+[40:28] [Orador 0]: mais,
+[40:29] [Orador 0]: mais modernos 1 pouco.
+[40:31] [Orador 0]: Acho que foi 2019,
+[40:33] [Orador 0]: E a gente tinha 1 projeto,
+[40:35] [Orador 0]: eu já comentei desse projeto com vocês com certeza, 1 projeto chamado Mant,
+[40:40] [Orador 0]: com a Petrobras que era da parte de engenharia submarina,
+[40:43] [Orador 0]: e 1 das tarefas que a gente tinha lá era desenvolver 1 modelo de classificação,
+[40:47] [Orador 0]: tranquilo de imagens,
+[40:49] [Orador 0]: e eram imagens do leito marinho.
+[40:51] [Orador 0]: Era 1 imagem de vídeos de ROV na verdade, filmava
+[40:57] [Orador 0]: o leito marinho e a gente pegava esses vídeos e extraía.
+[41:01] [Orador 0]: E o que eles queriam era 1 modelo classificador,
+[41:05] [Orador 0]: se eu não me engano a gente tinha 4 ou 5 classes que era sedimento,
+[41:08] [Orador 0]: ou seja, é 1 solo marinho que não tem nada,
+[41:11] [Orador 0]: é só areia mesmo, e aí tinha outras 4 classes que distinguiam a quantidade de vida marinha que tinha naquele solo.
+[41:18] [Orador 0]: Não lembro exatamente
+[41:20] [Orador 0]: as classes, agora vem a ordem, mas tinha laje,
+[41:23] [Orador 0]: estercodolito,
+[41:24] [Orador 0]: alguma
+[41:25] [Orador 0]: outra coisa e bioconcressão.
+[41:27] [Orador 0]: E
+[41:29] [Orador 0]: essas 4 eram essas 4 eram diferentes níveis de de
+[41:33] [Orador 0]: vida marinha que existe ali. Você olhava pra imagem era basicamente em pedregulhos,
+[41:38] [Orador 0]: mas o formato,
+[41:40] [Orador 0]: a textura,
+[41:42] [Orador 0]: a cor
+[41:43] [Orador 0]: indicava a quantidade de vida marinha que você tinha naquela região.
+[41:46] [Orador 0]: E na bioconcreção você tinha uns pedregulhos maiores assim, eram mais bem definidos, mas o que acontecia é que você,
+[41:53] [Orador 0]: quando a gente olhava o dataset que a gente tinha, poxa, o desbalanceamento era absurdo,
+[41:57] [Orador 0]: a quantidade de sedimento era muito alta, a quantidade de bioconcresção era muito baixa.
+[42:03] [Orador 0]: Então a gente usou esses modelos aqui baseados em GAN pra gerar
+[42:07] [Orador 0]: novas imagens de bioconpressão
+[42:09] [Orador 0]: e ficaram perfeitos assim, gente chegou a apresentar,
+[42:12] [Orador 0]: a gente fez 1 1 teste né, às cegas.
+[42:16] [Orador 0]: A gente
+[42:18] [Orador 0]: pegou algumas imagens de bioconpressão e apresentou
+[42:21] [Orador 0]: numa reunião pros especialistas da da Petrobras,
+[42:24] [Orador 0]: do do Noah,
+[42:25] [Orador 0]: que era o cliente na época, e eles não conseguiram
+[42:29] [Orador 0]: dizer se era 1 imagem real ou feita.
+[42:31] [Orador 0]: As pessoas que lidavam com aquilo, eram especialistas né, que lidavam pelo no dia a dia E a gente usou lá 1 arquitetura vazada ainda Então ninguém diz isso é 1 rosto, o modelo aprende apenas o que parece real
+[42:45] [Orador 0]: Simplesmente
+[42:46] [Orador 0]: ajustando parâmetros pra mim visar 1 RD
+[42:49] [Orador 0]: E aí a questão né, demora,
+[42:52] [Orador 0]: de fato demora É
+[42:54] [Orador 0]: 1 pouco mais difícil, 1 pouco mais estável esse processo de treinamento
+[42:57] [Orador 0]: Mas como ele tem 1 objetivo de minimizar, ele vai ajustando o peso até que ele consegue
+[43:01] [Orador 0]: aproximar aquela distribuição da distribuição real.
+[43:04] [Orador 0]: O Felipe falou, na prática durante modelos como GPT precisam de 1 feedback se a resposta dele está tão boa como se fosse real.
+[43:10] [Orador 0]: Feita por 1 humano pra melhorar?
+[43:14] [Orador 0]: Não.
+[43:15] [Orador 0]: O GPT por exemplo,
+[43:17] [Orador 0]: ele é treinado pra prever a próxima palavra.
+[43:20] [Orador 0]: Então ele pega ali todo o conjunto de texto que ele tem disponível na incorpora pra pra treinar o modelo,
+[43:25] [Orador 0]: e ele pega por exemplo 1 frase e faz aquele
+[43:29] [Orador 0]: left shift right né?
+[43:31] [Orador 0]: Ele shift a frase pra direita,
+[43:34] [Orador 0]: insere 1 token de inicialização,
+[43:36] [Orador 0]: e fica sem o último token, sem a última palavra.
+[43:39] [Orador 0]: você encurta isso no momento de treinamento,
+[43:42] [Orador 0]: E o que ele tem que o que ele tem que gerar na saída é aquele token que eu escondi dele
+[43:49] [Orador 0]: não precisa
+[43:50] [Orador 0]: no processo de treinamento de 1 feedback humano,
+[43:53] [Orador 0]: tá?
+[43:54] [Orador 0]: Tem muita coisa que na teoria, na na teoria,
+[43:58] [Orador 0]: pô na teoria não precisa né?
+[44:01] [Orador 0]: Mas
+[44:02] [Orador 0]: dependendo da aplicação que você está fazendo é interessante colocar 1 humano no loop né, até a gente tem 1 termo pra falar sobre isso, human in the loop, né? Pra melhorar, pra dar 1 feedback então,
+[44:13] [Orador 0]: aí voltando né, na teoria não precisa, e você falou exatamente na prática, na prática pode ser interessante dependendo do da aplicação que você está está fazendo, tá?
+[44:23] [Orador 0]: Qual a relação dos modelos GAN para os modelos de fusão? Aí Eduardo, você está adiantando
+[44:29] [Orador 0]: o está tendo muita pergunta aqui, acho que eu não vou responder essa pergunta agora.
+[44:34] [Orador 0]: Mas GAN e o próximo tópico que eu vou falar hoje ainda, eles são a base pro modelo de difusão,
+[44:40] [Orador 0]: tá?
+[44:41] [Orador 0]: Mas vamos segurar 1 pouco pro pessoal não não não se enrolar aqui.
+[44:46] [Orador 0]: das coisas que vocês estão vendo aqui,
+[44:48] [Orador 0]: vocês vão ver que são conceitos que vão ser usados lá em difusão.
+[44:51] [Orador 0]: Isso contrasta diretamente com por exemplo 1 CNN de classificação, onde você precisaria rotular milhares de imagens como rosto ou não rosto.
+[44:59] [Orador 0]: Exato,
+[45:00] [Orador 0]: na GAN os dados falam por si mesmo, exatamente,
+[45:03] [Orador 0]: exatamente isso.
+[45:04] [Orador 0]: Isso aí.
+[45:04] [Orador 0]: A Fabiana perguntou, quando usamos GAN
+[45:07] [Orador 0]: quando você quer gerar dados,
+[45:09] [Orador 0]: 1 aplicação prática Fabiana. Imagina que esse exemplo que eu acabei de dar né, não sei se você fez a pergunta antes de eu falar, mas esse exemplo que eu acabei de dar do MANT. A gente tinha dados muito desbalanceados.
+[45:21] [Orador 0]: A quantidade de imagens que a gente tinha em bioconcresção
+[45:24] [Orador 0]: era absurdamente menor
+[45:26] [Orador 0]: do que de sedimento, do que das outras classes.
+[45:29] [Orador 0]: 1 área que tenha muita muita concentração de vida marinha era difícil no data 7 da Petrobras.
+[45:35] [Orador 0]: Então quando a gente treinava os modelos, por melhor que os modelos fossem, por mais que a gente tentasse ajustar a loss pra ser de forma ponderada né, dar 1 peso maior pra 1 erro na bioconpressão,
+[45:44] [Orador 0]: do que 1 erro de sedimento, por mais que a gente ajustasse essas coisas de outras formas,
+[45:50] [Orador 0]: o modelo acabava sempre errando vir a compressão.
+[45:52] [Orador 0]: Então estava muito desbalanceado.
+[45:54] [Orador 0]: Aí a gente usou a GAN como
+[45:56] [Orador 0]: 1 auxílio para o treinamento da classificação,
+[45:59] [Orador 0]: para geração de dados. Então a gente completou esses dados aqui, gerou alguns,
+[46:03] [Orador 0]: completou e aí o desbalanceamento não ficou tão grande.
+[46:06] [Orador 0]: Tá, vou chutar aqui, eu tinha por exemplo 5000
+[46:09] [Orador 0]: imagens de de sedimento, era muito mais que isso tá, mas imagina, eu tinha 5000 imagens de sedimento e eu tinha 150 de boa pressão.
+[46:16] [Orador 0]: E aí é o que a gente falou lá na na em préprocessamento
+[46:20] [Orador 0]: O modelo ele tende a não aprender aquele dado que é errado né?
+[46:23] [Orador 0]: Outras aplicações, aí aplicações que estão próximas de todo mundo. Por exemplo você,
+[46:28] [Orador 0]: ah está lá no chat ePT e você quer gerar 1 imagem pra botar aqui no meu slide.
+[46:34] [Orador 0]: Não, desculpa, agora não, isso não. Isso já vai ser modelo de difusão, mas em tipo.
+[46:39] [Orador 0]: Eu acho que na prática é mais usada pra isso, pra balanceamento de dados.
+[46:42] [Orador 0]: Pra geração de variedade né, pra por exemplo, ah, pra aumentation,
+[46:48] [Orador 0]: date aumentation,
+[46:49] [Orador 0]: porque balanceamento
+[46:50] [Orador 0]: seria 1 coisa específica pra 1 classe rara, mas você pode usar também pra aumentar a variabilidade, pra tornar o seu modelo mais robusto.
+[46:57] [Orador 0]: Tá? Então você gera mais dados,
+[46:59] [Orador 0]: diferente daqueles dados que você tem.
+[47:01] [Orador 0]: Quanto a ela, o usa
+[47:03] [Orador 0]: pra
+[47:04] [Orador 0]: derivar a imagem? Não, o usa modelos de fusão, que é que a gente vai ver na próxima aula.
+[47:09] [Orador 0]: Meet journey e esses modelos
+[47:11] [Orador 0]: mais modernos de direção de imagem usam de fusão.
+[47:14] [Orador 0]: Desculpa, é que eu estou esperando meses para chegar na parte do curso que fala sobre modelo de fusão.
+[47:20] [Orador 0]: Eu imagino que você esteja
+[47:22] [Orador 0]: ansioso.
+[47:23] [Orador 0]: Mas vamos chegar lá, só não quero confundir o pessoal.
+[47:27] [Orador 0]: Me chama falou
+[47:28] [Orador 0]: pra
+[47:31] [Orador 0]: fazer upscale.
+[47:33] [Orador 0]: É não não conheço o Cristiano.
+[47:35] [Orador 0]: Na boa aí outra outra
+[47:37] [Orador 0]: outra aplicação aí que é a quem tinha perguntado Fabiana né?
+[47:41] [Orador 0]: Atividade criativa?
+[47:43] [Orador 0]: É, pode ser também atividade criativa, sei lá, tem 1 conjunto de dados
+[47:47] [Orador 0]: e você aprende,
+[47:49] [Orador 0]: sei lá, vou pensar em imagem também, a gente está falando em imagem né, você tem 1 conjunto de dados, você treina a sua van pra gerar,
+[47:55] [Orador 0]: pra aprender a distribuição desses dados e cada vez que você dá 1 ruído ele vai gerar alguma variação naqueles dados que você já tem, então pode ser também
+[48:03] [Orador 0]: alguma atividade
+[48:04] [Orador 0]: criativa,
+[48:05] [Orador 0]: né?
+[48:06] [Orador 0]: Bom, beleza, então não precisa de leigos ou anotações,
+[48:09] [Orador 0]: ele aprende com exemplos reais e captura estrutura implícita dos dados
+[48:14] [Orador 0]: no processo de peelamento.
+[48:16] [Orador 0]: Então é 1 aprendizado que a gente chama de aprendizado implícito,
+[48:18] [Orador 0]: não aprende com regras, já falei né, rosto tem 2 olhos simétricos, nariz centralizado,
+[48:23] [Orador 0]: nada disso a gente passa pra nenhum modelo de ar, nem generativo ou nem preenchível.
+[48:27] [Orador 0]: E aprende padrões,
+[48:28] [Orador 0]: estruturas estatísticas profundas
+[48:30] [Orador 0]: que definem o que, o que é real,
+[48:33] [Orador 0]: né? O que é real e o que não é, simplesmente se baseando
+[48:37] [Orador 0]: no erro.
+[48:38] [Orador 0]: O que é pra rodar modelos de fusão open source.
+[48:42] [Orador 0]: Ah beleza, não conheço não, depois vou ver.
+[48:44] [Orador 0]: A Ana falou, a GAN seria 1 mecanismo pra saber se algo foi gerado por IA?
+[48:48] [Orador 0]: Olha,
+[48:50] [Orador 0]: não exatamente,
+[48:52] [Orador 0]: tá? Na época que a GAN foi proposta,
+[48:54] [Orador 0]: muita gente
+[48:56] [Orador 0]: acabou,
+[48:57] [Orador 0]: principalmente porque naquela época estavam gerando muitos deepfakes. Os deepfakes até eram bem ruins, a gente conseguia facilmente saber que por exemplo 1 vídeo era era era 1 deepfake né, hoje em dia as coisas já estão bem mais modernas, bem mais,
+[49:13] [Orador 0]: bem melhores né esse processo de geração.
+[49:15] [Orador 0]: Mas na época
+[49:17] [Orador 0]: muita gente estava trabalhando
+[49:18] [Orador 0]: aqui no discriminador,
+[49:20] [Orador 0]: inclusive o Ian Goodfelo ele trabalha com isso, ele propôs 1 modelo de geração e hoje ele trabalha muito na parte de
+[49:28] [Orador 0]: detecção
+[49:29] [Orador 0]: de de
+[49:31] [Orador 0]: de dados fakes né de de fake enfim,
+[49:34] [Orador 0]: informação falsa.
+[49:35] [Orador 0]: Muita gente trabalhou nessa parte da pra
+[49:39] [Orador 0]: pra pra essa parte de discriminação né, de de de detecção.
+[49:44] [Orador 0]: Mas que acontece aqui, com esse modelo sendo treinado em conjunto,
+[49:48] [Orador 0]: esse discriminador a partir desse modelo
+[49:50] [Orador 0]: aprende
+[49:51] [Orador 0]: o que é feito e o que é,
+[49:53] [Orador 0]: quer dizer, a a mostrar
+[49:55] [Orador 0]: dados com a mesma distribuição dos dados reais, esse discriminador não vai ser mais capaz de distinguir o que é real do é feio. Então tem outros linhas de pesquisa
+[50:04] [Orador 0]: que desenvolvem outras arquiteturas pra tentar,
+[50:08] [Orador 0]: de alguma forma
+[50:09] [Orador 0]: distinguir o que é real do que feito, tá?
+[50:12] [Orador 0]: Mas na teoria esse discriminador poderia ser usado.
+[50:15] [Orador 0]: Mas aí teria que ter outro,
+[50:16] [Orador 0]: outro processo aqui pra tentar melhorar, eu vou né entender,
+[50:20] [Orador 0]: isso aqui é 1 imagem feita,
+[50:22] [Orador 0]: tá?
+[50:23] [Orador 0]: Enfim.
+[50:23] [Orador 0]: Bom, bem isso.
+[50:24] [Orador 0]: Aí
+[50:25] [Orador 0]: vamos lá.
+[50:26] [Orador 0]: Então primeiro os resultados começaram com dígitos como o MNIS,
+[50:32] [Orador 0]: simples mas impressionantes
+[50:34] [Orador 0]: pra época né,
+[50:35] [Orador 0]: não era,
+[50:36] [Orador 0]: não, foi 1,
+[50:38] [Orador 0]: foi 1 quebra de paradigma ali no no conceito de pra predição.
+[50:43] [Orador 0]: Depois rostos como eu falei e até com
+[50:46] [Orador 0]: o,
+[50:48] [Orador 0]: com o,
+[50:49] [Orador 0]: imperfeitas mas revolucionárias,
+[50:51] [Orador 0]: primeiro centrada numa parte,
+[50:53] [Orador 0]: né, até que
+[50:55] [Orador 0]: chegamos a objetos, cenas e objetos cada vez mais complexos.
+[50:58] [Orador 0]: Não sei se se lembra mas eu acho que coisa de 2 3 anos atrás 1 grande
+[51:03] [Orador 0]: marco foi o Sora da OpenAI.
+[51:06] [Orador 0]: Acho que hoje ele até já ficou pra trás, né? Nem ouço mais falar no Sora.
+[51:10] [Orador 0]: Não sei quão bom ele está, realmente nunca mais
+[51:13] [Orador 0]: procurei saber.
+[51:14] [Orador 0]: Mas hoje a gente tem modelos que não focam nem só em geração de imagem pura e simplesmente mas 1 sequência de imagens, 1 vídeo,
+[51:22] [Orador 0]: e que esse foi o grande
+[51:25] [Orador 0]: lance quando a OpenAI lançou o Sora,
+[51:27] [Orador 0]: que foi muito falado, é que aquele modelo conseguia entender
+[51:32] [Orador 0]: a física das coisas.
+[51:34] [Orador 0]: Então eles lançaram alguns vídeos,
+[51:37] [Orador 0]: na época eles lançaram alguns vídeos exemplo
+[51:39] [Orador 0]: do que eles tinham gerado com sorra E você via, se não me engano era 1 moça atravessando 1 1
+[51:46] [Orador 0]: rua em Tóquio se eu não me engano E você via
+[51:50] [Orador 0]: o andar,
+[51:51] [Orador 0]: a roupa se movimentando,
+[51:53] [Orador 0]: o vento,
+[51:54] [Orador 0]: o movimento do cabelo de acordo com
+[51:57] [Orador 0]: Como funciona fisicamente,
+[51:59] [Orador 0]: né? Isso foi 1 grande passo também pro pros modelos generativos
+[52:03] [Orador 0]: E as ganches, enfim foram ficando muito boas,
+[52:06] [Orador 0]: a face CPC lísticas, zip fakes.
+[52:08] [Orador 0]: Não sei se se lembram mas começou com
+[52:12] [Orador 0]: aqueles zip fakes do Will Smith comendo 1 1 1 miojo,
+[52:16] [Orador 0]: e hoje em dia tem até vários vídeos na internet fazer essa comparação né de como é que era no início, como é que é hoje você compara o avanço, no início apareceu 1 monstro comendo 1 1 miojo e hoje em dia é difícil saber se é 1,
+[52:30] [Orador 0]: Perguntaram sobre, ah então
+[52:33] [Orador 0]: é demorado treinar né? O treinamento é mais lento, é mais complicado.
+[52:37] [Orador 0]: E é exatamente isso. Tem várias
+[52:40] [Orador 0]: desvantagens né,
+[52:42] [Orador 0]: em relação ao processo de treinamento porque é de fato
+[52:45] [Orador 0]: difícil treinar o modelo
+[52:48] [Orador 0]: pra pra aprender 1 distribuição
+[52:50] [Orador 0]: desconhecida né, de conjunto de dados. Então o treinamento é indicado, gerador e exterminador precisam evoluir em sincronia.
+[52:57] [Orador 0]: A gente tem problemas de colapso muito comum em modelos generativos,
+[53:01] [Orador 0]: gerador aprende
+[53:02] [Orador 0]: a enganar com poucas amostras repetidas
+[53:05] [Orador 0]: ignorando a diversidade.
+[53:06] [Orador 0]: Isso seria 1 problema de colapso.
+[53:09] [Orador 0]: E aí qual que é o sintoma disso? O sintoma é que poxa, cheguei num erro mínimo e estou satisfeito ali, estou gerando a
+[53:18] [Orador 0]: mesma imagem, é 1 imagem muito similar, pouca variação,
+[53:21] [Orador 0]: Mas no final das contas, se eu tenho 1 gerador assim ele não serve pra nada. Imagina no meu caso, que eu queria gerar novas imagens de de bioconcreção.
+[53:30] [Orador 0]: Ou num caso que você quer fazer alguma algum análise criativa pra gerar variações
+[53:35] [Orador 0]: no em alguns trabalhos, sei lá, de algum pintor,
+[53:38] [Orador 0]: ou você quer fazer data aumentation nos seus dados, pô você está gerando sempre a mesma imagem, isso não tem valor nenhum pra mim, poucas variações,
+[53:45] [Orador 0]: né?
+[53:46] [Orador 0]: E o terceiro ponto é difícil de de controlar, você gera dados,
+[53:50] [Orador 0]: mas você não determina exatamente o que que vai sair.
+[53:53] [Orador 0]: Então no MAGAN se você treinou com a MNIST que são dígitos de 0 a 9,
+[53:58] [Orador 0]: vai cada input em input ruído que você entrar ele vai gerar 1 número diferente.
+[54:03] [Orador 0]: E qual vai ser?
+[54:04] [Orador 0]: Se se é o 0 que você quer gerar, você vai ter que gerar muitos
+[54:08] [Orador 0]: e analisar na mão ou criar 1 classificador para classificar entre 0 e 2 3 4, enfim,
+[54:15] [Orador 0]: para para separar essas imagens que você quer para fazer o balanceamento,
+[54:19] [Orador 0]: tá?
+[54:19] [Orador 0]: Então é difícil de de de controlar a saída. Difícil não né? É impossível controlar a saída.
+[54:27] [Orador 0]: É o filho falou chocado que o criador fez isso numa madrugada sem usar nenhum NIAR. É, e teoricamente estava bebendo.
+[54:33] [Orador 0]: Pois é.
+[54:34] [Orador 0]: É 1 ideia, foi 1 epifania que ele teve mesmo muito
+[54:38] [Orador 0]: revolucionário né? Mizarmem.
+[54:41] [Orador 0]: Bom
+[54:41] [Orador 0]: a questão da falta de controle, você gera mas você não escolhe exatamente o que sai, então por isso no nosso caso por exemplo, a gente não treinou com todas as imagens que a gente tinha, a gente treinou só com biocompressão,
+[54:52] [Orador 0]: porque a gente sabe que independente do ruído ele vai gerar 1 variação de biocompressão
+[54:56] [Orador 0]: tá?
+[54:58] [Orador 0]: Espaço latente existe mas é desorganizado,
+[55:01] [Orador 0]: então a gente pode pensar que internamente,
+[55:03] [Orador 0]: matematicamente,
+[55:05] [Orador 0]: o que está acontecendo
+[55:07] [Orador 0]: nas ganhos é isso aqui.
+[55:08] [Orador 0]: É 1 espaço latente que ele usa pra recriar o seu conjunto de dados,
+[55:13] [Orador 0]: que é totalmente desorganizado.
+[55:14] [Orador 0]: Então quando você dá 1 input, 1 ruído qualquer,
+[55:17] [Orador 0]: ele vai pegar, ah sei lá está mapeado aqui, então ele vai retornar essa classe, esse esse essa imagem aqui. Agora adicionar 1 outro ruído, vai retornar
+[55:26] [Orador 0]: 1 outro ruído muito diferente, e ainda assim vai retornar 1 imagem como essa aqui parecida, azul, estou
+[55:32] [Orador 0]: assumindo que isso aqui seria por exemplo a mesma classe, o mesmo dígito né, esse azulzinho, esse azulzinho aqui. Mas é 1 espaço muito muito
+[55:39] [Orador 0]: longe né, então está tudo desorganizado aqui, se a gente considerar que cada cor dessa é 1 dígito diferente está tudo desorganizado no seu espaço latente, então é caótico,
+[55:48] [Orador 0]: os pontos são estruturados,
+[55:50] [Orador 0]: espalhados aleatoriamente
+[55:51] [Orador 0]: no espaço latente.
+[55:53] [Orador 0]: O que que seria 1 espaço latente estruturado? E aí que a gente faz o gancho pro próximo modelo que a gente vai ver, que são os seria
+[56:01] [Orador 0]: isso aqui,
+[56:02] [Orador 0]: né, você tem os seus azulzinhos centrados aqui,
+[56:05] [Orador 0]: o seu branquinho centrado aqui, os seus outros, enfim, é tudo bem organizado tá,
+[56:12] [Orador 0]: de acordo com com com o grupo que ele pertence. Então é como se aqui fosse 1 dígito 0,
+[56:18] [Orador 0]: os dígitos 8, os dígitos 5,
+[56:21] [Orador 0]: tá? Organizado.
+[56:22] [Orador 0]: Então o espaço ela tem estruturado clusters organizados por categoria interpolação suave entre
+[56:27] [Orador 0]: conceitos.
+[56:28] [Orador 0]: E aí o que acontece? Se eu quero gerar,
+[56:31] [Orador 0]: você não percebe, você não, no Varation Authent Code, na na implementação original, você não vai falar olha, eu quero gerar o dígito 0. Não, você ainda não consegue fazer isso. Mas você dá 1 input,
+[56:41] [Orador 0]: 1 ponto qualquer no seu espaço latente,
+[56:44] [Orador 0]: e aí por exemplo o que cai aqui,
+[56:46] [Orador 0]: e aí você observa a saída, a saída é 1 0, ah então eu sei que eu posso fazer pequenas variações nesse input que ele vai me gerar outros zeros, só que zeros diferentes,
+[56:57] [Orador 0]: Tá? Essa é a ideia. Então primeiro você vai ter que procurar no seu espaço latente,
+[57:02] [Orador 0]: onde está que aquilo que você quer gerar, e depois você faz variações pequenininhas,
+[57:07] [Orador 0]: você vai gerar variações daquela daquela classe, daquela informação.
+[57:10] [Orador 0]: Tá? Então se eu quiser gerar 1 dígito 7
+[57:13] [Orador 0]: na GAN,
+[57:14] [Orador 0]: como eu digo pro modelo cara esse dígito específico,
+[57:16] [Orador 0]: acabou que foi o que eu acabei de falar. GAN simples, você não sabe, gera o que aprendeu a gerar.
+[57:22] [Orador 0]: Mas existem outras soluções que acabaram sendo devoluções das GAN's. GAN's sendo 1 modelo tão,
+[57:28] [Orador 0]: importante no desenvolvimento da IA generativa, é claro que muita gente trabalhou em cima dela pra resolver
+[57:33] [Orador 0]: suas limitações. Eu já falei sobre a Style Gun, desenvolvida por cientistas da NVIDIA, tem o Conduition Allgun, que é 1 solução parcial mas existe rótulo, então no processo de treinamento você tem que passar o rótulo também.
+[57:45] [Orador 0]: Então isso pode ser 1 problema se você não tem rótulo por exemplo.
+[57:48] [Orador 0]: Então será que existe 1 arquitetura que organize
+[57:51] [Orador 0]: esse espaço?
+[57:52] [Orador 0]: E a resposta sim,
+[57:54] [Orador 0]: várias outras que organizam.
+[57:56] [Orador 0]: E a que eu vou apresentar para vocês é o Veryage Noting Codery. Então o que acontece quando forçamos o modelo a organizar o que aprende? No final das contas,
+[58:05] [Orador 0]: como aquela imagem que eu mostrei pra vocês, só pra pra vocês, desorganizado
+[58:10] [Orador 0]: e organizado, aquelas imagens eram meio abstratas.
+[58:13] [Orador 0]: Aqui eu tentei trazer 1 que
+[58:15] [Orador 0]: fica mais talvez mais simples de entender. Isso aqui considere como o seu espaço latente,
+[58:21] [Orador 0]: a representação interna
+[58:23] [Orador 0]: daquele
+[58:23] [Orador 0]: dado que eu quero gerar,
+[58:25] [Orador 0]: e
+[58:26] [Orador 0]: você tem 2 imagens de gato e 2 imagens de cachorro.
+[58:29] [Orador 0]: Internamente,
+[58:31] [Orador 0]: ele aprende, o ele
+[58:33] [Orador 0]: aprende a organizar isso. Então essas 2 primeiras imagens são imagens de gatos.
+[58:37] [Orador 0]: Eles vão estar próximos no espaço latente.
+[58:40] [Orador 0]: Essas 2 imagens aqui são imagens de cachorro, elas vão estar próximas no meu espaço latente.
+[58:44] [Orador 0]: Então de novo, na GAN, 1 gato está aqui, outro gato está aqui, gato está aqui, então você dá 1 ruído aleatório, cada hora vai ser 1 coisa,
+[58:51] [Orador 0]: sem controle nenhum.
+[58:53] [Orador 0]: Enviation all in coder que eu vou explicar daqui a pouco. Se botou 1 ponto aqui e gerou 1 gato, faz variações
+[59:00] [Orador 0]: que vão gerar outros gatos na intermediação daquele ponto, tá?
+[59:05] [Orador 0]: Essa é a ideia.
+[59:05] [Orador 0]: Beleza gente, mais alguma dúvida?
+[59:07] [Orador 0]: Esse primeiro exercício,
+[59:09] [Orador 0]: Eu vou usar,
+[59:10] [Orador 0]: esse esse
+[59:12] [Orador 0]: a base pra
+[59:13] [Orador 0]: e
+[59:14] [Orador 0]: pro
+[59:15] [Orador 0]: na
+[59:16] [Orador 0]: quer dizer,
+[59:17] [Orador 0]: na GAN eu não propus exercício nenhum.
+[59:20] [Orador 0]: Eu vou mostrar pra vocês como funciona,
+[59:22] [Orador 0]: inclusive já está executado porque demora muito. Se vocês quiserem rodar vocês já podem começar a rodar aí mas vai demorar.
+[59:29] [Orador 0]: Eu vou apresentar o script rodar. Quando a gente depois que eu apresentar a variável auto encobrir eu vou ter 1 estudo outro estudo de caso e eu vou sugerir alguns exercícios
+[59:38] [Orador 0]: tá, pra vocês fazerem se Deus quiser, vai dar tempo pra vocês tentarem botar a mão na massa.
+[59:43] [Orador 0]: Mas
+[59:44] [Orador 0]: nesse aqui eu vou só vou só apresentar.
+[59:47] [Orador 0]: Deixa eu deletar esse negócio aqui.
+[59:49] [Orador 0]: E aí quando eu for fazer o exercício do Variation Authent Code,
+[59:52] [Orador 0]: lembrem de
+[59:53] [Orador 0]: quando eu começar a explicar vocês já colocarem colocarem o código para rodar, fazer o exercício.
+[59:58] [Orador 0]: Aí enquanto eu explico vocês já
+[60:01] [Orador 0]: já ficam rodando o código que acho que demorou coisa de no colap
+[60:06] [Orador 0]: demorou coisa de 20 minutos,
+[60:08] [Orador 0]: 1 coisa assim.
+[60:09] [Orador 0]: Inclusive se quiserem já podem ir rodando.
+[60:11] [Orador 0]: Abre esse
+[60:12] [Orador 0]: aqui e
+[60:13] [Orador 0]: já coloca para rodar.
+[60:15] [Orador 0]: Bom então vamos lá.
+[60:16] [Orador 0]: A ideia é explicar aqui como é que funciona
+[60:18] [Orador 0]: pra vocês terem esse entendimento por debaixo dos panos
+[60:21] [Orador 0]: Mas sempre tem na cabeça que
+[60:23] [Orador 0]: Poxa, isso aqui é 1 código que você pode pedir pra IA fazer Então
+[60:28] [Orador 0]: é mais pra vocês terem esse entendimento com os baixos dos panos, pra se você for pedir, por exemplo, pra 1 IA fazer esse código pra você Arruma 1 gama, tem que resolver esse problema aqui Você conseguir
+[60:38] [Orador 0]: julgar se as coisas estão sendo feitas da forma correta e interpretar
+[60:43] [Orador 0]: E saber quais as possibilidades com aquele modelo que você tem em mãos Então
+[60:48] [Orador 0]: vamos lá Eu tentei colocar aqui o máximo de comentário que eu pude
+[60:51] [Orador 0]: pra vocês terem isso como template. Então importei alguns pacotes aqui, o TensorFlow,
+[60:55] [Orador 0]: vou usar o TensorFlow, vocês sabem que eu sou time TensorFlow,
+[60:59] [Orador 0]: Numpy e MatchPlotLib.
+[61:01] [Orador 0]: Você tem 1 Cid aqui para reprodutibilidade,
+[61:04] [Orador 0]: vocês já sabem que eu costumo fazer isso também para a gente conseguir
+[61:07] [Orador 0]: analisar os mesmos resultados.
+[61:09] [Orador 0]: E definir aqui olha, esse latent timm é a dimensão latente.
+[61:14] [Orador 0]: É a dimensão
+[61:15] [Orador 0]: do meu ruído
+[61:16] [Orador 0]: de entrada.
+[61:17] [Orador 0]: Tá?
+[61:18] [Orador 0]: 1 vetor de tamanho 100 exatamente como eu criei ali quando vocês fizeram a perguntar e que é na prática esse ruído?
+[61:25] [Orador 0]: Nada mais é do que você usar o módulo de geração de números aleatórios ou pseudo aleatórios para gerar esses valores que vão ser imputados na gama.
+[61:33] [Orador 0]: o batch size vocês já sabem que é, o tamanho do batch, a cada interação de ajuste de peso da rede neural e o número de épocas 300.
+[61:41] [Orador 0]: Aí eu vou deixar só 1 comentário, vocês vão ver que 300
+[61:45] [Orador 0]: é pouco pro treinamento dessa gama, tá? Mas foi o que eu consegui treinar.
+[61:50] [Orador 0]: Se vocês tiverem tempo aí aumenta
+[61:52] [Orador 0]: 1 2 ordens de grandeza esse esse
+[61:54] [Orador 0]: número de épocas.
+[61:56] [Orador 0]: Acho que talvez
+[61:57] [Orador 0]: 10 1000 épocas seja 1 número adequado
+[62:00] [Orador 0]: pra pra esse treinamento.
+[62:02] [Orador 0]: Mas com 300 épocas você já vai conseguir ter 1 feeling de como funciona o processo.
+[62:07] [Orador 0]: Beleza, aí no segundo passo eu,
+[62:10] [Orador 0]: em GPU Daniel, assim GPU, se se põe em CPU aí vai demorar muito,
+[62:15] [Orador 0]: demorar ruim. Tenta pegar 1 gpu aí normalmente essa hora é difícil pegar né?
+[62:19] [Orador 0]: Mas
+[62:20] [Orador 0]: tenta pegar.
+[62:21] [Orador 0]: Não mas tenta pegar 1 gpu aqui né? Aqui no collab.
+[62:25] [Orador 0]: Eu já deixei com padrão pegando até 4.
+[62:27] [Orador 0]: Mas nem sempre a gente consegue essa hora vou até tentar pegar aqui.
+[62:31] [Orador 0]: Eu
+[62:31] [Orador 0]: acho que vai,
+[62:32] [Orador 0]: Vou culpar 1 à toa.
+[62:34] [Orador 0]: Bom, lá.
+[62:36] [Orador 0]: Eu baixei aqui o data 7 do próprio Pensar Flow, peguei só o input de treino. Por quê? Porque
+[62:44] [Orador 0]: a gente não precisa de rótulos né? Esse data 7 tem rótulo,
+[62:49] [Orador 0]: mas eu não preciso dele.
+[62:50] [Orador 0]: Então você vê aqui que eu estou pegando
+[62:53] [Orador 0]: essa tupla que seria input output
+[62:56] [Orador 0]: de treino e esse segundo aqui
+[62:59] [Orador 0]: seria o teste
+[63:00] [Orador 0]: input output teste. Não vou usar o teste, estou pegando só as imagens de treino.
+[63:05] [Orador 0]: A
+[63:05] [Orador 0]: 90 e falou pro professor, você acha viável passar a lista de exercício pra gente fazer previamente
+[63:10] [Orador 0]: corrigimos juntos em aula?
+[63:12] [Orador 0]: Acho que essa dinâmica seria ótima pra gente ter esse tempo mal pra fazer e entender nosso.
+[63:16] [Orador 0]: Ser, acho que é 1 boa ideia.
+[63:18] [Orador 0]: Pode ser. Vamos ver,
+[63:20] [Orador 0]: vamos ver se vai dar tempo para fazer os exercícios que eu preparei para aula de hoje. Se não der, gente já pode usar ele
+[63:27] [Orador 0]: com essa sugestão na aula para a próxima aula.
+[63:30] [Orador 0]: Estou achando que talvez não dê tempo de vocês fazerem.
+[63:33] [Orador 0]: Aí eu deixo então pra casa, quem tiver tempo faz,
+[63:37] [Orador 0]: Quem não tiver acompanha depois a solução. Aí na próxima aula a gente começa resolvendo esse exercício. Isso é 1 boa ideia.
+[63:43] [Orador 0]: Vamos fazer isso.
+[63:44] [Orador 0]: E aí nas próximas eu já me comprometo a sempre trazer algum exercício.
+[63:48] [Orador 0]: Beleza, aí eu converti aqui pra pra Float 32, vocês sabem que
+[63:53] [Orador 0]: pra treinamento de rede neural pode ser interessante 32 ou 16 se você quiser mais mais rapidez no processo de treinamento ou 8 mais rapidez ainda.
+[64:02] [Orador 0]: Coloquei aqui 32,
+[64:04] [Orador 0]: 1 precisão maior né, quando você diminui você diminui a precisão. Basicamente
+[64:08] [Orador 0]: o número de casas decimais você tem nos nos valores de reais.
+[64:12] [Orador 0]: Fiz a normalização,
+[64:13] [Orador 0]: essa normalização aqui o que ela faz é simplesmente,
+[64:16] [Orador 0]: não estou dividindo por 2 5 5 que é o normal que a gente faz com imagens,
+[64:20] [Orador 0]: eu estou subtraindo 1275
+[64:23] [Orador 0]: dividido por 1275
+[64:25] [Orador 0]: porque eu quero que ele fique entre menos 1 e 1 e não entre 0,
+[64:30] [Orador 0]: tá?
+[64:30] [Orador 0]: E eu fiz isso porque a gente vai usar 1 tangente hiperbólica na saída e vocês sabem que a função de ativação
+[64:36] [Orador 0]: tangente hiperbólica é 1 função que varia entre menos 1 e 1. A SIGMO ideal varia entre 0 a 1, né?
+[64:42] [Orador 0]: Depois eu faço o ExpanDINS porque eu tenho,
+[64:46] [Orador 0]: se vocês olharem esse Xtrain aqui, ele tem 60000 imagens,
+[64:50] [Orador 0]: 28 por 28, são 28 por 28.
+[64:54] [Orador 0]: Largura, altura.
+[64:57] [Orador 0]: É 1 imagem em brayscale,
+[64:59] [Orador 0]: então não tem canal de cor.
+[65:00] [Orador 0]: Só que acontece é que eu preciso ter essa dimensão ali pra fazer o treinamento do modelo, tá? Então eu coloquei aqui 1 canal que não muda nada o meu dado só aumenta o shape do meu do meu objeto.
+[65:14] [Orador 0]: Criei aqui o meu o meu data
+[65:17] [Orador 0]: data set transfer flow né, do
+[65:20] [Orador 0]: meu,
+[65:21] [Orador 0]: ele cria o data set a partir das imagens,
+[65:24] [Orador 0]: e depois eu faço 1 nele ou seja, eu aleatorizo
+[65:29] [Orador 0]: a a ordem das imagens.
+[65:32] [Orador 0]: Fica tudo embaralhado,
+[65:33] [Orador 0]: faço o batch,
+[65:35] [Orador 0]: vai ser 1 batch de 128,
+[65:37] [Orador 0]: e esse droveremader,
+[65:39] [Orador 0]: é só pra jogar fora o último batch se ele não tiver 128,
+[65:43] [Orador 0]: exatamente 128 imagens.
+[65:45] [Orador 0]: Que na verdade nem seria 1 problema mas,
+[65:48] [Orador 0]: coloquei true aqui.
+[65:49] [Orador 0]: Beleza então agora eu tenho 60000 por 28 por
+[65:52] [Orador 0]: 1 canal.
+[65:53] [Orador 0]: Aí começa o a criação dos do modelo. Lembram que a gente tem 1 gerador e a gente tem 1 discriminador,
+[66:00] [Orador 0]: são 2 itinerários,
+[66:01] [Orador 0]: que depois elas são fundidas aí pra calcular a loss function.
+[66:06] [Orador 0]: Não tem detalhes da loss function,
+[66:08] [Orador 0]: mas eu vou mostrar aqui
+[66:10] [Orador 0]: qual que é a ideia dele quando a gente chegar na definição da loss.
+[66:13] [Orador 0]: Na verdade eu até comentei né sobre a ideia de
+[66:16] [Orador 0]: 1 está maximizando a loss, outro está minimizando,
+[66:18] [Orador 0]: e aí entram nessa competição.
+[66:21] [Orador 0]: O modelo gerador, criei 1 função aqui no Build Generator,
+[66:25] [Orador 0]: que cria esse modelo. Eu,
+[66:27] [Orador 0]: quando estava preparando esse exercício pra vocês eu tentei fazer 1 dance, eu tentei usar, não usar convolução.
+[66:34] [Orador 0]: Só que a gente está trabalhando com imagens e vocês já viram na prática
+[66:39] [Orador 0]: que, poxa é muito melhor usar 1 convolução, usar 1 vision transformer,
+[66:43] [Orador 0]: do que usar 1 1 MLP, 1 mídia oral clássica pra trabalhar com imagem. Eu tentei simplificar o máximo aqui mas eu não consegui resultados bons com o Dance,
+[66:54] [Orador 0]: então acabei usando
+[66:56] [Orador 0]: convoluções tá.
+[66:57] [Orador 0]: Eu só usei 2 convoluções.
+[66:59] [Orador 0]: Simples aqui né, ela tem o meu input
+[67:02] [Orador 0]: que é meu retorno latente, o sensi que estava saindo, é 1 ruído,
+[67:06] [Orador 0]: depois ele passa numa dance, 1
+[67:09] [Orador 0]: função de ativação,
+[67:11] [Orador 0]: 1 para entrar na convolução,
+[67:14] [Orador 0]: best normalization, Leaky Relu e outra convolução.
+[67:17] [Orador 0]: É esse o meu modelo.
+[67:19] [Orador 0]: tá.
+[67:19] [Orador 0]: Beleza, estava com 1 espaço ali enfê aquilo ali sem querer. E na sequência eu crio o gerador. E aí
+[67:25] [Orador 0]: pessoal se vocês, isso aqui pode ser substituído por qualquer outro modelo.
+[67:30] [Orador 0]: Se você quiser pegar 1 vgg,
+[67:33] [Orador 0]: coloca ela aqui.
+[67:34] [Orador 0]: Se quiser montar, ah eu quero 4 convoluções,
+[67:38] [Orador 0]: monta suas convoluções aqui,
+[67:39] [Orador 0]: tá? Então assim, modelo ali pode ser 1
+[67:43] [Orador 0]: qualquer né, se você tem 1 modelo mais complexo provavelmente você vai ter que aumentar o número de camadas aqui, vai vai responder melhor.
+[67:50] [Orador 0]: Na sequência eu fiz o discriminador,
+[67:52] [Orador 0]: então o discriminador também,
+[67:54] [Orador 0]: ah e repara que é o convidou de transpose,
+[67:59] [Orador 0]: gerador,
+[68:00] [Orador 0]: porque ele está
+[68:01] [Orador 0]: num caminho meio que inverso,
+[68:04] [Orador 0]: Ele vem aqui de 1 ruído de 1 vetor 100 e ele vai abrindo lá para minha imagem.
+[68:11] [Orador 0]: Já o discriminador não, ele recebe a imagem e ele me leva para 1 classificação
+[68:16] [Orador 0]: Então o discriminador
+[68:18] [Orador 0]: ele tem camadas com V2D só Então
+[68:21] [Orador 0]: aqui no discriminador também eu tenho 2 camadas de convolução
+[68:24] [Orador 0]: ser exatamente igual né, gente voltar pro mesmo tamanho.
+[68:28] [Orador 0]: E eu também com 1
+[68:30] [Orador 0]: drapeout para regularização,
+[68:32] [Orador 0]: depois faço 1 flatten e 1 dance
+[68:35] [Orador 0]: pra
+[68:36] [Orador 0]: 1 neurônio.
+[68:37] [Orador 0]: Poderia ser 2,
+[68:39] [Orador 0]: de novo é fake ou
+[68:41] [Orador 0]: real.
+[68:42] [Orador 0]: Coloquei aqui 1, então vocês sabem que vai ter 1 MA0 5, acima 0 5 é 1 classe abaixo de 0 5 é outro, né, com ativação sigmaidal, ou seja, a saída do neurônio varia entre 0 e 1. Mas poderia muito mais ser 2 aqui, 1 neurônio responde por real, outro neurônio responde por
+[68:56] [Orador 0]: fake.
+[68:57] [Orador 0]: E aí dou 1 bio de discriminator aqui.
+[68:59] [Orador 0]: E aí vem a loss. A loss,
+[69:02] [Orador 0]: criei
+[69:02] [Orador 0]: 1 objeto
+[69:03] [Orador 0]: da crossentrop para classificação.
+[69:06] [Orador 0]: Essa crossentrop
+[69:07] [Orador 0]: vai ser aqui para o modelo de classificação.
+[69:09] [Orador 0]: 1 entropia cruzada.
+[69:11] [Orador 0]: Defini aqui 1 otimizador, usei 1 adam,
+[69:14] [Orador 0]: defini 1 learning rate de 0002
+[69:18] [Orador 0]: e 1 beta de 0.5. Eu acho que inclusive é o padrão.
+[69:22] [Orador 0]: Enfim,
+[69:23] [Orador 0]: que isso aqui inclusive é o padrão.
+[69:25] [Orador 0]: 000 2 não.
+[69:26] [Orador 0]: Acho que o padrão é 10 a menos 3.
+[69:30] [Orador 0]: Enfim.
+[69:30] [Orador 0]: E também o
+[69:32] [Orador 0]: otimizador do discriminador.
+[69:34] [Orador 0]: Usei o mesmo, tá? Dos 2.
+[69:36] [Orador 0]: Deixa eu ver que tem comentário aqui.
+[69:38] [Orador 0]: Às
+[69:40] [Orador 0]: vezes eu fico meio perdido porque cada linha desse seqüest aparece. Eu entendo o conceito das camadas, da convolução,
+[69:45] [Orador 0]: mas entre algumas
+[69:47] [Orador 0]: que ainda vou, muito por não usar todo dia isso.
+[69:50] [Orador 0]: A Fabiana falou também, então vejo nos próximos exemplos, acredito eu que ajudaria a colocar 1 comentário nas camadas.
+[69:56] [Orador 0]: Tá,
+[69:57] [Orador 0]: acho que foi
+[69:58] [Orador 0]: quase o único lugar que eu não coloquei comentário, né?
+[70:01] [Orador 0]: Tá, vou colocar, tá. Mas posso explicar aqui rapidamente, mas depois eu vou colocar os comentários para você e atualizo no próprio Braip,
+[70:09] [Orador 0]: tá? Essa camada aqui, vocês estão vendo que está tudo vendo de t f.layers,
+[70:14] [Orador 0]: é o módulo onde tem todas as camadas implementadas no TensorFlow.
+[70:18] [Orador 0]: Lá você vai achar a camada Dance, que nada mais é do que camadas
+[70:22] [Orador 0]: de neurônios clássicos
+[70:24] [Orador 0]: densamente conectados,
+[70:26] [Orador 0]: tem camada de input onde você define o shape de entrada do seu input, no nosso caso é 1 vetor de ruído de tamanho 100,
+[70:34] [Orador 0]: você tem teste normalization, você tem funções de ativação, você tem convolucionais.
+[70:39] [Orador 0]: Então vamos lá, o input você só definiu o shape de entrada, a rede neural precisa saber aquele vetor de que tamanho ele é, que está entrando ali. Ah é o tamanho 100, eu defini a dimensão latente sendo 100.
+[70:50] [Orador 0]: Depois vem 1 camada densa.
+[70:52] [Orador 0]: Essa camada densa é 1 camada densamente conectada, como 1 MLB que a gente viu lá no início, quando eu fiz a introdução à rede neurais. Tem os neurônios que fazem somatório ponderado das entradas, mas 1 baias aplicado numa função de ativação,
+[71:05] [Orador 0]: né,
+[71:06] [Orador 0]: densamente conectado.
+[71:08] [Orador 0]: E aí você passa o número de neurônios e estou falando aqui pra não usar byes, mas enfim, poderia usar também.
+[71:15] [Orador 0]: Depois tem o que
+[71:17] [Orador 0]: é 1 normalização
+[71:18] [Orador 0]: a nível de byes no processo de treinamento.
+[71:21] [Orador 0]: Ajuda a estabilizar o processo de treinamento.
+[71:24] [Orador 0]: Depois tem o que é a função de ativação.
+[71:27] [Orador 0]: Como aqui eu não passei a como
+[71:30] [Orador 0]: eu passei aqui embaixo,
+[71:32] [Orador 0]: aqui,
+[71:33] [Orador 0]: isso aqui por padrão, Dentz, ele usa 1 linear, ou seja, na verdade ele não faz nada. A saída do neurônio vai ser o somatório ponderado das entradas, mas 1 bias aplicado numa função ativação.
+[71:44] [Orador 0]: Não vai traçar numa simoide, numa tangente verbólica.
+[71:47] [Orador 0]: eu coloco ali que Helô aqui, tá?
+[71:50] [Orador 0]: Então depois disso ele passa numa ali que Helô. E aí eu faço 1 shape porque aqui na saída aqui eu vou ter
+[71:58] [Orador 0]: 7 vezes 7 vezes 128,
+[72:00] [Orador 0]: 1 vetorzão
+[72:01] [Orador 0]: desse tamanho da 3000 e pouco,
+[72:03] [Orador 0]: 3000 e pouco?
+[72:04] [Orador 0]: Sei.
+[72:05] [Orador 0]: Vai ter 1 vetor de tamanho, que é o número de neurônios da camada anterior.
+[72:09] [Orador 0]: 6000 e pouco, 6272
+[72:11] [Orador 0]: então tem 1 vetor tamanho 6000 e pouco. E aí eu preciso fazer 1 recheio de
+[72:16] [Orador 0]: 7 por 7 por 128 que é a entrada da camada convolucional.
+[72:20] [Orador 0]: E essa camada convolucional ela aumenta a dimensionalidade,
+[72:24] [Orador 0]: posição com o v 2 d transpose.
+[72:27] [Orador 0]: Tá ele aumenta a dimensionalidade,
+[72:29] [Orador 0]: porque lembrando a gente está no gerador,
+[72:31] [Orador 0]: ele vem de 1 shape de 100 pra 1 shape de,
+[72:35] [Orador 0]: 28 por 28,
+[72:37] [Orador 0]: tá?
+[72:37] [Orador 0]: enfim, eu fui colocando essas camadas aqui, na verdade na sequência eu só repliquei né,
+[72:43] [Orador 0]: Depois desse conv 2 d eu repliquei isso aqui.
+[72:46] [Orador 0]: Sem o Mixhaper claro né, o best formalization, leak hello e outra camada de conv
+[72:51] [Orador 0]: 2 d transposta. E aqui no final você tem o seu,
+[72:55] [Orador 0]: a
+[72:56] [Orador 0]: sua saída,
+[72:57] [Orador 0]: saída do
+[72:59] [Orador 0]: modelo.
+[72:59] [Orador 0]: Tá? Eu vou colocar esses comentários aqui. E o que não tem ali, que tem aqui é o dropout. O dropout é pra regularização.
+[73:07] [Orador 0]: Ele quando eu coloco o 03 aqui significa que 30 por 100 das conexões entre os neurônios
+[73:13] [Orador 0]: vão ser desconsideradas durante o processo de treinamento,
+[73:16] [Orador 0]: tá? Isso faz com que a rede seja mais robusta.
+[73:19] [Orador 0]: Garante que o conhecimento da rede esteja espalhado
+[73:22] [Orador 0]: em toda a rede neural.
+[73:23] [Orador 0]: Não é porque ele perdeu
+[73:25] [Orador 0]: 30 por 100 das conexões que ele não vai aprender ou vai perder algum conhecimento.
+[73:30] [Orador 0]: Essa é a ideia por trás então o processo de reduranização
+[73:33] [Orador 0]: pra evitar o overfitting e deixar seu modelo mais robusto.
+[73:35] [Orador 0]: Vou
+[73:36] [Orador 0]: começar a comentar todas as linhas. Eu estou assumindo que algumas coisas
+[73:41] [Orador 0]: já passaram batida mas acho que pra vocês é importante comentar todos
+[73:46] [Orador 0]: Beleza, aí eu eu defini aqui 1 função pra visualização
+[73:50] [Orador 0]: Essa função primeiro
+[73:52] [Orador 0]: gerei 1
+[73:54] [Orador 0]: Gerei 1 ruído fixo Olha,
+[73:57] [Orador 0]: não estou usando num pai como eu mostrei ali no exemplo para vocês, estou usando o próprio que também tem 1 módulo e
+[74:02] [Orador 0]: tem 1 função normal que eu consigo gerar
+[74:06] [Orador 0]: ruído.
+[74:06] [Orador 0]: Então eu estou falando pra ele, quero gerar 16 ruídos de tamanho 100.
+[74:10] [Orador 0]: Por que que eu estou fazendo isso? Porque eu quero
+[74:13] [Orador 0]: com o passar do treinamento do modelo sempre gerar
+[74:16] [Orador 0]: esse as imagens usando esse mesmo input, esses 16 ruídos,
+[74:21] [Orador 0]: pra gente comparar como é que está evoluindo
+[74:23] [Orador 0]: a geração desses dados,
+[74:25] [Orador 0]: a geração o treinamento desse modelo, tá?
+[74:28] [Orador 0]: Porque se eu gerasse ruídos aleatórios toda vez aí não teria 1 critério de comparação.
+[74:32] [Orador 0]: Tá bom? Criei 1 função aqui plot generated images que recebe o gerador,
+[74:38] [Orador 0]: só preciso do gerador pra gerar a imagem depois de modelo treinado só preciso do gerador, o discriminador eu posso jogar fora.
+[74:43] [Orador 0]: O número de épocas,
+[74:45] [Orador 0]: não, qual época que eu estou, porque eu vou imprimir isso na imagem,
+[74:49] [Orador 0]: e o ruído fixo,
+[74:51] [Orador 0]: que eu estou estou pegando por padrão nesse aqui né mas poderia passar outra.
+[74:54] [Orador 0]: E aí como é que eu faço pra plotar as imagens geradas? Eu chamo o gerador.
+[74:58] [Orador 0]: Quando eu chamo esse gerador aqui ele faz como o predict o gerador.
+[75:02] [Orador 0]: Ele imputa,
+[75:04] [Orador 0]: ele vai imputar esses 16 ruídos aqui,
+[75:07] [Orador 0]: e vai pegar a saída do gerador.
+[75:09] [Orador 0]: Excriminador,
+[75:10] [Orador 0]: pouco importa. Eu estou querendo gerar dado com aquele estado atual do modelo.
+[75:15] [Orador 0]: Eu volto
+[75:16] [Orador 0]: pra
+[75:17] [Orador 0]: o intervalo de 0 e 1, entre 0 e 1 né, ao invés de menos 1 ao 1,
+[75:22] [Orador 0]: e faço o plot da imagem. Esse esse código aqui ele está gerando 1 imagem de 4 por 4 porque são 16 imagens que eu vou gerar, então tem 4 linhas, 4 colunas,
+[75:33] [Orador 0]: onde eu vou colocar as 16 imagens e aí eu faço 1 range do geninetes.shape
+[75:38] [Orador 0]: que vai ser 16.
+[75:40] [Orador 0]: Faço 1 subplot
+[75:41] [Orador 0]: de 4 por 4,
+[75:43] [Orador 0]: e dou 1 Image Show, e mostra aquela imagem ali né, vou iperando o I aqui.
+[75:48] [Orador 0]: E beleza, ponho 1 subtitle que é a época que está, e ajusto o layout e dou 1 show.
+[75:54] [Orador 0]: Eu fiz essa essa função pra na hora do treino eu ir imprimindo, eu vou a cada 20 ou cada 50 épocas eu vou imprimir como é que está a geração dessas imagens,
+[76:03] [Orador 0]: pra enfim,
+[76:04] [Orador 0]: pra comparação,
+[76:06] [Orador 0]: tá?
+[76:07] [Orador 0]: Aí o que que eu fiz? Eu
+[76:09] [Orador 0]: eu
+[76:10] [Orador 0]: implementei esse training stack
+[76:12] [Orador 0]: com esse decorator t f ponto function porque,
+[76:15] [Orador 0]: Porque eu quero reimplementar né, como é que funciona o training step. Porque o training step de 1 GAN é diferente de 1 rede neural
+[76:22] [Orador 0]: preditiva convencional,
+[76:24] [Orador 0]: tá? E isso não tem implementado
+[76:27] [Orador 0]: no.
+[76:28] [Orador 0]: Se você quiser rodar 1 mudança vai ter que implementar esse training step, ou você vai ter que implementar seu próprio loop de
+[76:35] [Orador 0]: de épocas,
+[76:37] [Orador 0]: Eu inclusive vou implementar meu loop de épocas só que vai simplificar o meu código se eu tiver implementado esse training step, Então
+[76:44] [Orador 0]: é 1 é 1 passo de treinamento.
+[76:46] [Orador 0]: Que que eu estou fazendo aqui dentro? Vamos lá, isso aqui eu comentei né, comentei tudo.
+[76:51] [Orador 0]: Vamos lá.
+[76:52] [Orador 0]: Eu gero 1 ruído olha, etf.random.normal
+[76:55] [Orador 0]: do tamanho do batch size que é 128 por 100. Então gerei 128 ruídos de tamanho 100.
+[77:01] [Orador 0]: Beleza, esse vai ser o meu batch que eu vou usar para gerar 128
+[77:05] [Orador 0]: imagens
+[77:06] [Orador 0]: fakes.
+[77:07] [Orador 0]: Depois eu faço,
+[77:09] [Orador 0]: isso aqui é recomendado né? Eu eu até na hora que eu fui treinar eu tentei fazer sem, e como ficou muito melhor.
+[77:17] [Orador 0]: Esse label que a gente chama de label smoothing,
+[77:20] [Orador 0]: é você,
+[77:21] [Orador 0]: porque o que que seriam os label reais?
+[77:24] [Orador 0]: Imagem real você colocaria 1, imagem fake você colocaria 0. É o label
+[77:29] [Orador 0]: empodado né, real e fake, real é 1 fake é 0. Só que eu estou multiplicando por 09 então os reais vão ficar em 09.
+[77:38] [Orador 0]: Matematicamente
+[77:39] [Orador 0]: isso acaba ajudando o processo de treinamento
+[77:42] [Orador 0]: porque
+[77:43] [Orador 0]: reduz o excesso de confiança do modelo na na conferência
+[77:47] [Orador 0]: tá? Então ficou como o real 0 9 e o falso
+[77:52] [Orador 0]: 0,
+[77:52] [Orador 0]: tá?
+[77:53] [Orador 0]: Isso ajuda na na estabilidade do processo de treinamento.
+[77:56] [Orador 0]: Aí eu faço 1 width e abro 1 tape.
+[78:00] [Orador 0]: O tape,
+[78:01] [Orador 0]: acho que eles chamaram de tape exatamente porque ele faz 1 gravação, é como 1 fita mesmo de gravação,
+[78:07] [Orador 0]: tá? Na implementação do TensorFlow,
+[78:09] [Orador 0]: esse GradientTape,
+[78:11] [Orador 0]: ele vai gravar tudo que vai ser feito durante o processo de treinamento. E aí eu estou estou abrindo 1 para para o gerador e 1 para o discriminador
+[78:18] [Orador 0]: tá?
+[78:19] [Orador 0]: Aí aqui dentro do tape eu vou fazer todo o processo de propagação e retropropagação.
+[78:25] [Orador 0]: Propagação de entrada e retropropagação.
+[78:29] [Orador 0]: Repropagação não. Propagação de entrada, desculpa.
+[78:32] [Orador 0]: Propagação de entrada, depois eu vou fazer a retropropagação.
+[78:35] [Orador 0]: Então vamos lá, eu preciso aqui gerar as imagens fakes, então eu chamo o meu gerador,
+[78:41] [Orador 0]: passo
+[78:42] [Orador 0]: os meus os meus 128
+[78:44] [Orador 0]: ruídos de tamanho 100
+[78:46] [Orador 0]: e digo aqui que é, estou em processo de treinamento,
+[78:50] [Orador 0]: ou seja, os gradientes eles vão ser calculados
+[78:53] [Orador 0]: para eu ajustar os pesos da minha rede neural.
+[78:55] [Orador 0]: Essas aqui,
+[78:57] [Orador 0]: a saída do gerador,
+[78:59] [Orador 0]: ele me gera as imagens feitas,
+[79:01] [Orador 0]: Botei lá o ruído ele me gerou a imagem fake.
+[79:04] [Orador 0]: Na sequência, o que que eu faço aqui? Eu faço a classificação.
+[79:08] [Orador 0]: Poxa, se eu tenho imagem fake, beleza, eu vou pegar essa imagem fake e essa imagem real e vou passar no discriminador.
+[79:16] [Orador 0]: Então o primeiro passo o real, depois passo o fake, então faz a ordem. E também digo aqui que a eu estou em etapas de treinamento, então pra gente podem ser calculados.
+[79:27] [Orador 0]: E o que que é saída do discriminador?
+[79:29] [Orador 0]: a classificação.
+[79:30] [Orador 0]: Então aqui eu tenho o output dos das imagens reais e aqui eu tenho o output das imagens feitas. Que que eu espero numa primeira época? Eu espero que o o discriminador não tenha problema nenhum de classificar.
+[79:42] [Orador 0]: Ele diga que ele acerte tudo aqui, fake output seja tudo 0
+[79:45] [Orador 0]: e real output seja tudo 1.
+[79:48] [Orador 0]: Tá,
+[79:48] [Orador 0]: mas que que eu espero em épocas mais adiante?
+[79:51] [Orador 0]: Espero que ele diga que tudo aqui é 1 e tudo aqui é 1, ou seja, são tão reais as imagens feitas que o definador acha que é real, tá?
+[80:00] [Orador 0]: Beleza, e aí eu calculo a loss, já que eu tenho real e
+[80:05] [Orador 0]: e real e
+[80:06] [Orador 0]: predito,
+[80:08] [Orador 0]: eu vou calcular
+[80:09] [Orador 0]: a loss.
+[80:10] [Orador 0]: Então estou calculando aqui
+[80:12] [Orador 0]: a loss das imagens reais, então real label, real output, e aí calculo a binary process.
+[80:18] [Orador 0]: Depois faço o mesmo pro fade,
+[80:20] [Orador 0]: o real e o predito.
+[80:22] [Orador 0]: Depois somo essas lotes, né? Então tem 1 loss total aqui, que é a soma desses 2 loss,
+[80:27] [Orador 0]: e na sequência,
+[80:30] [Orador 0]: eu calculo a loja do gerador. Então isso aqui é a loja discriminador,
+[80:34] [Orador 0]: a loja gerador,
+[80:35] [Orador 0]: loja gerador, olha, repara aqui, a loja gerador
+[80:39] [Orador 0]: eu estou passando
+[80:40] [Orador 0]: uns
+[80:41] [Orador 0]: que seria real,
+[80:43] [Orador 0]: o output fake.
+[80:45] [Orador 0]: Por quê? Porque é isso que o gerador espera.
+[80:49] [Orador 0]: Ele quer que as imagens fakes sejam rotuladas como I e não como 0. Isso indica
+[80:55] [Orador 0]: que ele está gerando imagens tão reais quantas reais.
+[80:58] [Orador 0]: Tá?
+[80:59] [Orador 0]: Bom, beleza. Aí sai da fita e aí eu faço a retropropagação.
+[81:04] [Orador 0]: Então calculo o gradiente,
+[81:06] [Orador 0]: Calculo o gradiente, eu coloquei trading true lá, então eu consigo chamar, usar a minha fita, chamar o gradiente pra
+[81:13] [Orador 0]: pra calcular o gradiente do erro em relação aos pesos e fazer aquele processo de ajuste que eu já expliquei pra vocês no bypropagation,
+[81:21] [Orador 0]: pra ajustar os pesos a para bet, né? E faço isso pro gerador e pro discriminador.
+[81:28] [Orador 0]: Em seguida aplico os gradientes então aqui de fato,
+[81:31] [Orador 0]: aqui calculam,
+[81:32] [Orador 0]: aqui atualizam
+[81:34] [Orador 0]: os pesos.
+[81:35] [Orador 0]: E aí retorna a loss gerador e a loss do discriminador.
+[81:38] [Orador 0]: O loop de treinamento como eu implementei esse trainset,
+[81:42] [Orador 0]: fica muito mais simples senão tudo isso aqui deveria estar aqui dentro, tá? Acho que assim fica mais clean mas enfim,
+[81:48] [Orador 0]: é questão de gosto.
+[81:49] [Orador 0]: Meu loop de treinamento infelizmente não dá pra fazer 1 .fit, não tem
+[81:53] [Orador 0]: essa arquitetura prépronta,
+[81:56] [Orador 0]: num karas da vida por exemplo Por isso que é 1 pouco mais complexo fazer esse código aqui, eu não posso fazer
+[82:03] [Orador 0]: Simplesmente
+[82:04] [Orador 0]: abrir 1 sequencial, adicionar as camadas,
+[82:07] [Orador 0]: depois fazer 1 compile e depois fazer 1 fit. Infelizmente não dá. Então eu tenho que fazer o meu loop de épocas.
+[82:13] [Orador 0]: Então pra cada época de 1 range de 1 até épocas mais 1, eu coloquei 300, né? Lembrando que isso aqui é
+[82:19] [Orador 0]: Exclusive,
+[82:20] [Orador 0]: então quando eu coloco 301 ele vai só até 300 Inicializo
+[82:24] [Orador 0]: minha lista aqui com as lossers do gerador e do discriminador
+[82:28] [Orador 0]: Bom, e aí por em cada batch do meu data 7. Lembra que o meu data 7 eu inicializei lá com o módulo TensorFlow, com a função TensorFlow,
+[82:35] [Orador 0]: que
+[82:37] [Orador 0]: já gera os batches, já
+[82:39] [Orador 0]: aleatoriza, embaralha os dados e me retorna 1 batch de 128.
+[82:44] [Orador 0]: Então quando eu faço 1 for nele, a cada interação ele me retorna 128
+[82:49] [Orador 0]: imagens,
+[82:50] [Orador 0]: tá? E aí eu faço o trainset que foi o o que eu implementei ali em cima, trainset,
+[82:56] [Orador 0]: passo o batch,
+[82:59] [Orador 0]: o batch de imagens,
+[83:01] [Orador 0]: depois calculo a loss do gerador e a loss do discriminador e retorno. E imprimo essas informações né, de época
+[83:09] [Orador 0]: e de loss.
+[83:11] [Orador 0]: E esse último if aqui
+[83:13] [Orador 0]: é só pra eu imprimir de tempos em tempos
+[83:17] [Orador 0]: as imagens, aquelas 16 imagens
+[83:20] [Orador 0]: que eu estou colocando no plot generated images. Aí o eu estou fazendo aqui? Estou garantindo que ele vai plotar na última época, ou seja, quando a época for, na primeira época, quando a época foi igual a 1.
+[83:29] [Orador 0]: Na última época,
+[83:31] [Orador 0]: quando
+[83:32] [Orador 0]: a época atual dividida pelo número de épocas foi igual a 0, então a última época. E também de 20 em 20 épocas, quando a época atual, o resto da divisão da época atual por 20 foi igual a 0.
+[83:44] [Orador 0]: Também, resto da divisão da época atual com 300 foi igual a 0.
+[83:50] [Orador 0]: Beleza, aí o que acontece aqui no loop? Ele vai imprimindo aqui a loss do gerador,
+[83:55] [Orador 0]: a época,
+[83:56] [Orador 0]: a loss do discriminador,
+[83:58] [Orador 0]: na época 1 ele vai imprimir as imagens e aí veja, vejam.
+[84:01] [Orador 0]: Você vê que está semelhante à característica do MGIS,
+[84:05] [Orador 0]: que é você ter 1 fundo preto e 1 dígito aqui no meio em branco, mas
+[84:11] [Orador 0]: esses dígitos não estou vendo nenhum dígito,
+[84:14] [Orador 0]: claramente é 1 dígito né, algo que parece,
+[84:17] [Orador 0]: mas o modelo está aprendendo ainda.
+[84:19] [Orador 0]: Então com o passar das épocas a gente espera que isso vá melhorando né. Então estou imprimindo essas imagens de 20 em 20 épocas, você já vê que na vigésima época o negócio já está começando a melhorar né
+[84:32] [Orador 0]: E enfim, isso que eu estou imprimindo sempre as mesmas 16 imagens com o mesmo mesma imagem não né, o mesmo input, mesmo ruído de entrada
+[84:40] [Orador 0]: Eu já consigo ver dígitos aqui né, 1 0, 1 8, 1 1 7, 8, 7, 1 7,
+[84:46] [Orador 0]: enfim
+[84:47] [Orador 0]: Ainda tem espaço pra melhor obviamente, tem coisas aqui que não estão muito boas
+[84:52] [Orador 0]: E aí isso é tempo de treinamento,
+[84:54] [Orador 0]: tempo de treinamento. Com passar das épocas a gente espera que o modelo vai ficando melhor nessa geração. Então consigo ver que ele vai melhorando.
+[85:03] [Orador 0]: Enfim.
+[85:04] [Orador 0]: Essa é a ideia, eu treinei só por 300,
+[85:06] [Orador 0]: mas como eu comentei esse treinamento é mais lento, mais difícil.
+[85:10] [Orador 0]: Então a gente usualmente
+[85:12] [Orador 0]: dá ordem de grandeza maior pro treinamento de 1 modelo desse.
+[85:16] [Orador 0]: Bom e aí pra finalizar eu só,
+[85:19] [Orador 0]: no final das contas é a mesma coisa que eu fui fazendo aqui a cada 20 épocas.
+[85:23] [Orador 0]: Copiei e colei aquele código lá de cima pra fazer 1 geração final de mais de 16 imagens.
+[85:28] [Orador 0]: Só que aí eu aleatorizei de novo então gerei 1 novo vetor,
+[85:32] [Orador 0]: não usei aquele fixed
+[85:34] [Orador 0]: nós,
+[85:35] [Orador 0]: gerei 1 novo nós aqui,
+[85:36] [Orador 0]: e o restante do código é exatamente igual ao de cima do da função,
+[85:40] [Orador 0]: pra gerar como é que ficou né. Então já se assemelha mais a ao a antígitos,
+[85:46] [Orador 0]: mas como eu falei a gente necessitaria de mais alguma.
+[85:49] [Orador 0]: Comentar pelo menos 1 ordem de grandeza,
+[85:52] [Orador 0]: no treinamento.
+[85:53] [Orador 0]: Tá? Dúvidas?
+[85:54] [Orador 0]: Esse aqui,
+[85:55] [Orador 0]: acho que foi,
+[85:56] [Orador 0]: A Lana,
+[85:57] [Orador 0]: esse aqui eu não não não sugeri nenhum exercício mas eu posso também
+[86:01] [Orador 0]: pensar em alguns exercícios aqui depois eu coloco nesse,
+[86:05] [Orador 0]: nesse notebook também,
+[86:07] [Orador 0]: pra quem quiser praticar.
+[86:08] [Orador 0]: Tá?
+[86:08] [Orador 0]: Bom, se vocês não têm nenhuma dúvida então acho que eu vou dar o intervalo, 15 minutinhos,
+[86:13] [Orador 0]: e a gente volta com o variate na outra input.
+[86:16] [Orador 0]: Beleza?
+[86:17] [Orador 0]: 15 minutos então.
+[86:18] [Orador 0]: Pessoal, vamos voltar aqui então agora
+[86:21] [Orador 0]: para apresentar para vocês 1
+[86:23] [Orador 0]: Outra arquitetura que resolve 1 dos problemas da GAN
+[86:27] [Orador 0]: Que é a questão do controle na geração dos dados Então
+[86:32] [Orador 0]: no exercício anterior que a gente viu,
+[86:34] [Orador 0]: no exercício anterior a gente viu que a GAN é capaz de gerar dados
+[86:38] [Orador 0]: realistas,
+[86:39] [Orador 0]: mas
+[86:40] [Orador 0]: a gente nunca sabe
+[86:42] [Orador 0]: o que que ela vai gerar né, o que que vai sair daquele gerador.
+[86:45] [Orador 0]: gera imagens realistas,
+[86:47] [Orador 0]: aprende a imitar 1 distribuição complexa com sucesso,
+[86:50] [Orador 0]: mas o espaço de ruído é opaco, desorganizado,
+[86:53] [Orador 0]: então a gente gera meio que no escuro.
+[86:55] [Orador 0]: Isso aqui seria 1 exemplo de 1 espaço desorganizado,
+[86:59] [Orador 0]: então eu dou 1 ruído aqui e ele gera 1 aqui, daqui a pouco eu dou 1 outro ruído e gera 1 outra coisa totalmente diferente. Se eu modificar o ruído 1 pouco,
+[87:09] [Orador 0]: não significa que se ele gera 1 dígito 8, exemplo a cor vermelha aqui,
+[87:14] [Orador 0]: representado pela cor vermelha, se eu mudar 1 pouquinho o ruído ele pode me gerar
+[87:20] [Orador 0]: número
+[87:21] [Orador 0]: 3, daqui a pouco número 5, né?
+[87:24] [Orador 0]: Agora se você tem 1 espaço latente organizado,
+[87:28] [Orador 0]: a gente consegue ter 1 pouco mais de controle nisso. E seria essa ideia, essa representação
+[87:33] [Orador 0]: aqui.
+[87:33] [Orador 0]: Então se eu gero 1 dado aqui que é o 8,
+[87:36] [Orador 0]: eu modifico 1 pouco o ruído ao redor daquele que eu gerei, eu vou gerar outros 8 diferentes
+[87:42] [Orador 0]: né, mas o mesmo a mesma saída.
+[87:46] [Orador 0]: Vou aumentar aqui do do do José Moura, nem tem parte pra 1 crítica mas como 1 fato. Esses detalhes das linhas é extremamente complexos pra mim, mesmo com explicação e comentários. Tomo com mão verdadeiros e vou em frente.
+[87:57] [Orador 0]: Essa questão,
+[87:59] [Orador 0]: José,
+[87:59] [Orador 0]: realmente para quem não tem
+[88:02] [Orador 0]: conhecimento e prática em programação,
+[88:04] [Orador 0]: eu sei que é 1 barreira. Eu vejo isso aqui em todos os cursos.
+[88:08] [Orador 0]: Mas infelizmente para você treinar 1 modelo de IA essa é 1 barreira que precisa ser vencida.
+[88:15] [Orador 0]: E como é que a gente vence
+[88:16] [Orador 0]: isso? É praticando.
+[88:18] [Orador 0]: Acho que é o único conselho que eu posso dar. É prático, acho que a sugestão da Ana é 1 boa, sempre deixar alguns exercícios pra meio que obrigar vocês sempre que vocês tiverem tempo a colocar a mão na massa pra isso entrar, não tem outro jeito, pra entrar no sangue né?
+[88:33] [Orador 0]: Por mais que eu comente aqui, só assistir aula não vai ser
+[88:37] [Orador 0]: suficiente.
+[88:38] [Orador 0]: Outra coisa eu estou tentando pedir 1 coisa que vi que existe no zoom, transmissão em 2 telas.
+[88:43] [Orador 0]: Normalmente não é possível ver detalhes da imagem
+[88:46] [Orador 0]: da sala na imagem.
+[88:48] [Orador 0]: Eu vou,
+[88:50] [Orador 0]: vou tirar foto do seu comentário aqui,
+[88:51] [Orador 0]: e vou mandar pro suporte.
+[88:53] [Orador 0]: Eu acho que eles estão transmitindo 2 telas, eu vejo aqui
+[88:56] [Orador 0]: a minha tela do notebook e eu vejo aqui a câmera.
+[88:59] [Orador 0]: No zoom.
+[89:00] [Orador 0]: Eu acho que você pode alternar a tela que você quer ver,
+[89:03] [Orador 0]: se você clicar aí na na na tela.
+[89:06] [Orador 0]: Mas eu vou mandar para eles depois eles podem te mandar como é que 1
+[89:10] [Orador 0]: tutorial de como é que faz.
+[89:12] [Orador 0]: Tá?
+[89:12] [Orador 0]: Bom,
+[89:13] [Orador 0]: beleza.
+[89:14] [Orador 0]: Então o problema central é a falta de estrutura. O espaço de entrada da GAN.
+[89:18] [Orador 0]: Ai deixa eu ver que o Felipe mandou 1 imagem aqui, deixa eu dar 1 olhada.
+[89:21] [Orador 0]: Ainda é sobre a GAN?
+[89:23] [Orador 0]: Vamos fechar isso aqui.
+[89:24] [Orador 0]: Tá, caminho do gerador, input 1, ruído aleatório, sem números. Sim. E aí só 1 detalhe né? Sem números porque a gente definiu. A gente poderia ter definido 1 ruído de tamanho diferente, poderia ser 200, poderia ser 50.
+[89:38] [Orador 0]: Mas perfeito. Exemplo,
+[89:40] [Orador 0]: beleza.
+[89:40] [Orador 0]: Aí o gerador é o falsificador.
+[89:43] [Orador 0]: Exato, ele gera a imagem falsa.
+[89:45] [Orador 0]: No nosso caso da Minisse 1 imagem 28 por 28 pixels, isso.
+[89:49] [Orador 0]: Aí tem outro caminho lá no input 2 imagens reais do Minisse, 60000 dígitos manuscritos,
+[89:55] [Orador 0]: isso.
+[89:56] [Orador 0]: Esse é o bloco de dados, aí essa imagem real
+[89:59] [Orador 0]: entra no discriminador junto com a imagem falsa exatamente,
+[90:03] [Orador 0]: se encontra aqui e seria o detetive.
+[90:05] [Orador 0]: É isso aí, aí a saída do discriminador é a indicação se é real ou falso, 0 1, perfeito.
+[90:10] [Orador 0]: É esse o fluxo mesmo.
+[90:12] [Orador 0]: Ficou mais claro o caminho dos inputs. Eu vou copiar sua imagem depois e vou e vou colocar no no
+[90:18] [Orador 0]: slide que eu acho que pode ajudar também o pessoal aqui.
+[90:20] [Orador 0]: Vou salvar a imagem aqui.
+[90:22] [Orador 0]: Maravilha.
+[90:23] [Orador 0]: Show.
+[90:23] [Orador 0]: Bom, então o espaço de entrada da GAN é 1 vetor de ruído aleatório Funciona?
+[90:29] [Orador 0]: Funciona,
+[90:30] [Orador 0]: mas a gente entende o que acontece lá dentro? Não, é desorganizado,
+[90:34] [Orador 0]: é não interpretado,
+[90:36] [Orador 0]: é difícil de controlar Então isso modelo aprendesse 1 espaço que fizesse sentido.
+[90:41] [Orador 0]: E aí que entra a questão do Em
+[90:46] [Orador 0]: vez de apenas gerar a imagem a partir de 1 ruído aleatório,
+[90:49] [Orador 0]: imagina 1 modelo que aprende a organizar o mundo num mapa estruturado.
+[90:52] [Orador 0]: Então a Khan Khan aprende a imitar tão bem que engana 1 discriminador.
+[90:57] [Orador 0]: A nova ideia então é aprender a representar,
+[91:00] [Orador 0]: encontrar
+[91:01] [Orador 0]: 1 estrutura oculta no seu conjunto de dados. E aí o resultado é a possibilidade de 1 geração
+[91:08] [Orador 0]: controlada.
+[91:09] [Orador 0]: Então nessa representação
+[91:10] [Orador 0]: estruturada,
+[91:13] [Orador 0]: aprendida
+[91:14] [Orador 0]: pelo Varation Authincoder,
+[91:16] [Orador 0]: eu consigo fazer
+[91:18] [Orador 0]: essa geração. Como eu falei, eu coloco 1 valor lá, no caso vai ser 1 entrada de 1 ponto, você vai ver que vai ser 1 ponto
+[91:25] [Orador 0]: num shape do espaço latente.
+[91:28] [Orador 0]: É o mesmo a questão do Late and Theme, na GAN ela é entrada do gerador.
+[91:33] [Orador 0]: No vai
+[91:35] [Orador 0]: ser a entrada do decoder.
+[91:36] [Orador 0]: Tá?
+[91:37] [Orador 0]: E aí a gente também vai gerar esse valor em ponto qualquer, pode ser 1 1 dado aleatório,
+[91:43] [Orador 0]: como na DAN.
+[91:44] [Orador 0]: Mas a gente vai quando gerar esse ponto, observando
+[91:48] [Orador 0]: o que ele representa,
+[91:50] [Orador 0]: se eu quiser variações daquela geração é só mudar 1 pouquinho
+[91:54] [Orador 0]: ao entorno daquele valor que eu imputei,
+[91:56] [Orador 0]: tá?
+[91:57] [Orador 0]: Então o triationalting coder é 1 modelo generativo também,
+[92:00] [Orador 0]: modelo que combina o poder da compressão com estrutura probabilística,
+[92:04] [Orador 0]: ele não gera apenas, ele aprende a organizar o mundo. E aí no caso do nosso analista que é a representação,
+[92:11] [Orador 0]: de como ele estaria representado dentro desse espaço de atributos de de dimensão latente.
+[92:17] [Orador 0]: Todos os 4 são esses verdinhos aqui no canto, todos os 9 são esses vermelhos aqui,
+[92:22] [Orador 0]: os sets aqui, 1 aqui,
+[92:24] [Orador 0]: está tudo não está nada não está misturado, está organizado então ele comprime vocês vão ver que a arquitetura do do
+[92:31] [Orador 0]: qualquer
+[92:32] [Orador 0]: outra é
+[92:33] [Orador 0]: pelo menos a a maioria deles a ideia é fazer isso aqui olha, pegar aqui.
+[92:39] [Orador 0]: Opa.
+[92:40] [Orador 0]: Pegar aqui o meu.
+[92:41] [Orador 0]: A minha caneta, não estou conseguindo escrever nos lives.
+[92:45] [Orador 0]: Vocês vão ver que a arquitetura do auto encoder,
+[92:47] [Orador 0]: ele em geral os auto mais auto encoders mais usuais,
+[92:51] [Orador 0]: independente de ser 1 Variation auto encoder ou auto encoder comum,
+[92:55] [Orador 0]: ele vai ser assim olha,
+[92:57] [Orador 0]: imagina que essas caixinhas
+[92:59] [Orador 0]: são as camadas de neurônios, em cada caixinha dessa tem diversos
+[93:04] [Orador 0]: neurônios tá? E aí eu tenho input que por exemplo é a minha imagem tá? Eu estou imputando minha imagem aqui com os dígitos.
+[93:11] [Orador 0]: Isso entra no auto encoder. Ele para aqui no que a gente chama de espaço latente.
+[93:18] [Orador 0]: Pensa nesse espaço latente
+[93:20] [Orador 0]: como 1 representação
+[93:21] [Orador 0]: de baixa dimensionalidade
+[93:23] [Orador 0]: dos seus dados. Imagina que na sua entrada você tem 28 com 28, isso dá
+[93:28] [Orador 0]: 784.
+[93:30] [Orador 0]: Então você tem 1 1 dimensionalidade de 784,
+[93:34] [Orador 0]: só que aqui no seu espaço latente você tem 1 dimensionalidade menor,
+[93:39] [Orador 0]: por exemplo de
+[93:41] [Orador 0]: Tá? A gente vai colocar em 2
+[93:43] [Orador 0]: para a gente conseguir plotar esse espaço e para vocês verem, para provar para vocês que esse espaço é organizado
+[93:50] [Orador 0]: Porque eu vou botar num gráfico de dispersão como esse aqui e vocês vão ver que vai estar organizado Mas poderia ser num espaço de dimensão maior
+[93:57] [Orador 0]: Eu só vou colocar 2 para eu conseguir mostrar para vocês que o espaço é organizado
+[94:01] [Orador 0]: Mas lembremse que poxa, eu estou reduzindo
+[94:04] [Orador 0]: de 784
+[94:05] [Orador 0]: pra 2.
+[94:07] [Orador 0]: Isso é muita perda de informação,
+[94:09] [Orador 0]: né? Talvez 2 não seja o mais adequado pra representar
+[94:13] [Orador 0]: essa entrada aqui dessa dimensionalidade.
+[94:15] [Orador 0]: talvez os resultados sejam melhores se aumentar esse espaço de atributo de esse tamanho de espaço latente.
+[94:21] [Orador 0]: Mas aí você não vai conseguir botar, se colocar 100, pode ser que os resultados sejam muito melhores, mas você não vai conseguir plotar no gráfico de extensão, tá?
+[94:28] [Orador 0]: E aí que que esse autoencoder faz? Essa aqui é a parte o que a gente chama de,
+[94:33] [Orador 0]: ele faz
+[94:35] [Orador 0]: o daquela
+[94:37] [Orador 0]: representação de alta dimensionalidade dos seus dados,
+[94:40] [Orador 0]: pra 1 espaço latente de menor dimensionalidade.
+[94:43] [Orador 0]: E aí depois do encoder
+[94:45] [Orador 0]: a gente tem o decoder.
+[94:47] [Orador 0]: Ele cresce de novo
+[94:49] [Orador 0]: pra dimensão original.
+[94:51] [Orador 0]: Então aqui na saída eu tenho 1 x linha que é a minha imagem do 0 reconstruída.
+[94:57] [Orador 0]: E
+[94:57] [Orador 0]: obviamente o que a gente quer é 1 aprendizado auto supervisionado.
+[95:01] [Orador 0]: A gente quer que o x seja o mais próximo possível de x'Eu
+[95:05] [Orador 0]: quero que ele aprenda a reduzir esse dado para 1 baixa dimensionalidade,
+[95:10] [Orador 0]: comprimir esse dado, mas na hora que eu passo esse dado
+[95:14] [Orador 0]: comprimido para o decoulder,
+[95:16] [Orador 0]: ele consiga reconstruir. Isso significa, se ele consegue reconstruir, significa que aquele espaço de baixa dimensionalidade
+[95:22] [Orador 0]: conseguiu
+[95:23] [Orador 0]: capturar a informação de 1 dado de mais alta dimensionalidade,
+[95:28] [Orador 0]: tá? Então aqui eu tenho 1 0 e eu quero que seja mais parecido desse 0 aqui, Essa imagem é mais parecida desse 0. Então aqui na saída de novo eu tenho meu 784,
+[95:39] [Orador 0]: 28 por 28 né na verdade, 28 por 28.
+[95:42] [Orador 0]: Tá? E essa parte aqui então é chamada de.
+[95:45] [Orador 0]: Tá? Essa é a ideia de 1 auto encoder, qualquer auto encoder, maioria deles pelo menos.
+[95:52] [Orador 0]: comprime para 1 espaço latente,
+[95:55] [Orador 0]: organiza,
+[95:55] [Orador 0]: então esse espaço latente é organizado,
+[95:58] [Orador 0]: dado
+[95:59] [Orador 0]: com característica diferente está montado
+[96:01] [Orador 0]: espaço, num num numa região do nosso espaço multidimensional
+[96:05] [Orador 0]: e reconstrói com o decoder.
+[96:08] [Orador 0]: intuição central né, cada imagem ela é mapeada para 1 ponto em 1 espaço contínuo e organizado chamado espaço latente.
+[96:16] [Orador 0]: Imagens seriam pontos nesse espaço latente.
+[96:19] [Orador 0]: Cada exemplo de entrada
+[96:21] [Orador 0]: se torna 1 coordenada em 1 espaço de baixa dimensão.
+[96:24] [Orador 0]: Proximidade é igual a similaridade, imagens parecidas
+[96:27] [Orador 0]: elas ficam próximas.
+[96:29] [Orador 0]: Então o espaço reflete a estrutura dos meus dados, a similaridade
+[96:33] [Orador 0]: e dissimularidade
+[96:35] [Orador 0]: dos meus dados. E o espaço é contínuo e navegável.
+[96:38] [Orador 0]: A gente pode nos mover por esse espaço e gerar qualquer imagem nesse espaço navegável interpretado.
+[96:44] [Orador 0]: E a gente tem mais controle
+[96:46] [Orador 0]: sobre isso, de novo, porque o espaço é estruturado.
+[96:49] [Orador 0]: Arquitetura que eu acabei de desenhar, essa ideia
+[96:53] [Orador 0]: você tem 1 input aqui digamos nossa imagem, 1 camada de neurônios, outra camada de neurônios, vai reduzindo dimensionalidade,
+[97:00] [Orador 0]: chega no espaço latente e depois reconstrói.
+[97:04] [Orador 0]: Então esse x' aqui a gente quer que seja o mais próximo possível desse
+[97:09] [Orador 0]: x.
+[97:09] [Orador 0]: A loss function no que ela está fazendo,
+[97:12] [Orador 0]: verificando
+[97:13] [Orador 0]: a diferença do x pro x'Essa
+[97:15] [Orador 0]: a gente está pensando em imagem, como se ele comparasse pixel a pixel Esse pixel aqui tem intensidade 255
+[97:21] [Orador 0]: na entrada
+[97:22] [Orador 0]: E na saída?
+[97:23] [Orador 0]: É 253,
+[97:24] [Orador 0]: então tem 1 erro aqui de 2,
+[97:27] [Orador 0]: tá? E aí ele vai somando os erros de cada 1 dos pixels.
+[97:30] [Orador 0]: O variante autoincor ele funciona como 1 funil inteligente, ele comprime a imagem de sua essência, o espaço latente, depois reconstrói a partir dessa representação,
+[97:39] [Orador 0]: forçando o modelo a prender o que realmente importa,
+[97:42] [Orador 0]: né, essa compressão
+[97:44] [Orador 0]: de dados. Só que esse espaço latente aqui,
+[97:46] [Orador 0]: eu só estou sempre falando de comprimir no espaço latente,
+[97:50] [Orador 0]: mas tem 1 informação importante
+[97:52] [Orador 0]: no Varation Auth encoder que é diferente de 1 Auth encoder comum. É que é esse espaço latente que ele está aprendendo aqui,
+[97:58] [Orador 0]: é 1 vetor, são 2 vetores.
+[98:00] [Orador 0]: É 1 vetor que representa.
+[98:02] [Orador 0]: Então essa saída aqui,
+[98:04] [Orador 0]: ela vai para 1 dance
+[98:06] [Orador 0]: que AA0
+[98:07] [Orador 0]: número de neurônios dela, por exemplo 100,
+[98:10] [Orador 0]: representa o tamanho do vetor
+[98:11] [Orador 0]: que é
+[98:12] [Orador 0]: a média.
+[98:13] [Orador 0]: E você nessa saída aqui tem 1 outra Dance,
+[98:16] [Orador 0]: por exemplo de 100 também,
+[98:17] [Orador 0]: ou seja, 100 neurônios,
+[98:19] [Orador 0]: que esse vetor de tamanho 100 representa
+[98:22] [Orador 0]: o desvio.
+[98:23] [Orador 0]: Matematicamente é isso que ele faz. Então ele aprende no espaço latente 1 distribuição
+[98:28] [Orador 0]: gaussiana.
+[98:29] [Orador 0]: Então ele te dá a média e o desvio daquela distribuição.
+[98:32] [Orador 0]: O
+[98:33] [Orador 0]: mesmo conceito do InBedding quando falamos de Haag
+[98:36] [Orador 0]: Acho que a gente pode fazer 1 analogia a isso.
+[98:39] [Orador 0]: Porque o que que é o embedding?
+[98:40] [Orador 0]: O embedding
+[98:42] [Orador 0]: é 1 representação
+[98:43] [Orador 0]: vetorial
+[98:44] [Orador 0]: de 1 imagem, 1 representação vetorial
+[98:47] [Orador 0]: de 1 texto, de 1 documento, de 1 palavra.
+[98:51] [Orador 0]: Então de certa forma você está criando 1 espaço
+[98:54] [Orador 0]: que
+[98:55] [Orador 0]: multidimensional
+[98:56] [Orador 0]: que representa aquela informação.
+[98:58] [Orador 0]: Só que lá você faz isso
+[99:02] [Orador 0]: utilizando por exemplo o modelo treinável
+[99:04] [Orador 0]: representar aquela informação naquele espaço latente. A diferença é que aqui você está usando 1 encoder,
+[99:11] [Orador 0]: a ideia é a mesma, acho que é.
+[99:13] [Orador 0]: Aqui a ideia é comprimir o dado né, na verdade comprimir 1 auto encoder normal.
+[99:18] [Orador 0]: E gerar a
+[99:19] [Orador 0]: distribuição
+[99:20] [Orador 0]: num auto encoder.
+[99:22] [Orador 0]: Mas é, eu acho que a gente pode fazer essa essa analogia.
+[99:26] [Orador 0]: É 1 representação vetorial em menor dimensionalidade.
+[99:29] [Orador 0]: Só que no caso de texto, a gente não pode falar que é menor dimensionalidade né, porque
+[99:34] [Orador 0]: é texto pra número.
+[99:35] [Orador 0]: Mas a ideia é a mesma, a ideia é a mesma.
+[99:37] [Orador 0]: No final das contas você tem 1 vetor que represente aquela aquela entrada,
+[99:42] [Orador 0]: mas talvez por motivos diferentes.
+[99:44] [Orador 0]: O texto você é obrigado pra conseguir treinar o modelo. A imagem não necessariamente, você poderia encontrar os switches.
+[99:50] [Orador 0]: Tá.
+[99:50] [Orador 0]: Mas no fundo é a ideia mesmo.
+[99:52] [Orador 0]: o modelo ele nunca recebeu o rótulo Essa estrutura ela vai emergir sozinha
+[99:58] [Orador 0]: Pelo
+[100:00] [Orador 0]: pelo entendimento de como comprimir aqueles dados pra gerar aquele vetor latente
+[100:06] [Orador 0]: para depois reconstruir
+[100:08] [Orador 0]: Então 1 3 fica perto de outros 3
+[100:11] [Orador 0]: mesmo sendo escritas diferentes
+[100:13] [Orador 0]: Então se eu for lá no grupo de 3 e
+[100:16] [Orador 0]: fizer aquele
+[100:17] [Orador 0]: aquela variação pequena,
+[100:20] [Orador 0]: você vai gerar outros 3.
+[100:22] [Orador 0]: Legiões do espaço fazem sentido semântico e a fronteira entre os classes são suaves, não abruptos E aí como o Luiz falou, fazendo essa analogia com o embedding, é isso que a gente quer também
+[100:33] [Orador 0]: né? Quando a gente gera o você está gerando
+[100:36] [Orador 0]: por
+[100:36] [Orador 0]: exemplo de imagens de cachorros, cachorros diferentes,
+[100:39] [Orador 0]: no final das contas quando você está gerando daquela imagem com 1 coaching qualquer, por exemplo 1,
+[100:45] [Orador 0]: você está querendo gerar 1 vetor que representa aquele aquela aquela imagem, e cachorros vão ficar perto de cachorros,
+[100:53] [Orador 0]: né, que carrega esse esse sentido semântico.
+[100:56] [Orador 0]: Então tem muita analogia com 1 questão do império. E as fronteiras entre as classes são suaves, não abruptas.
+[101:04] [Orador 0]: quando a gente fala na falei lá na geração de embeddings no clique por exemplo, a gente usou o Vision Transformer, a gente poderia também usar 1
+[101:12] [Orador 0]: 1 auto encoder, 1 auto encoder que você
+[101:15] [Orador 0]: comprime pro espaço latente,
+[101:17] [Orador 0]: reconstrói
+[101:18] [Orador 0]: e depois você joga fora o decoder e só comprime pra entrar no clipe e calcular a similaridade,
+[101:23] [Orador 0]: né aquela similaridade de 1 cosseno. Então, ela poderia ser usada pra geração de também.
+[101:28] [Orador 0]: Bom, beleza. Então não é 1 ponto,
+[101:31] [Orador 0]: é 1 distribuição,
+[101:33] [Orador 0]: porque como eu expliquei pra vocês quando eu mostrei essa aqui, a gente tem nessa saída 1 dance pra gerar média e 1 saída nessa 1 saída de dance aqui para gerar o desvio padrão. Então é 1 distribuição, não exatamente 1 ponto.
+[101:46] [Orador 0]: Então o encodre não mapeia 1 imagem para 1 ponto fixo, mas para 1 distribuição gaussiano no espaço latente.
+[101:52] [Orador 0]: Então a média, o centro da distribuição, a imagem provavelmente está
+[101:56] [Orador 0]: naquele espaço latente. E a variância,
+[101:59] [Orador 0]: a incerteza, qual espalhada é a apresentação ao redor da média. Então em vez dessa imagem é esse ponto, o Variational Encoder aprende essa imagem vive nessa região. Se você pegar 1 outro Encoder clássico,
+[102:11] [Orador 0]: a imagem vai ser aquele ponto,
+[102:13] [Orador 0]: é aquele
+[102:13] [Orador 0]: Aquele vetor latente gerado.
+[102:15] [Orador 0]: Agora aqui não, tem média e variância.
+[102:18] [Orador 0]: E é por isso que a gente consegue
+[102:20] [Orador 0]: gerar os dados aqui, gerar os dados
+[102:23] [Orador 1]: Manuela,
+[102:24] [Orador 1]: me escuta.
+[102:25] [Orador 1]: Escuto, diga. Boa noite, desculpa que eu não estou podendo digitar agora, estou com 1 bebê no colo.
+[102:31] [Orador 1]: Só 1 dúvida se eu entendi corretamente. Então você define o centro
+[102:35] [Orador 1]: da imagem
+[102:37] [Orador 1]: e a variância
+[102:39] [Orador 1]: desses desses vetores da direção dos pontos é o que determina a interpretação da imagem, eu entendi correto,
+[102:46] [Orador 1]: viajei.
+[102:47] [Orador 0]: Deixa deixa eu tentar explicar aqui,
+[102:49] [Orador 0]: no seu Obrigada.
+[102:50] [Orador 0]: Nada.
+[102:51] [Orador 0]: O que que, bom vamos lá.
+[102:53] [Orador 0]: Desenhar aqui.
+[102:54] [Orador 0]: Bom então a gente vai ter
+[102:56] [Orador 0]: 1 entrada x
+[102:58] [Orador 0]: né e aí eu tenho por exemplo 2 camadas de neurônios.
+[103:01] [Orador 0]: E aí tem o meu espaço latente aqui menorzinho.
+[103:04] [Orador 0]: Depois eu reconstruo
+[103:06] [Orador 0]: a entrada e essa saída aqui vai ser o x linha. Eu quero que x seja o mais próximo possível de x linha. Então esse aqui é o nosso espaço latente,
+[103:16] [Orador 0]: certo? Isso no auto empoder
+[103:19] [Orador 0]: normal. No auto empoder,
+[103:21] [Orador 0]: no vale,
+[103:22] [Orador 0]: o que acontece
+[103:23] [Orador 0]: é que
+[103:24] [Orador 0]: essa saída aqui vai me gerar,
+[103:27] [Orador 0]: deixa eu botar aqui, essa saída aqui vai me gerar 2 vetores.
+[103:31] [Orador 0]: Esse vetor aqui representa a média,
+[103:33] [Orador 0]: e esse vetor aqui me representa a variância.
+[103:36] [Orador 0]: Desvio.
+[103:37] [Orador 0]: Isso
+[103:38] [Orador 0]: aqui depois é imputado
+[103:40] [Orador 0]: na reconstrução.
+[103:41] [Orador 0]: E aí a mesma coisa, entrou x, saiu x linha aqui e a gente quer que seja o mais próximo possível.
+[103:46] [Orador 0]: Então se eu definir que o tamanho da meu espaço latente é 100, eu vou ter 1 média aqui de tamanho 100,
+[103:51] [Orador 0]: e vou ter 1 variância de tamanho 100, você vai ser 1 vetor de tamanho 100, né, pra média, 1 vetor de tamanho 100 pra variância.
+[103:59] [Orador 0]: E se a gente for pensar, isso aqui vai ser 1 distribuição gaussiana, ele aprende essa distribuição gaussiana.
+[104:04] [Orador 0]: Que que é 1 distribuição gaussiana? É algo que tem 1 distribuição mais ou menos assim né?
+[104:09] [Orador 0]: A média
+[104:10] [Orador 0]: ele diz qual o ponto mais provável, lembrando que isso aqui é frequência né?
+[104:15] [Orador 0]: E esse aqui é o valor. Então
+[104:18] [Orador 0]: digamos, a média é sei lá 3, está aqui,
+[104:21] [Orador 0]: e aqui em 4 1 desvio padrão, sei lá, variância igual a 1, então aqui
+[104:27] [Orador 0]: 4, aqui 2, 1 desvio padrão para esquerda ou para a direita. Então esse ponto aqui da média,
+[104:34] [Orador 0]: me diz onde é mais provável que aquele que aquela margem
+[104:38] [Orador 0]: esteja
+[104:39] [Orador 0]: no meu
+[104:40] [Orador 0]: espaço latente,
+[104:42] [Orador 0]: né? Porque quanto mais eu venho para cá, para mais desvios padrões para cima ou para baixo da minha média,
+[104:48] [Orador 0]: menor a probabilidade dela estar lá, né? Já que isso aqui é frequência, aqui é maior probabilidade, que eu tenho
+[104:54] [Orador 0]: 1 frequência de sei lá,
+[104:57] [Orador 0]: botar 1 valor qualquer aqui, 1, vamos colocar entre 0 e 1, então a frequência máxima possível.
+[105:03] [Orador 0]: Agora,
+[105:05] [Orador 0]: ele ser 1,
+[105:06] [Orador 0]: a probabilidade é muito menor, tá aqui em sei lá, 0.2.
+[105:09] [Orador 0]: com isso, já que ele está aprendendo média e desvio,
+[105:13] [Orador 0]: ele está aprendendo exatamente a distribuição
+[105:16] [Orador 0]: daquele dado E aí a média é o valor mais provável daquela imagem, onde ela está no espaço latente
+[105:24] [Orador 0]: tá?
+[105:24] [Orador 0]: E com isso,
+[105:26] [Orador 0]: com essa ideia, com essa mudança aqui de 1 toner convencional que seria 1 ponto no meu espaço multidimensional,
+[105:32] [Orador 0]: como a gente faz pra geração de invers, aqui
+[105:35] [Orador 0]: eu tenho
+[105:36] [Orador 0]: a distribuição
+[105:37] [Orador 0]: média de vírgula.
+[105:38] [Orador 0]: Ficou claro?
+[105:39] [Orador 0]: Bom,
+[105:39] [Orador 0]: estou assumindo que sim, mas se não tiver claro me falha.
+[105:42] [Orador 0]: E aí como é que o vai faz isso em relação ao treinamento? Lá na Ganja que estava falando poxa, eu tenho 1 lógica geradora, tenho 1 lógica terminadora,
+[105:50] [Orador 0]: 1 tenta fazer com que o outro erre, é 1 competição.
+[105:53] [Orador 0]: Aqui a função de perda do Variation of Encoder tem
+[105:59] [Orador 0]: 2 termos também
+[106:00] [Orador 0]: complementares
+[106:01] [Orador 0]: e opostos.
+[106:03] [Orador 0]: Ele tem 1 perda que é o erro de reconstrução.
+[106:07] [Orador 0]: O que a gente quer obviamente é que a imagem seja parecida com a original, aquele x que entrou ali seja
+[106:12] [Orador 0]: mais próximo possível do x de ninguém que está saindo
+[106:16] [Orador 0]: na reconstrução
+[106:17] [Orador 0]: Então esse erro de reconstrução ele mede 1 erro pixel a pixel
+[106:20] [Orador 0]: Então por exemplo,
+[106:21] [Orador 0]: entrou 1 imagem aqui, esse primeiro pixel é 255,
+[106:25] [Orador 0]: esse segundo pixel é 185,
+[106:28] [Orador 0]: e aí na saída eu tenho 1 pixel 253,
+[106:31] [Orador 0]: 180.
+[106:33] [Orador 0]: Então aqui tem 1 erro associado de
+[106:35] [Orador 0]: de 2, aqui tem 1 erro associado de 5.
+[106:38] [Orador 0]: Então ele vai somando esses erros
+[106:41] [Orador 0]: pixel a pixel.
+[106:43] [Orador 0]: Show, beleza Daniel.
+[106:44] [Orador 0]: E o outro termo que entra nesse erro é a divergência
+[106:49] [Orador 0]: KL
+[106:50] [Orador 0]: A divergência KL é muito utilizada inclusive para treinamento de GANT Porque
+[106:55] [Orador 0]: ela
+[106:56] [Orador 0]: mede o
+[106:58] [Orador 0]: erro entre distribuições de probabilidade
+[107:01] [Orador 0]: não é simplesmente 1 menos o outro, por exemplo, elevado ao quadrado dividido 2 a média Não é 1 menos o outro Ele verifica a distribuição de 1 conjunto de dados e vê quão próxima ela é de 1 outra distribuição. Exemplo.
+[107:15] [Orador 0]: Imagina que
+[107:17] [Orador 0]: eu tenho 1 distribuição aqui.
+[107:19] [Orador 0]: Que é assim.
+[107:20] [Orador 0]: E aí eu tenho minha outra distribuição dos dados que é assim.
+[107:25] [Orador 0]: Pô, tem que
+[107:26] [Orador 0]: medir essa diferença aqui entre 1 distribuição, não 1 valor
+[107:30] [Orador 0]: exato.
+[107:31] [Orador 0]: essa
+[107:32] [Orador 0]: KN da invergência aqui faz exatamente isso, calcula a diferença,
+[107:37] [Orador 0]: o erro,
+[107:38] [Orador 0]: o deslocamento A
+[107:41] [Orador 0]: diferença nas distribuições
+[107:43] [Orador 0]: E isso garante a estrutura do espaço,
+[107:46] [Orador 0]: porque é isso que vai dizer onde que aquela sua imagem está no espaço latente.
+[107:50] [Orador 0]: Então o equilíbrio galósia, o treinamento do viration a quem puder é 1 negociação constante entre essas 2
+[107:55] [Orador 0]: forças.
+[107:57] [Orador 0]: Eu quero que a reconstrução seja a melhor possível, mas eu quero também que a distribuição
+[108:03] [Orador 0]: aprendida
+[108:03] [Orador 0]: seja próxima de 1 distribuição
+[108:06] [Orador 0]: normal.
+[108:07] [Orador 0]: E aí ao projetar o espaço latente por exemplo em 2 menções,
+[108:11] [Orador 0]: que é o que eu vou fazer com vocês no exercício,
+[108:14] [Orador 0]: cada ponto
+[108:15] [Orador 0]: aqui no meu espaço de 2 menções seria 1 imagem do data
+[108:19] [Orador 0]: só que representada em 2 dimensões, sair lá de 784
+[108:23] [Orador 0]: pra 2 dimensões.
+[108:25] [Orador 0]: Cada cor seria 1 classe, classes similares ficam próximas, coisas que a gente já falou né? E as fronteiras são suaves, não abruptas.
+[108:33] [Orador 0]: E aí como é que funciona a geração controlada?
+[108:36] [Orador 0]: Bom, com o modelo treinado, o espaço latente organizado,
+[108:40] [Orador 0]: minimizando a loss function,
+[108:42] [Orador 0]: gerar algo,
+[108:43] [Orador 0]: vai ser só
+[108:45] [Orador 0]: 3 etapas aqui. Escolher o ponto, eu seleciono 1 coordenada no meu espaço latente de 2 dimensões,
+[108:53] [Orador 0]: imputo isso no
+[108:55] [Orador 0]: decoder
+[108:57] [Orador 0]: e input isso no decoder
+[108:59] [Orador 0]: e ele
+[109:00] [Orador 0]: me gera a minha saída. Imagem gerada com sentido, a saída reflete a região do espaço escolhido. E aí como eu já comentei diversas vezes, se a gente variar esses e 1 e 2
+[109:11] [Orador 0]: nas proximidades a gente vai gerar outros números 7.
+[109:13] [Orador 0]: Aí é isso que eu acabei de começar, de comentar
+[109:16] [Orador 0]: também né,
+[109:17] [Orador 0]: em volta ali eu vou gerar outros números
+[109:20] [Orador 0]: mas se eu fizer 1 interpolação navegando pelo espaço,
+[109:23] [Orador 0]: você vai ver que
+[109:25] [Orador 0]: você,
+[109:26] [Orador 0]: quando você for se movendo suavemente nesse espaço,
+[109:30] [Orador 0]: as imagens começam a ser modificadas
+[109:33] [Orador 0]: e transformadas de forma gradual
+[109:35] [Orador 0]: e coerente também
+[109:36] [Orador 0]: Então isso é impossível de se fazer com 1 GAN de forma confiável
+[109:40] [Orador 0]: Se você pega 1 ponto aqui e ele te gerou 1 5, por exemplo, e aí você começa a variar indo naquele sentido
+[109:48] [Orador 0]: aí gera outros 5 1 pouco diferentes,
+[109:50] [Orador 0]: daqui a pouco gera 1 outra imagem,
+[109:53] [Orador 0]: 1 6,
+[109:53] [Orador 0]: que se parece mais com 5,
+[109:55] [Orador 0]: depois 1 8 se parece mais com 6, depois 8, depois 9. Então você vai ver gradualmente essas imagens
+[110:03] [Orador 0]: mudando quando é quando você se move nesse espaço latente.
+[110:08] [Orador 0]: ponto a ponto b, 1 5 se transforma em 1 9 passando por formas intermediárias
+[110:13] [Orador 0]: plausíveis.
+[110:14] [Orador 0]: Suave
+[110:15] [Orador 0]: prova que o espaço é contínuo e organizado, não há não há saltos bruscos,
+[110:20] [Orador 0]: né?
+[110:20] [Orador 0]: Como na GAN.
+[110:21] [Orador 0]: pra fechar,
+[110:22] [Orador 0]: GAN versus Barational Encoder versus Dqlgen que vai ser o tópico da próxima aula, o futuro né, cada modelo generativo resolve 1 problema diferente,
+[110:32] [Orador 0]: e juntos eles formam a base da IA generativa moderna.
+[110:36] [Orador 0]: GAN realismo aprende a imitar muito bem mas sem estrutura, preenche o autoincon estrutura aprende organizar e representar,
+[110:42] [Orador 0]: e isso é a base pro que a gente vai ver em seguida que são os modelos de difusão.
+[110:47] [Orador 0]: Ele junta os 2, o realismo da GAN com as com a estrutura
+[110:51] [Orador 0]: dos dados. Esse é a fronteira atual do estado da arte de geração de imagens, pelo exemplo.
+[110:57] [Orador 0]: Dúvidas?
+[110:58] [Orador 0]: Bom beleza, surgiu,
+[110:59] [Orador 0]: só falar.
+[111:01] [Orador 0]: Estudo de caso então que eu separei pro Variation é o Think Poder,
+[111:05] [Orador 0]: é o mesmo, não é o do MNISS, e a gente vai montar essa arquitetura aqui.
+[111:09] [Orador 0]: Também vai ser 1 arquitetura eu acho que eu usei convolucional também.
+[111:13] [Orador 0]: Mas lembrando que aqui no meu espaço latente eu tenho média e desvio padrão.
+[111:19] [Orador 0]: Então se eu imputei essa imagem aqui, eu quero que
+[111:23] [Orador 0]: essa saída aqui seja a mais próxima possível
+[111:26] [Orador 0]: da entrada.
+[111:27] [Orador 0]: E lembrando que isso aqui está está
+[111:30] [Orador 0]: está deixando ele reconstruir da forma correta, né? Mas ele também está aproximando a distribuição de 1 distribuição normal.
+[111:37] [Orador 0]: Com a divergência elétrica.
+[111:39] [Orador 0]: Beleza então vamos lá, vamos pro exercício. Esse exercício aqui eu implementei e deixei alguns
+[111:44] [Orador 0]: pontos pra vocês praticarem.
+[111:46] [Orador 0]: Então eu tenho 2 scripts, o vai solução e o vai. Tá? Então,
+[111:50] [Orador 0]: vou abrir aqui o vai.
+[111:52] [Orador 0]: Acho que não vai dar tempo de vocês fazerem, mas bora lá.
+[111:55] [Orador 0]: Se vocês, bom,
+[111:56] [Orador 0]: se vocês quiserem vocês podem ir rodando esse,
+[111:59] [Orador 0]: já tinha até pedido pra vocês rodarem né? Demora 1 pouquinho.
+[112:03] [Orador 0]: Eu não vou rodar porque não vai dar tempo,
+[112:05] [Orador 0]: de rodar. Como já está executado?
+[112:07] [Orador 0]: Vocês vão ver que algumas coisas são exatamente iguais ao que a gente fez
+[112:12] [Orador 0]: lá na GAN Então por exemplo, os mesmos pacotes eu estou usando, também vou usar
+[112:17] [Orador 0]: também você tem 1 semente, também você tem, a diferença é que lá na GAN a gente estava usando 1 dimensão latente de 100,
+[112:24] [Orador 0]: tá? É até 1 1 teste legal. Você aumentar a dimensionalidade
+[112:29] [Orador 0]: do espaço latente, você perde menos informação.
+[112:32] [Orador 0]: Mas como eu comentei com vocês, eu vou deixar 2
+[112:35] [Orador 0]: para eu conseguir plotar isso no gráfico de dispersão para vocês verem que o espaço latente é organizado.
+[112:42] [Orador 0]: Não parei isso não o tempo todo.
+[112:44] [Orador 0]: Backsites estou usando o mesmo e número de épocas também é mesmo, 300.
+[112:49] [Orador 0]: Baixei o dataset igual a gente fez lá e
+[112:52] [Orador 0]: também normalizei e ajustei o shape como a gente também fez lá, só que aqui eu estou normalizando entre 0 e 1, porque a gente não vai usar 1,
+[113:02] [Orador 0]: a gente pegou.
+[113:03] [Orador 0]: O Eduardo mandou aí exatamente aí a imagem do espaço latente 2D,
+[113:07] [Orador 0]: como ele é estruturado né? Cada cor dessa aí é 1 é 1 dígito. E você vê que eles estão separados, eles não estão
+[113:14] [Orador 0]: tudo misturado né? Estão em grupinhos ali.
+[113:17] [Orador 0]: Beleza. Aí eu criei 1 encoder, então a gente está aqui nessa etapa olha, estou criando essa parte aqui olha,
+[113:23] [Orador 0]: que entra e sai aqui no meu espaço latente. Beleza, então vamos lá.
+[113:27] [Orador 0]: Tem 1 camada de input, vou colocar os comentários aqui também como vocês pediram.
+[113:32] [Orador 0]: Aqui eu estou usando
+[113:34] [Orador 0]: o model né, não o sequencial, mas poderia ser o sequencial também, só eu ir dando em cada 1 dessas camadas.
+[113:40] [Orador 0]: Então eu tenho 1 camada de input que é 28 por 28 por 1, eu só tenho 1 canal de cor porque é GrayScale.
+[113:46] [Orador 0]: Segunda camada, 1 convolução 2 d.
+[113:48] [Orador 0]: De 32,
+[113:49] [Orador 0]: 3 por 3,
+[113:51] [Orador 0]: stride 2, enfim,
+[113:53] [Orador 0]: ativação relu. E aí entra essa camada anterior. Como eu não estou dando add, eu tenho que concatenando as camadas aqui. Então na sequência eu chamei de x, então vou aqui.
+[114:03] [Orador 0]: Chamei de x aqui também, vou aqui tá?
+[114:06] [Orador 0]: Então convolução,
+[114:07] [Orador 0]: convolução e flatten.
+[114:09] [Orador 0]: 2 camadas convolucionais,
+[114:11] [Orador 0]: faço o flatten da saída da convolução que vai ser 1 estrutura
+[114:14] [Orador 0]: então gera 1 vetor aqui e passo numa dance.
+[114:18] [Orador 0]: Essa dance,
+[114:20] [Orador 0]: de 128
+[114:21] [Orador 0]: com 1 ativação relu, ela vai ser input da dance que vai gerar a média e o desvio.
+[114:28] [Orador 0]: Então você vê que eu pego aqui
+[114:30] [Orador 0]: a a dimensão latente que é de tamanho 2
+[114:32] [Orador 0]: e crio essa essa camada dance e pego também e crio 1 camada
+[114:38] [Orador 0]: da
+[114:39] [Orador 0]: do desvio.
+[114:41] [Orador 0]: Esse aqui na verdade não é o desvio exatamente,
+[114:43] [Orador 0]: o logo do desvio,
+[114:45] [Orador 0]: e isso é usado no Variation Out Encoder porque ele melhora a estabilidade do processo de treinamento,
+[114:51] [Orador 0]: tá?
+[114:51] [Orador 0]: Enfim.
+[114:52] [Orador 0]: Daqui a pouco eu vou montar essa rede, vocês vão ver que eu vou juntar porque aqui.
+[114:57] [Orador 0]: Ah estou concatenando aqui já, daqui a pouco eu vou juntar isso tudo. Eu também preciso de 1 função de amostragem
+[115:02] [Orador 0]: pra gerar,
+[115:04] [Orador 0]: esse aqui é o vetor produzido pelo encoder né,
+[115:08] [Orador 0]: vai entrar aqui esse vetor produzido da média e do log, eu estou pegando esses 2 valores
+[115:14] [Orador 0]: aqui, ele vem numa tupla,
+[115:15] [Orador 0]: então eu estou pegando esses 2 aqui.
+[115:17] [Orador 0]: E eu gero 1 ruído gaussiano,
+[115:20] [Orador 0]: como a gente gerava lá na GAN para imputar no no gerador.
+[115:23] [Orador 0]: E aí eu retorno esse sampling né, que é 1 amostra,
+[115:27] [Orador 0]: 1 amostra de 1 conjunto de dados para você
+[115:31] [Orador 0]: imputar no seu.
+[115:32] [Orador 0]: Imputar no seu modelo para gerar né a média
+[115:36] [Orador 0]: E0E0
+[115:38] [Orador 0]: desvio tá então ele aplica aqui o centing na sequência com essa função lambda
+[115:43] [Orador 0]: e constrói o encoder. Então tfkarads ponto model, porque eu não usei o sequencial aqui né mas como eu falei poderia ter usado. Passa o encoder input, esse aqui é o input, a saída o que que é? A saída é a média e o desvio,
+[115:58] [Orador 0]: E0Z
+[115:59] [Orador 0]: né que é o sampling
+[116:00] [Orador 0]: e deu o nome aqui de encoder.
+[116:03] [Orador 0]: Beleza aí o decoder ele faz o processo de aumentar dimensionalidade de novo para voltar
+[116:08] [Orador 0]: para estrutura
+[116:10] [Orador 0]: original
+[116:11] [Orador 0]: E
+[116:11] [Orador 0]: nessa estrutura aqui,
+[116:13] [Orador 0]: eu tenho 1 Dance que é 7 por 7 por 64,
+[116:17] [Orador 0]: que é o shape das features.
+[116:19] [Orador 0]: Então se a gente olhar aqui o shape dessa camada
+[116:23] [Orador 0]: dance de saída aqui,
+[116:24] [Orador 0]: ela vai ter esse shape. Então eu tenho que voltar,
+[116:28] [Orador 0]: eu tenho que eu tenho que aumentar para esse shape de novo para começar a passar
+[116:34] [Orador 0]: nas camadas
+[116:35] [Orador 0]: de reconstrução.
+[116:37] [Orador 0]: Então você vai ver que essas camadas aqui
+[116:40] [Orador 0]: elas são
+[116:41] [Orador 0]: espelhadas
+[116:42] [Orador 0]: no no decoder.
+[116:44] [Orador 0]: Então eu tenho 1 dance, depois eu tenho 1 convolucional,
+[116:47] [Orador 0]: depois outra convolucional.
+[116:48] [Orador 0]: na sequência inversa né, 32 64, aqui é 64 32,
+[116:53] [Orador 0]: tá?
+[116:54] [Orador 0]: Eu só tenho 1 aqui no meio porque essa camada dance vai me fazer 1 vetor
+[116:58] [Orador 0]: de 7 7 vezes 7 vezes 64,
+[117:01] [Orador 0]: né, que é.
+[117:02] [Orador 0]: 3136
+[117:03] [Orador 0]: eu preciso colocar nesse shape que é 1 tensor
+[117:08] [Orador 0]: de 7 por 7 por 64,
+[117:11] [Orador 0]: 7 linhas, 7 colunas e 64 canais
+[117:14] [Orador 0]: porque esse é o shape de entrada da convolucional
+[117:19] [Orador 0]: 2D.
+[117:19] [Orador 0]: Porque esse também é o shape de saída
+[117:22] [Orador 0]: dessa convolucional 2 d pra entrada na Dance, tá?
+[117:26] [Orador 0]: E por isso que a gente faz o flatter na quina.
+[117:28] [Orador 0]: Então aqui eu pego esse 3 d e vetorizo,
+[117:32] [Orador 0]: e aqui eu pego esse vetor
+[117:35] [Orador 0]: e faço o recheio com 3 d então estou fazendo
+[117:38] [Orador 0]: o caminho inverso né.
+[117:39] [Orador 0]: E aí faço 1 convolução
+[117:42] [Orador 0]: transposto que eu estou aumentando dimensionalidade
+[117:44] [Orador 0]: né enfim,
+[117:46] [Orador 0]: e junto o modelo aqui todo né input, decoder outputs e dou o nome de decoder.
+[117:52] [Orador 0]: E aí eu criei 1 classe aqui,
+[117:53] [Orador 0]: pra montar esse na outra encoder. Ele recebe aqui como,
+[117:58] [Orador 0]: como no construtor 0EE
+[118:01] [Orador 0]: implementei igual
+[118:03] [Orador 0]: a igual a Nagant.
+[118:05] [Orador 0]: Aconteceu aqui comigo que,
+[118:07] [Orador 0]: em 1 época, e aconteceu de forma aleatória,
+[118:11] [Orador 0]: o data ele veio, o conjunto de dados, o batch, ele veio dentro de 1 tupla.
+[118:17] [Orador 0]: E aí eu só estou verificando que se for 1 tupla, eu pego o,
+[118:22] [Orador 0]: só a imagem né, só o dado.
+[118:24] [Orador 0]: Então eu tiro de dentro da tupla porque senão dá problema ali na hora de de seguir no processo de treinamento.
+[118:30] [Orador 0]: E igual lá na GAN né, eu abro essa essa fita que grava as operações durante o processo de cálculo dos gradiente.
+[118:36] [Orador 0]: Só que aqui não são 2 redes separadas então,
+[118:39] [Orador 0]: na verdade você tem o Encoder e o Encoder, mas eu não preciso abrir 1 pra cada 1.
+[118:43] [Orador 0]: Então eu eu chamo o Encoder, passo o meu dataset, o o de imagens,
+[118:49] [Orador 0]: defino aqui que training igual true, seja, vai calcular os gradientes.
+[118:52] [Orador 0]: E no encoder eu tenho como saída a média,
+[118:55] [Orador 0]: o desvio e o sampling,
+[118:57] [Orador 0]: né?
+[118:58] [Orador 0]: Beleza, meu espaço latente. E aí depois eu eu pego esse espaço latente aqui e dou como input
+[119:05] [Orador 0]: do meu decoder, e ele vai reconstruir.
+[119:07] [Orador 0]: Então isso aqui é a representação do meu espaço latente, aqui eu tenho na saída do decoder
+[119:13] [Orador 0]: Training true porque também treinamento
+[119:16] [Orador 0]: ele tem que calcular o gradiente.
+[119:18] [Orador 0]: Na sequência calcula a loss. Então essa primeira loss aqui é simplesmente 1 binary presenter que está comparando ali pixel a pixel os valores da entrada
+[119:29] [Orador 0]: e da saída.
+[119:31] [Orador 0]: Esse aqui é o erro de reconstrução
+[119:33] [Orador 0]: e esse aqui é o KL Divergents,
+[119:36] [Orador 0]: que vai calcular o erro
+[119:38] [Orador 0]: da
+[119:39] [Orador 0]: diferença da distribuição
+[119:42] [Orador 0]: dos seus dados, do seu batch para 1 distribuição normal.
+[119:46] [Orador 0]: Depois eu
+[119:47] [Orador 0]: somo todas as loss
+[119:49] [Orador 0]: fora aqui do tape eu faço de novo o cálculo dos gradientes,
+[119:53] [Orador 0]: e depois aplico
+[119:55] [Orador 0]: isso para atualizar os pesos né, apply gradient ele aplica
+[119:59] [Orador 0]: a atualização dos pesos. E retorna aqui os valores da loss, a loss total, a loss de reconstrução e a loss KL.
+[120:07] [Orador 0]: Crio o meu objeto, o variation auto encoder dessa classe aqui que eu acabei de criar. Então eu crio esse meu objeto passando em encoder e decoder,
+[120:16] [Orador 0]: compilo passando 1 otimizador, usei 1 adam e usei os parâmetros
+[120:20] [Orador 0]: padrão
+[120:21] [Orador 0]: tá?
+[120:21] [Orador 0]: Invés o Zamara falou como escolhe a sequência de camadas?
+[120:24] [Orador 0]: Se você não for usar 1 arquitetura
+[120:27] [Orador 0]: conhecida, tipo ah vou usar 1 vgg,
+[120:29] [Orador 0]: aí você
+[120:31] [Orador 0]: vai fazendo teste.
+[120:32] [Orador 0]: Eu
+[120:33] [Orador 0]: testei primeiro a forma mais simples, eu usei 1 convolução 2D,
+[120:37] [Orador 0]: e os resultados não ficaram tão legais, aí eu adicionei mais 1.
+[120:40] [Orador 0]: E aí achei que foi o suficiente, então a gente vai adicionando complexidade
+[120:44] [Orador 0]: ao modelo de acordo com a necessidade.
+[120:46] [Orador 0]: Você vai vendo o resultado. Será que tá tá tão complexa quanto eu preciso para aprender esse conjunto de dados?
+[120:53] [Orador 0]: Tá?
+[120:53] [Orador 0]: Então usualmente é assim, é experimental.
+[120:55] [Orador 0]: Você vai olhando como é que vai ficando os resultados e decidindo se tem que aumentar ou diminuir complexidade.
+[121:00] [Orador 0]: Depois de compilar então com a DAN, com os parâmetros do otimizador default né, não mudei nada ali em learning rates, nada, eu faço o feat. Aqui diferente do
+[121:11] [Orador 0]: Da GAN que eu preciso também implementar meu
+[121:14] [Orador 0]: minha época de treinamento eu posso simplesmente chamar o FIT Então
+[121:18] [Orador 0]: facilita a nossa vida, eu preciso mudar algumas coisas aqui no
+[121:22] [Orador 0]: no trainset,
+[121:24] [Orador 0]: mas o
+[121:25] [Orador 0]: fit funciona.
+[121:26] [Orador 0]: Então vale ponto fit, passo meu meu data set de treino,
+[121:30] [Orador 0]: número de hábitos, o backsize e o verbose só pra ir imprimindo aqui
+[121:34] [Orador 0]: a as informações né então está imprimindo exatamente as o que eu estava pedindo pra imprimir aqui no.
+[121:42] [Orador 0]: Total, loss de reconstrução
+[121:44] [Orador 0]: e
+[121:45] [Orador 0]: loss do k l da
+[121:48] [Orador 0]: Então treina treina.
+[121:49] [Orador 0]: Vamos lá, peguei 300.
+[121:51] [Orador 0]: Vou passar lá pra baixo.
+[121:53] [Orador 0]: Beleza, vamos terminar de treinar,
+[121:54] [Orador 0]: o que que eu quero mostrar pra vocês? Reconstruções, como é que a gente faz reconstrução? Agora a gente tem,
+[122:00] [Orador 0]: agora a gente tem 1 encoder,
+[122:02] [Orador 0]: faltando 1 coisinha aqui nessa imagem,
+[122:04] [Orador 0]: que além de
+[122:06] [Orador 0]: reduzir dimensionalidade
+[122:08] [Orador 0]: pra 1 vetor
+[122:10] [Orador 0]: de média de desvio também
+[122:12] [Orador 0]: me gera que o z seria o meu espaço latente,
+[122:15] [Orador 0]: tá?
+[122:16] [Orador 0]: Beleza, então
+[122:17] [Orador 0]: agora eu posso fazer, pegar esse empoder, passar 1 input, ele vai me gerar aqui meu vetor latente, esse vetor latente eu entro no decoder,
+[122:25] [Orador 0]: e eu vou ver a saída, e eu quero que ela seja mais próxima possível da entrada. Então eu peguei aqui
+[122:32] [Orador 0]: 10
+[122:34] [Orador 0]: valores do teste,
+[122:35] [Orador 0]: então peguei os últimos as últimas 10 imagens do x teste. Tá? E eu estou fazendo, pegando o encoder e fazendo o predix. Então o que que ele vai me gerar aqui? Vai me gerar a média,
+[122:47] [Orador 0]: vai me gerar o desvio e vai me gerar
+[122:50] [Orador 0]: os exemplo que é o meu espaço latente.
+[122:52] [Orador 0]: Beleza, então esses exemplo é o que eu imputo no meu decoder.
+[122:56] [Orador 0]: Então o decoder ponto predict, passo o meu espaço latente e ele vai reconstruir
+[123:01] [Orador 0]: esse essa imagem a partir do espaço latente, tá?
+[123:05] [Orador 0]: Então reconstructed
+[123:06] [Orador 0]: aqui. E aí eu fiz 1 código aqui só pra imprimir isso.
+[123:12] [Orador 0]: Todos eles
+[123:13] [Orador 0]: num range,
+[123:14] [Orador 0]: aí num range de 10, eu faço 1 subplot
+[123:17] [Orador 0]: de 2 linhas, 10 colunas.
+[123:20] [Orador 0]: Depois faço o show né, então pego essa imagem,
+[123:23] [Orador 0]: faço 1 recheio de 28 por 28,
+[123:26] [Orador 0]: porque ele está 28 28 1 na saída se não me engano.
+[123:30] [Orador 0]: E vou,
+[123:31] [Orador 0]: ah tá, então essa é a imagem e também faço 1 plot da reconstrução.
+[123:36] [Orador 0]: Então na primeira linha vai a
+[123:40] [Orador 0]: imagem original
+[123:41] [Orador 0]: e na segunda linha vai a imagem reconstruída.
+[123:44] [Orador 0]: tá aí.
+[123:45] [Orador 0]: Você vê que a reconstrução
+[123:47] [Orador 0]: está ficando
+[123:49] [Orador 0]: muito boa, tem 1 pouco de ruído,
+[123:51] [Orador 0]: está meio embaçado algumas imagens,
+[123:54] [Orador 0]: mas ele está aprendendo a reconstruir a imagem direitinho.
+[123:58] [Orador 0]: Né talvez se eu deixasse treinando mais 1 pouco, ou até se eu aumentasse 1 pouco a complexidade.
+[124:03] [Orador 0]: Como o José Mauro falou como é que escolhe a sequência de camadas?
+[124:07] [Orador 0]: Bom, poderia colocar de repente mais 1 camada convolucional
+[124:10] [Orador 0]: ali pra ver se ele consegue reconstruir melhor ainda esses esses essas imagens,
+[124:14] [Orador 0]: tá? Mas está muito aproximado, está muito interessante esse resultado aqui. Vamos seguir então.
+[124:20] [Orador 0]: Então reconstrução a gente está vendo visualmente que ele está conseguindo
+[124:24] [Orador 0]: reconstruir e gente, tem 1 outro detalhe, não só aumentar a complexidade,
+[124:29] [Orador 0]: o que eu comentei lá em cima, eu estou colocando 1 espaço latente de tamanho 2.
+[124:35] [Orador 0]: Eu estou diminuindo de 784
+[124:37] [Orador 0]: valores para 2.
+[124:39] [Orador 0]: E o que significa?
+[124:40] [Orador 0]: É que eu tenho que representar esse 784
+[124:42] [Orador 0]: em só 2 números.
+[124:44] [Orador 0]: É pouco,
+[124:45] [Orador 0]: tá? Eu, de novo, botei 2 por questões didáticas para vocês verem
+[124:50] [Orador 0]: que o espaço latente é 1 espaço
+[124:53] [Orador 0]: organizado.
+[124:54] [Orador 0]: Tá? Mas em geral você não vai se importar em ver isso. Esse
+[124:59] [Orador 0]: modelo faz isso. Eu só quero provar para vocês que faz isso. Então num caso normal você escolheria 1 espaço latente 1 pouco maior.
+[125:07] [Orador 0]: Né? Precisa ser 2.
+[125:08] [Orador 0]: Né?
+[125:09] [Orador 0]: Beleza,
+[125:10] [Orador 0]: então vamos ver aqui o espaço latente que eu quero provar pra vocês que é 1 espaço organizado.
+[125:14] [Orador 0]: Então Então de novo faço o empolder.preadit
+[125:17] [Orador 0]: e nem precisaria fazer de novo tá? Porque eu poderia pegar esse aqui que eu acabei de pegar aqui da minha Mas
+[125:25] [Orador 0]: fiz pra todo,
+[125:27] [Orador 0]: melhor, fiz pra todo o dataset de teste. Então passo no encoder e eu tenho a média,
+[125:34] [Orador 0]: eu tenho
+[125:35] [Orador 0]: o log da desvio
+[125:37] [Orador 0]: e eu tenho o espaço latente. Eu estou ignorando esses últimos 2, tá? Eu estou ignorando
+[125:42] [Orador 0]: porque pra eu visualizar o espaço latente eu não preciso, tá? Vou pegar só a média que é o ponto mais provável da onde está aquele aquela imagem no meu espaço latente,
+[125:51] [Orador 0]: tá?
+[125:52] [Orador 0]: Faço 1 scatter desse
+[125:54] [Orador 0]: desse valor nas 2 dimensões. Os emites
+[125:58] [Orador 0]: a coluna 1, A0EA coluna 1 nas 2 dimensões né? A média da primeira dimensão e a média da segunda dimensão.
+[126:05] [Orador 0]: E aí eu ploto
+[126:06] [Orador 0]: no meu
+[126:07] [Orador 0]: espaço latente aqui, no meu gráfico de dispersão.
+[126:10] [Orador 0]: E aí de novo provar pra vocês que o espaço latente de 1 Barational Think Pover é 1 espaço
+[126:15] [Orador 0]: organizado.
+[126:16] [Orador 0]: Você vê aqui os sets que são o cinza,
+[126:19] [Orador 0]: os 9,
+[126:21] [Orador 0]: os 4,
+[126:22] [Orador 0]: tá tudo bem organizado no meu espaço. E eu consegui plotar aqui porque
+[126:28] [Orador 0]: esse número 7 tem rótulo, né?
+[126:29] [Orador 0]: Você normalmente
+[126:31] [Orador 0]: talvez não tenha rótulo, talvez isso não importe. Então só peguei os rótulos aqui para provar de novo para vocês que o espaço é organizado.
+[126:39] [Orador 0]: Beleza, aí na sequência o que eu fiz foi gerar a partir de pontos escolhidos. Eu defini 1
+[126:45] [Orador 0]: ponto de teste
+[126:47] [Orador 0]: com a média
+[126:49] [Orador 0]: 0000
+[126:51] [Orador 0]: log do do desvio 1 e 1, e o espaço latente menos 1, não desculpa,
+[126:58] [Orador 0]: desculpa.
+[126:59] [Orador 0]: O teste point seriam como,
+[127:02] [Orador 0]: cada 1 desses é 1 espaço latente tá? Então eu estou escolhendo 1,
+[127:07] [Orador 0]: outro 0.11,
+[127:08] [Orador 0]: outro ponto menos 1 menos 1, e outro 0.2 menos 2. Eu vou testar todos eles.
+[127:14] [Orador 0]: Tá. Então eu vou pegar o decoder, eu estou pegando o decoder aqui.
+[127:19] [Orador 0]: Eu
+[127:20] [Orador 0]: tenho o meu,
+[127:21] [Orador 0]: espaço
+[127:23] [Orador 0]: latente,
+[127:24] [Orador 0]: decoder.
+[127:25] [Orador 0]: Então eu estou pegando só isso aqui olha.
+[127:27] [Orador 0]: Que é o meu decoder.
+[127:29] [Orador 0]: Vou imputar aqui meu espaço latente que é de tamanho 2, a gente sabe, e ele vai reconstruir aqui
+[127:36] [Orador 0]: pra minha imagem
+[127:38] [Orador 0]: 28 por 28,
+[127:39] [Orador 0]: tá? Estou pegando só essa segunda parte, só o decoder.
+[127:43] [Orador 0]: Então vamos lá.
+[127:44] [Orador 0]: Então decoder ponto predicts eu passo o zenil e eu estou iterando no test point, está então na primeira iteração ele vai pegar o ponto 00E
+[127:53] [Orador 0]: passar no decoder.
+[127:54] [Orador 0]: E aí eu vou plotar.
+[127:56] [Orador 0]: Depois eu vou pegar o 0.1 e vou passar no decoder.
+[127:59] [Orador 0]: E aí eu vou plotar, tá? E aí por diante todos os pontos. Então tá aqui olha, o 0
+[128:05] [Orador 0]: está em 3, o 0.1
+[128:07] [Orador 0]: é 1, o ponto menos 1 menos 1 me gerou 4 e o 0.2 menos 2 me gerou 1 0,
+[128:13] [Orador 0]: tá?
+[128:14] [Orador 0]: Pra ter 1 ideia,
+[128:15] [Orador 0]: de como
+[128:16] [Orador 0]: as coisas se modificam ali no espaço,
+[128:20] [Orador 0]: no espaço latente,
+[128:22] [Orador 0]: eu fiz 1 interpolação.
+[128:23] [Orador 0]: Eu criei
+[128:25] [Orador 0]: esses 2 2 dimensões, z 1 seria a primeira dimensão do meu espaço latente e z 2 seria a segunda dimensão do meu espaço latente. E eu vou fazer 1 interpolação entre esse ponto e esse. O ponto menos 2 2,
+[128:38] [Orador 0]: assim ó.
+[128:39] [Orador 0]: Essa interpolação.
+[128:40] [Orador 0]: Meu espaço latente está aqui né?
+[128:42] [Orador 0]: É z 1
+[128:43] [Orador 0]: e z 2, vocês viram que ele está organizado.
+[128:46] [Orador 0]: Opa,
+[128:47] [Orador 0]: 2, z aqui.
+[128:49] [Orador 0]: Você viu que ele está organizado.
+[128:51] [Orador 0]: Então eu vou pegar aqui 1 ponto
+[128:55] [Orador 0]: z 1 igual a 2, z 2 igual a menos 2. Z 1
+[128:58] [Orador 0]: 1 1 z 1 igual a 2,
+[129:01] [Orador 0]: z 2.
+[129:01] [Orador 0]: Menos 1 menos 2. Então esse primeiro ponto está aqui né?
+[129:05] [Orador 0]: 2 menos 2,
+[129:07] [Orador 0]: aqui 2 menos 2.
+[129:09] [Orador 0]: Esse primeiro ponto está aqui.
+[129:10] [Orador 0]: E o segundo ponto está em
+[129:12] [Orador 0]: z1 2.
+[129:13] [Orador 0]: Não, é 2 e 2 e 2 2.
+[129:16] [Orador 0]: Tá aqui 2 e 2.
+[129:18] [Orador 0]: Perdão
+[129:18] [Orador 0]: É que não é z1 aqui eu me confundi.
+[129:21] [Orador 0]: Aqui vamos fazer XEY.
+[129:23] [Orador 0]: Então esse aqui é o ponto z 1,
+[129:25] [Orador 0]: esse aqui menos 2 menos 2 é o ponto z 2. Então o que que eu vou fazer nessa interpolação?
+[129:32] [Orador 0]: Eu vou gerar
+[129:33] [Orador 0]: 10 valores nesse intervalo.
+[129:35] [Orador 0]: Então eu vou gerar
+[129:37] [Orador 0]: 1 ponto
+[129:38] [Orador 0]: 1 ponto aqui,
+[129:39] [Orador 0]: 1 aqui,
+[129:40] [Orador 0]: 1 aqui. E como o espaço é organizado,
+[129:43] [Orador 0]: o que que eu espero ver? Eu espero ver 1 numa transição que faça sentido, coerente,
+[129:50] [Orador 0]: né, talvez eu vou mover daqui para cá, aqui era 5 aqui vai continuar gerando 5,
+[129:56] [Orador 0]: mas eu vou mudar para cá já vai mudar para outro número,
+[129:59] [Orador 0]: 6 que
+[130:00] [Orador 0]: similar ao 5, depois de não vou mudar pro 6 de novo, depois talvez o 8 que é mais similar ao 6,
+[130:07] [Orador 0]: e depois 9, enfim, eu quero visualizar isso. Como é que eu ando nesse meu espaço
+[130:13] [Orador 0]: e e vejo essa transição acontecendo?
+[130:16] [Orador 0]: Eu estou pegando só 10 mas talvez fosse interessante até pegar mais nesse intervalo.
+[130:21] [Orador 0]: Então é isso que eu estou fazendo aqui.
+[130:23] [Orador 0]: Z1, z2 e aí eu pego 10 pontos nesse intervalo
+[130:27] [Orador 0]: e
+[130:29] [Orador 0]: faço 1 fora aqui para todos esses 10 pontos.
+[130:31] [Orador 0]: E aí faço essa interpolação linear,
+[130:34] [Orador 0]: vai pegar 1 ponto entre z 1 e z 2.
+[130:36] [Orador 0]: Faço no meu decoder e vou ter a imagem, né?
+[130:40] [Orador 0]: aí o que que está acontecendo.
+[130:42] [Orador 0]: Menos 2 e 2, deixa eu ver aqui.
+[130:44] [Orador 0]: 2 e 2, se reparar aqui olha, 2 e 2
+[130:47] [Orador 0]: cai mais ou menos aqui né?
+[130:49] [Orador 0]: 2 e 2.
+[130:50] [Orador 0]: E aqui é o laranja, é o 1, tá vendo?
+[130:53] [Orador 0]: E aí quando eu pulo para o próximo,
+[130:55] [Orador 0]: eu não coloquei os números aqui, mas enfim.
+[130:58] [Orador 0]: Pulo para o próximo eu continuo em 1. Então nessa intercolação linear o que aconteceu?
+[131:02] [Orador 0]: O próximo ponto foi aqui, continuou sendo 1. O próximo ponto foi aqui, continuou sendo 1. Mas aí depois ele muda.
+[131:09] [Orador 0]: Muda pra 8. E 8 está exatamente aqui né, o próximo ponto.
+[131:13] [Orador 0]: Opa.
+[131:14] [Orador 0]: O próximo ponto aqui.
+[131:16] [Orador 0]: É o amarelo.
+[131:17] [Orador 0]: Então ele está vindo aqui e pegando 1 8 aqui nesse caminho.
+[131:21] [Orador 0]: Depois,
+[131:22] [Orador 0]: enfim, e aí por diante né? E vai navegando até menos 2 menos 2 que é o próximo ponto é aqui. Aí ele vai pegando vários valores nesse
+[131:32] [Orador 0]: intervalo, 10 valores nesse intervalo tá? É isso basicamente que a gente está fazendo
+[131:37] [Orador 0]: nessa intercolação.
+[131:38] [Orador 0]: Então tem 1, aí depois 8 8 8 4 4 9 9.
+[131:43] [Orador 0]: Do menos 2 menos 2 até o 2 2. Beleza gente? Dúvidas?
+[131:47] [Orador 0]: Não?
+[131:47] [Orador 0]: Tá bom então então vamos lá vou, não vai dar tempo vocês fazerem exercício mas vamos seguir sugestão da Ana, quem tiver 1 tempo, quiser praticar é muito importante para vocês terem dúvidas,
+[131:58] [Orador 0]: também fixarem conhecimento.
+[132:00] [Orador 0]: Vou deixar esse exercício aqui, vou explicar,
+[132:02] [Orador 0]: vou deixar pra resolver na próxima aula.
+[132:05] [Orador 0]: Quem tiver tempo faz né, e traz as dúvidas.
+[132:08] [Orador 0]: Então primeiro são 3 exercícios. O primeiro exercício é, mude o ponto latente. Isso é algo até que eu fiz lá em cima,
+[132:15] [Orador 0]: Queria que vocês tentasse fazer
+[132:17] [Orador 0]: na mão ali. Então por exemplo,
+[132:20] [Orador 0]: define 1 novo 0.1 zenil, o espaço latente qualquer, o ponto ali do seu espaço latente, por exemplo, 0, mas tenta também com 1, menos 1, menos 1, 2 menos 2
+[132:29] [Orador 0]: E o que eu quero que vocês avaliem é o que mudou na imagem conforme você vai mudando
+[132:35] [Orador 0]: o ponto no espaço latente
+[132:37] [Orador 0]: Tem 1 insight aqui, regiões do espaço geram padrões
+[132:40] [Orador 0]: diferentes,
+[132:41] [Orador 0]: como a gente já viu
+[132:42] [Orador 0]: Beleza.
+[132:43] [Orador 0]: Mesmo
+[132:45] [Orador 0]: ponto
+[132:46] [Orador 0]: igual a mesma imagem. Se você pegar 1 ponto 0.5
+[132:51] [Orador 0]: 0.5
+[132:52] [Orador 0]: e passar no decoder 1 vez, depois passar no decoder segunda vez,
+[132:56] [Orador 0]: essas 2 imagens geradas elas vão ser exatamente iguais.
+[133:00] [Orador 0]: E a pergunta é, por que que a imagem é sempre igual?
+[133:02] [Orador 0]: Insight,
+[133:03] [Orador 0]: algo que eu falei durante a aula, o modelo é determinístico.
+[133:06] [Orador 0]: Diferente do treino. No treino os pesos estão sendo ajustados.
+[133:09] [Orador 0]: Agora nessa etapa de inferência quando eu faço só os
+[133:13] [Orador 0]: pesos estão fixados,
+[133:14] [Orador 0]: né? Então sobrou o mesmo input,
+[133:17] [Orador 0]: resultado vai ser sempre o mesmo.
+[133:18] [Orador 0]: E exercício 3 para finalizar,
+[133:21] [Orador 0]: explorar regiões.
+[133:22] [Orador 0]: Escolha 1 região do do espaço e explore ao redor dela.
+[133:25] [Orador 0]: A gente fez 1 interpolação linear entre 2 pontos muito longe, muito longe 1 do outro.
+[133:31] [Orador 0]: O que que eu acho que seria legal vocês avaliarem? Isso aqui olha.
+[133:34] [Orador 0]: Ah, pega 1 ponto.
+[133:36] [Orador 0]: Pega 1 ponto aqui.
+[133:38] [Orador 0]: 2 2,
+[133:39] [Orador 0]: mas aí começa a fazer 1 modificação bem suave ao redor dele.
+[133:43] [Orador 0]: Vai testando assim, valores assim.
+[133:46] [Orador 0]: Vê se está gerando tudo 1, por exemplo nesse intervalo aqui. Eu pego 1 ponto aqui e faz o mesmo, vai gerando aqui ao entorno. Vê se está gerando tudo
+[133:56] [Orador 0]: 7,
+[133:57] [Orador 0]: tá?
+[133:57] [Orador 0]: E
+[133:58] [Orador 0]: aí,
+[133:59] [Orador 0]: e aí fecha. Eu tenho 1 trecho de código aqui só para ajudar mas vocês não não não precisam usar exatamente isso, podem implementar da forma que vocês acharem melhor. Então explorar regiões, escolher 1 espaço, 1 região do espaço explorando a nordeste dela, insight pequenas mudanças,
+[134:14] [Orador 0]: pequenas mudanças da imagem também
+[134:16] [Orador 0]: tá
+[134:17] [Orador 0]: dúvidas
+[134:18] [Orador 0]: ficaram muito quietinhos nessa segunda parte
+[134:20] [Orador 0]: Beleza então, então vou deixar esse aqui
+[134:22] [Orador 0]: E se tiver dúvida durante a semana também gente pode mandar email, pode mandar mensagem
+[134:27] [Orador 0]: Estou à disposição de vocês, tá bom?
+[134:30] [Orador 0]: Agradeço muito a participação, espero que tenham gostado da aula
+[134:33] [Orador 0]: e até a próxima.
+[134:34] [Orador 0]: Valeu gente.
+[134:35] [Orador 0]: Obrigada pessoal, boa noite.
