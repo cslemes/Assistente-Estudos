@@ -2,27 +2,14 @@ import os
 
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-
-from app.services.drive import SCOPES, clean_filename, download_with_prefix, get_drive_links_from_form
+from app.services.drive import clean_filename, download_with_prefix, get_drive_links_from_form
+from app.services.google_auth import get_google_services
 
 
 def run_sync():
     print("--- Starting Study Assistant Sync ---")
 
-    creds = None
-    if os.path.exists("token.json"):
-        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-    if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_local_server(port=0)
-        with open("token.json", "w") as token:
-            token.write(creds.to_json())
-
-    classroom = build("classroom", "v1", credentials=creds)
-    drive = build("drive", "v3", credentials=creds)
+    classroom, drive, _ = get_google_services()
 
     courses = classroom.courses().list().execute().get("courses", [])
     downloaded_count = 0

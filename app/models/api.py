@@ -53,6 +53,11 @@ class UploadYoutubeRequest(BaseModel):
     description: str = ""
 
 
+class UploadStorageRequest(BaseModel):
+    file_path: str
+    object_key: Optional[str] = None  # auto-derived from path if omitted
+
+
 class ExtractAudioRequest(BaseModel):
     file_path: str
 

@@ -31,7 +31,9 @@ SCOPES = [
 
 
 def clean_filename(name: str) -> str:
-    return re.sub(r'[\\/*?:"<>|]', "", name)
+    name = re.sub(r'[\\/*?:"<>|]', "", name)
+    # Windows forbids names ending with a period or space
+    return name.strip().rstrip(".")
 
 
 def get_drive_links_from_form(url: str) -> list[str]:

@@ -12,7 +12,6 @@ const lesson: Lesson = {
   aula_number: 3,
   video_url: null,
   summary: null,
-  summarized: false,
   status: 'sent',
   file_path: '',
   created_at: '',

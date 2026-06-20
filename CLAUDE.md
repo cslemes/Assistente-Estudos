@@ -107,10 +107,74 @@ app/
     ├── notebook.py          # .ipynb cells + OCR match → Qdrant [PLANNED]
     └── create_collection.py # One-time Qdrant collection setup
 scripts/
-    ├── rename_videos.py        # Rename videos to Aula_NN_Topic.mp4
-    ├── transcribe_folder.py    # Scan folder → POST /transcribe for each video
+    ├── organize_downloads.py   # Phase 1-3: folder rename (regex+LLM) + video file clean + SQLite/Qdrant sync
+    ├── rename_videos.py        # Rename video files to Aula_NN_Topic.mp4 inside video/ subfolders
+    ├── transcribe_folder.py    # Scan folder → extract audio → POST /transcribe (skips already-done)
+    ├── upload_videos.py        # Upload all videos to S3-compatible storage (MinIO/R2), update SQLite
+    ├── video_cutter.py         # Silero VAD + transcript remapping → trimmed .mp4
+    ├── reset_collection.py     # Drop and recreate Qdrant collection (--apply required)
     └── cleanup.py              # Reset ai_data/ and DB records
 main.py                      # CLI trigger
+```
+
+---
+
+## Scripts Reference
+
+### organize_downloads.py
+
+Renames topic folders to `Aula_NN_<topic>`, cleans video filenames inside `video/` subfolders, and syncs renamed paths in SQLite and Qdrant. Detects and merges duplicate folders created by re-running `sync`.
+
+```bash
+python scripts/organize_downloads.py                    # dry-run (calls Groq LLM)
+python scripts/organize_downloads.py --apply            # apply renames + clean video files
+python scripts/organize_downloads.py --apply --sync     # also update SQLite + Qdrant
+python scripts/organize_downloads.py --no-llm           # regex only, no Groq API call
+python scripts/organize_downloads.py --no-clean         # skip Phase 3 video file renaming
+python scripts/organize_downloads.py --base /other/dir  # custom downloads root
+```
+
+### transcribe_folder.py
+
+Extracts audio from each video and POSTs to `/transcribe`. Skips videos that already have a `.txt` transcript (even if the video was renamed after transcription).
+
+```bash
+python scripts/transcribe_folder.py <folder>
+python scripts/transcribe_folder.py <folder> --recursive
+python scripts/transcribe_folder.py <folder> --force           # re-transcribe even if .txt exists
+python scripts/transcribe_folder.py <folder> --uploaded-only   # only videos with .uploaded marker
+
+# When API runs in Docker (path translation):
+API_DOWNLOADS_BASE=/app/Downloads python scripts/transcribe_folder.py <folder>
+```
+
+### upload_videos.py
+
+Uploads all videos under `Downloads/` to S3-compatible storage (MinIO locally, Cloudflare R2 in production). Writes a `.storage` marker per file to skip on re-run and updates `video_url` in SQLite.
+
+```bash
+python scripts/upload_videos.py                                 # dry-run
+python scripts/upload_videos.py --apply                         # upload
+python scripts/upload_videos.py --apply --force                 # re-upload even if .storage marker exists
+python scripts/upload_videos.py --apply --folder "Downloads/CourseName"
+```
+
+### video_cutter.py
+
+Cuts silence, fillers, and long pauses using Silero VAD. Produces a trimmed `.mp4` and a remapped Deepgram transcript.
+
+```bash
+python scripts/video_cutter.py --video aula.mp4 --transcript aula.json --preview
+python scripts/video_cutter.py --video aula.mp4 --transcript aula.json --output aula_clean.mp4
+# --audio is optional — extracted automatically via ffmpeg if omitted
+```
+
+### rename_videos.py
+
+Renames raw video files inside `video/` subfolders to `Aula_NN_Topic.mp4`. Superseded by `organize_downloads.py --apply` for most use cases.
+
+```bash
+python scripts/rename_videos.py <folder> --recursive --dry-run
 ```
 
 ---
@@ -141,6 +205,8 @@ POST /classify-frames              # CLIP zero-shot frame classification (single
 POST /classify-frames/batch        # CLIP zero-shot frame classification (batch) [PLANNED]
 POST /upload                       # Upload single video to YouTube
 POST /upload/batch?limit=6         # Batch upload (default 6/day)
+POST /upload/storage               # Upload single video to S3-compatible storage (MinIO/R2)
+POST /upload/storage/batch         # Batch upload videos to storage
 POST /ingest                       # Embed + NER + send to Qdrant (transcripts)
 POST /ingest/slides                # CLIP match pptx slides → Qdrant [PLANNED]
 POST /ingest/notebook              # CLIP/OCR match .ipynb cells → Qdrant [PLANNED]
@@ -175,6 +241,16 @@ POST /ask               → Query → hybrid search → LLM → answer
 POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 ```
 
+### Scripts Pipeline (local / offline)
+
+```text
+scripts/organize_downloads.py   → Rename topic folders (Aula_NN_) + clean video filenames
+scripts/rename_videos.py        → (optional) rename individual files only
+scripts/transcribe_folder.py    → Extract audio + POST /transcribe for each video
+scripts/upload_videos.py        → Upload videos to MinIO/R2, update video_url in SQLite
+scripts/video_cutter.py         → Trim silence/fillers from video + remap transcript
+```
+
 ---
 
 ## Implementation Status
@@ -195,6 +271,9 @@ POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 | FFmpeg audio extraction endpoint | Implemented |
 | Summary / Map-Reduce (`summarizer.py`) | Implemented |
 | Flashcards (Anki/genanki) | Implemented |
+| S3-compatible video storage (MinIO local / Cloudflare R2 prod) | Implemented |
+| Video file organization script (`organize_downloads.py`) | Implemented |
+| Video silence/filler cutting (`video_cutter.py` + Silero VAD) | Implemented |
 | Frame extraction (FFmpeg) | Planned |
 | CLIP zero-shot frame classifier (`openai/clip-vit-base-patch16`) | Planned |
 | PowerPoint ingestion — LibreOffice render + CLIP similarity matching | Planned |
@@ -220,6 +299,7 @@ POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 | OpenAI GPT-4o-mini | RAG answer generation | Implemented |
 | Groq (llama-3.3-70b) | RAG answer generation (fast/free) | Implemented |
 | Anki/genanki | Flashcard .apkg generation | Implemented |
+| MinIO (local) / Cloudflare R2 (prod) | S3-compatible video hosting | Implemented |
 | LibreOffice headless | Render .pptx slides → PNG images | Planned |
 | python-pptx | PowerPoint slide text extraction | Planned |
 | EasyOCR | Notebook + whiteboard text extraction from frames | Planned |

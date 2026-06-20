@@ -1,0 +1,10 @@
+{
+  "files.watcherExclude": {
+    "**/downloads/**": true
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.venv": true,
+    "**/*.pyc": true
+  }
+}

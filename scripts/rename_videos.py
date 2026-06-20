@@ -59,7 +59,8 @@ def plan_renames(videos: list[Path]) -> list[tuple[Path, str]]:
         by_dir.setdefault(v.parent, []).append(v)
 
     for parent, group in by_dir.items():
-        topic = slugify(parent.parent.name)
+        raw_topic = re.sub(r"^Aula_\d+_", "", parent.parent.name)
+        topic = slugify(raw_topic)
 
         # Split into main (has aula number) and extras
         mains = [(v, extract_aula_number(v.name)) for v in group]

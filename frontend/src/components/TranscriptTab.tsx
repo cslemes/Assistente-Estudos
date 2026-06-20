@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react';
+import { Alert, Spin, Typography, Empty } from 'antd';
 import { fetchSegments } from '../api';
 import type { Segment } from '../types';
 import { formatTime } from '../utils';
 
+const { Text } = Typography;
+
 interface TranscriptTabProps {
   lessonId: number;
   onSeek: (seconds: number) => void;
-}
-
-function LoadingSpinner() {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12">
-      <div className="w-8 h-8 rounded-full border-2 border-slate-600 border-t-sky-400 animate-spin" />
-      <p className="text-slate-400 text-sm">Carregando transcrição…</p>
-    </div>
-  );
 }
 
 export default function TranscriptTab({ lessonId, onSeek }: TranscriptTabProps) {
@@ -31,54 +25,57 @@ export default function TranscriptTab({ lessonId, onSeek }: TranscriptTabProps) 
 
     fetchSegments(lessonId)
       .then((data) => {
-        if (data.length === 0) {
-          setEmpty(true);
-        } else {
-          setSegments(data);
-        }
+        if (data.length === 0) setEmpty(true);
+        else setSegments(data);
       })
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
-        // Treat 404 as "not available" rather than a hard error
-        if (msg.includes('404')) {
-          setEmpty(true);
-        } else {
-          setError(msg);
-        }
+        if (msg.includes('404')) setEmpty(true);
+        else setError(msg);
       })
       .finally(() => setLoading(false));
   }, [lessonId]);
 
-  if (loading) return <LoadingSpinner />;
-
-  if (error) {
+  if (loading) {
     return (
-      <div className="p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">
-        {error}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px 0' }}>
+        <Spin tip="Carregando transcrição…" />
       </div>
     );
   }
 
+  if (error) return <Alert type="error" message={error} style={{ margin: '16px 0' }} />;
+
   if (empty) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-slate-400 text-sm">Transcrição não disponível</p>
-      </div>
-    );
+    return <Empty description="Transcrição não disponível" style={{ padding: '48px 0' }} />;
   }
 
   return (
-    <div className="flex flex-col divide-y divide-slate-700/50 overflow-y-auto">
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {segments.map((seg, idx) => (
         <button
           key={idx}
           onClick={() => onSeek(Math.floor(seg.start))}
-          className="flex items-start gap-3 px-3 py-2.5 text-left hover:bg-slate-700/50 transition-colors w-full"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 12,
+            padding: '10px 12px',
+            textAlign: 'left',
+            background: 'transparent',
+            border: 'none',
+            borderBottom: '1px solid rgba(51,65,85,0.5)',
+            cursor: 'pointer',
+            width: '100%',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
         >
-          <span className="shrink-0 text-sky-400 text-xs font-mono pt-0.5 w-10 text-right">
+          <Text code style={{ color: '#38bdf8', fontSize: 11, minWidth: 40, textAlign: 'right', background: 'transparent', border: 'none', padding: 0 }}>
             {formatTime(seg.start)}
-          </span>
-          <span className="text-slate-300 text-sm leading-relaxed">{seg.text}</span>
+          </Text>
+          <Text style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.6 }}>{seg.text}</Text>
         </button>
       ))}
     </div>

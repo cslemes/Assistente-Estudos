@@ -1,20 +1,15 @@
 import { useEffect, useState } from 'react';
+import { Alert, Button, Card, Empty, Spin, Tag, Typography } from 'antd';
+import { ClockCircleOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { fetchHighlights, generateHighlights } from '../api';
 import type { Highlight } from '../types';
 import { formatTime } from '../utils';
 
+const { Text, Paragraph } = Typography;
+
 interface HighlightsTabProps {
   lessonId: number;
   onSeek: (seconds: number) => void;
-}
-
-function LoadingSpinner({ label }: { label?: string }) {
-  return (
-    <div className="flex flex-col items-center justify-center gap-3 py-12">
-      <div className="w-8 h-8 rounded-full border-2 border-slate-600 border-t-sky-400 animate-spin" />
-      <p className="text-slate-400 text-sm">{label ?? 'Carregando…'}</p>
-    </div>
-  );
 }
 
 export default function HighlightsTab({ lessonId, onSeek }: HighlightsTabProps) {
@@ -30,16 +25,11 @@ export default function HighlightsTab({ lessonId, onSeek }: HighlightsTabProps) 
     setNotFound(false);
 
     fetchHighlights(lessonId)
-      .then((data) => {
-        setHighlights(data.highlights);
-      })
+      .then((data) => setHighlights(data.highlights))
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes('404')) {
-          setNotFound(true);
-        } else {
-          setError(msg);
-        }
+        if (msg.includes('404')) setNotFound(true);
+        else setError(msg);
       })
       .finally(() => setLoading(false));
   }, [lessonId]);
@@ -52,55 +42,53 @@ export default function HighlightsTab({ lessonId, onSeek }: HighlightsTabProps) 
         setHighlights(data.highlights);
         setNotFound(false);
       })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : String(err));
-      })
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
       .finally(() => setGenerating(false));
   }
 
-  if (loading) return <LoadingSpinner label="Carregando highlights…" />;
-  if (generating) return <LoadingSpinner label="Gerando highlights…" />;
-
-  if (error) {
+  if (loading || generating) {
     return (
-      <div className="p-4 rounded-lg border border-red-700/50 bg-red-900/20 text-red-400 text-sm">
-        {error}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '48px 0' }}>
+        <Spin tip={generating ? 'Gerando highlights…' : 'Carregando highlights…'} />
       </div>
     );
   }
 
+  if (error) return <Alert type="error" message={error} style={{ margin: '16px 0' }} />;
+
   if (notFound) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-12">
-        <p className="text-slate-400 text-sm">Nenhum highlight disponível para esta aula.</p>
-        <button
-          onClick={handleGenerate}
-          className="px-4 py-2 rounded-md bg-sky-500 hover:bg-sky-400 text-white text-sm font-medium transition-colors"
-        >
+      <Empty description="Nenhum highlight disponível para esta aula." style={{ padding: '48px 0' }}>
+        <Button type="primary" icon={<ThunderboltOutlined />} onClick={handleGenerate}>
           Gerar Highlights
-        </button>
-      </div>
+        </Button>
+      </Empty>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3 p-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '12px 0' }}>
       {highlights.map((hl, idx) => (
-        <div
+        <Card
           key={idx}
-          className="rounded-lg bg-slate-800 border border-slate-700 p-4 flex flex-col gap-2"
+          size="small"
+          style={{ background: '#1e293b', borderColor: '#334155' }}
+          styles={{ body: { padding: '12px 16px' } }}
         >
-          <p className="text-sky-400 font-semibold text-sm leading-snug">{hl.title}</p>
-          <p className="text-slate-300 text-sm leading-relaxed">{hl.description}</p>
-          <div className="mt-1">
-            <button
-              onClick={() => onSeek(hl.start_time)}
-              className="inline-flex items-center px-2.5 py-1 rounded border border-sky-500/60 text-sky-400 text-xs font-mono hover:bg-sky-500/10 hover:border-sky-400 transition-colors"
-            >
-              {formatTime(hl.start_time)}
-            </button>
-          </div>
-        </div>
+          <Text strong style={{ color: '#38bdf8', fontSize: 13, display: 'block', marginBottom: 6 }}>
+            {hl.title}
+          </Text>
+          <Paragraph style={{ color: '#cbd5e1', fontSize: 13, margin: '0 0 10px' }}>
+            {hl.description}
+          </Paragraph>
+          <Tag
+            icon={<ClockCircleOutlined />}
+            style={{ cursor: 'pointer', fontFamily: 'monospace', background: 'transparent', borderColor: '#38bdf8', color: '#38bdf8' }}
+            onClick={() => onSeek(hl.start_time)}
+          >
+            {formatTime(hl.start_time)}
+          </Tag>
+        </Card>
       ))}
     </div>
   );

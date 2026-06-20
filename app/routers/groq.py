@@ -4,7 +4,11 @@ from typing import AsyncGenerator
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from langsmith import traceable
+try:
+    from langsmith import traceable
+except ImportError:
+    def traceable(**_kw):  # type: ignore[misc]
+        return lambda fn: fn
 
 from functools import lru_cache
 

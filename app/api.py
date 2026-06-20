@@ -12,7 +12,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
+from app.routers.auth import router as auth_router
 from app.routers.audio import router as audio_router
+from app.routers.documents import router as documents_router
 from app.routers.highlights import router as highlights_router
 from app.routers.flashcards import router as flashcards_router
 from app.routers.groq import router as groq_router
@@ -35,6 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(sync_router)
 app.include_router(audio_router)
 app.include_router(youtube_router)
@@ -46,6 +49,7 @@ app.include_router(flashcards_router)
 app.include_router(summarize_router, prefix="/summarize")
 app.include_router(highlights_router)
 app.include_router(transcriptions_router, prefix="/transcriptions")
+app.include_router(documents_router)
 
 
 @app.on_event("startup")
@@ -53,9 +57,11 @@ def startup():
     init_db()
     hf_token = os.getenv("HUGGINGFACE_TOKEN")
     if hf_token:
-        from huggingface_hub import login
-
-        login(hf_token)
+        try:
+            from huggingface_hub import login
+            login(hf_token)
+        except ImportError:
+            pass
 
 
 @app.get("/health", tags=["health"])

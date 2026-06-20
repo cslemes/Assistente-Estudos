@@ -16,8 +16,8 @@ def _get_pipeline():
     return pipeline("ner", model=model, tokenizer=tokenizer,
                     aggregation_strategy="first", device=device)
 
-def handler(event):
-    text = event["input"]["text"]
+async def handler(job):
+    text = job["input"]["text"]
     if len(text) > 5000:
         text = text[:5000]
     ner_pipeline = _get_pipeline()

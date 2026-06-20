@@ -17,8 +17,8 @@ def _get_models():
     colbert = LateInteractionTextEmbedding("colbert-ir/colbertv2.0")
     return dense, bm25, colbert
 
-def handler(event):
-    inp = event["input"]
+async def handler(job):
+    inp = job["input"]
     text = inp["text"]
     mode = inp.get("mode", "passage")
     dense_model, bm25_model, colbert_model = _get_models()

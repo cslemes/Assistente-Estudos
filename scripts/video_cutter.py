@@ -494,7 +494,7 @@ def main():
         description="Auto-corte de videoaula com remapeamento de transcrição"
     )
     parser.add_argument("--video", required=True, help="Vídeo de entrada (.mp4)")
-    parser.add_argument("--audio", required=True, help="Áudio mono 16kHz (.wav)")
+    parser.add_argument("--audio", default=None, help="Áudio mono 16kHz (.wav) — extraído automaticamente se omitido")
     parser.add_argument(
         "--transcript", required=True, help="Transcrição (.json ou .txt)"
     )
@@ -516,8 +516,27 @@ def main():
     # 1. Parse
     chunks = parse_transcript(args.transcript, fmt=args.transcript_format)
 
-    # 2. VAD
-    vad_segments = run_vad(args.audio)
+    # 2. VAD — extract audio if not provided
+    audio_path = args.audio
+    _tmp_wav = None
+    if not audio_path:
+        import tempfile
+        _tmp_wav = tempfile.mktemp(suffix=".wav")
+        print(f"[audio] Extraindo áudio de {args.video} → {_tmp_wav}")
+        subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", args.video,
+             "-ac", "1", "-ar", "16000", "-vn", _tmp_wav],
+            check=True,
+        )
+        audio_path = _tmp_wav
+
+    vad_segments = run_vad(audio_path)
+
+    if _tmp_wav:
+        try:
+            os.remove(_tmp_wav)
+        except OSError:
+            pass
 
     # 3. Análise
     detect_fillers(chunks)

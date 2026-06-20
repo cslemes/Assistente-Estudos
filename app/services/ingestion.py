@@ -179,7 +179,9 @@ def _extract_class_meta(file_path: str) -> dict:
     p = PureWindowsPath(file_path) if "\\" in file_path else PurePosixPath(file_path)
     topic = p.parent.parent.name
     course = p.parent.parent.parent.name
-    m = re.search(r'[Aa]ula[_\s]*(\d+)', p.stem)
+    # Prefer the topic folder name (e.g. "Aula_07_...") over the audio stem,
+    # because rename_videos.py may have numbered the file differently.
+    m = re.search(r'[Aa]ula[_\s]*(\d+)', topic) or re.search(r'[Aa]ula[_\s]*(\d+)', p.stem)
     aula_number = int(m.group(1)) if m else None
     # Part number: trailing _N suffix after the base name (0 = main video)
     part_m = re.search(r'_(\d+)$', p.stem)

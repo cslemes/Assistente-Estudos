@@ -1,4 +1,7 @@
+import { Badge, Typography } from 'antd';
 import type { Lesson } from '../types';
+
+const { Text } = Typography;
 
 interface CourseSidebarProps {
   lessons: Lesson[];
@@ -6,48 +9,46 @@ interface CourseSidebarProps {
   onSelect: (id: number) => void;
 }
 
-function StatusIcon({ done, current }: { done: boolean; current: boolean }) {
-  if (current) {
-    return <span className="text-sky-400 text-sm w-4 shrink-0">●</span>;
-  }
-  if (done) {
-    return <span className="text-emerald-400 text-sm w-4 shrink-0">✓</span>;
-  }
-  return <span className="text-slate-500 text-sm w-4 shrink-0">○</span>;
+function StatusDot({ done, current }: { done: boolean; current: boolean }) {
+  if (current) return <Badge color="#38bdf8" />;
+  if (done) return <Badge color="#34d399" />;
+  return <Badge color="#475569" />;
 }
 
 export default function CourseSidebar({ lessons, currentId, onSelect }: CourseSidebarProps) {
-  // Group by topic, preserve insertion order
   const byTopic = lessons.reduce<Record<string, Lesson[]>>((acc, l) => {
     const key = l.topic ?? 'Sem tópico';
     (acc[key] ??= []).push(l);
     return acc;
   }, {});
 
-  // Sort lessons within each topic by aula_number
   Object.values(byTopic).forEach((group) =>
     group.sort((a, b) => (a.aula_number ?? 0) - (b.aula_number ?? 0)),
   );
 
+  const sortedTopics = Object.entries(byTopic).sort(([, a], [, b]) => {
+    const minA = Math.min(...a.map((l) => l.aula_number ?? 0));
+    const minB = Math.min(...b.map((l) => l.aula_number ?? 0));
+    return minA - minB;
+  });
+
   return (
-    <aside className="w-full h-full flex flex-col bg-slate-800 overflow-y-auto">
-      <div className="px-4 py-3 border-b border-slate-700 shrink-0">
-        <h2 className="text-slate-100 font-semibold text-sm uppercase tracking-wide">
+    <aside style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#1e293b', overflowY: 'auto' }}>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid #334155', flexShrink: 0 }}>
+        <Text strong style={{ color: '#f1f5f9', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Conteúdo do Curso
-        </h2>
+        </Text>
       </div>
 
-      <nav className="flex-1 py-2">
-        {Object.entries(byTopic).map(([topicName, topicLessons]) => (
+      <nav style={{ flex: 1, paddingBlock: 8 }}>
+        {sortedTopics.map(([topicName, topicLessons]) => (
           <div key={topicName}>
-            {/* Topic header */}
-            <div className="px-4 pt-4 pb-1">
-              <p className="text-xs font-semibold uppercase tracking-widest text-sky-500">
+            <div style={{ padding: '16px 16px 4px' }}>
+              <Text style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#38bdf8' }}>
                 {topicName}
-              </p>
+              </Text>
             </div>
 
-            {/* Lessons under this topic */}
             {topicLessons.map((lesson) => {
               const isCurrent = lesson.id === currentId;
               const isDone = lesson.summary !== null;
@@ -56,26 +57,40 @@ export default function CourseSidebar({ lessons, currentId, onSelect }: CourseSi
                 <button
                   key={lesson.id}
                   onClick={() => onSelect(lesson.id)}
-                  className={[
-                    'w-full flex items-start gap-2.5 px-4 py-2.5 text-left transition-colors',
-                    'hover:bg-slate-700',
-                    isCurrent
-                      ? 'border-l-2 border-sky-400 bg-slate-700/60 pl-3.5'
-                      : 'border-l-2 border-transparent',
-                  ].join(' ')}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '10px 16px',
+                    paddingLeft: isCurrent ? 14 : 16,
+                    textAlign: 'left',
+                    background: isCurrent ? 'rgba(56,189,248,0.08)' : 'transparent',
+                    border: 'none',
+                    borderLeft: isCurrent ? '2px solid #38bdf8' : '2px solid transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'transparent';
+                  }}
                 >
-                  <StatusIcon done={isDone} current={isCurrent} />
-
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={[
-                        'text-sm font-medium truncate',
-                        isCurrent ? 'text-sky-400' : isDone ? 'text-slate-300' : 'text-slate-400',
-                      ].join(' ')}
-                    >
-                      {lesson.aula_number != null ? `Aula ${lesson.aula_number}` : 'Aula —'}
-                    </p>
-                  </div>
+                  <StatusDot done={isDone} current={isCurrent} />
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: isCurrent ? '#38bdf8' : isDone ? '#cbd5e1' : '#94a3b8',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {lesson.aula_number != null ? `Aula ${lesson.aula_number}` : 'Aula —'}
+                  </Text>
                 </button>
               );
             })}

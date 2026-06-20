@@ -12,6 +12,7 @@ Test:
       -d '{"input": {"text": "redes neurais", "mode": "query"}}'
 """
 import importlib
+import inspect
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -32,7 +33,9 @@ async def runsync(endpoint_id: str, body: dict):
         raise HTTPException(status_code=404, detail=f"Unknown endpoint: {endpoint_id}")
     module = importlib.import_module(HANDLERS[endpoint_id])
     try:
-        output = module.handler({"input": body["input"]})
+        fn = module.handler
+        job = {"input": body["input"]}
+        output = await fn(job) if inspect.iscoroutinefunction(fn) else fn(job)
         return {"id": "local-test", "status": "COMPLETED", "output": output}
     except Exception as e:
         return {"id": "local-test", "status": "FAILED", "error": str(e)}

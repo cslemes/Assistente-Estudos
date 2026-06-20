@@ -116,6 +116,18 @@ Responda em português, de forma didática e completa."""
     cloudflare_r2_bucket_name: Optional[str] = None
     cloudflare_r2_public_url: Optional[str] = None  # e.g. https://pub-xxx.r2.dev
 
+    # Base path to the Downloads folder. Override with an absolute path when the DB
+    # stores Windows paths but the server runs on Linux/Docker (e.g. /app/Downloads).
+    downloads_base: str = "Downloads"
+
+    # Generic S3-compatible Object Storage (MinIO locally, R2/S3 in production)
+    storage_endpoint_url: Optional[str] = None          # http://localhost:9000 for MinIO
+    storage_access_key_id: Optional[str] = None
+    storage_secret_access_key: Optional[str] = None
+    storage_bucket_name: str = "videos"
+    storage_public_url: Optional[str] = None            # public base URL for video links
+    storage_region: str = "us-east-1"
+
     # LangSmith Configuration
     langsmith_api_key: Optional[str] = None
     langsmith_project: str = "assistente-estudos"
@@ -129,6 +141,5 @@ Responda em português, de forma didática e completa."""
     runpod_base_url: str = "https://api.runpod.ai/v2"
     runpod_embed_endpoint_id: Optional[str] = None
     runpod_ner_endpoint_id: Optional[str] = None
-    runpod_ocr_endpoint_id: Optional[str] = None
 
     model_config = {"env_file": ".env", "extra": "allow"}

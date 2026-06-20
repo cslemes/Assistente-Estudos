@@ -1,4 +1,10 @@
 import { Link } from 'react-router-dom';
+import { Breadcrumb, Progress, Tooltip, Typography } from 'antd';
+import { HomeOutlined, LogoutOutlined } from '@ant-design/icons';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
+
+const { Text } = Typography;
 
 interface TopBarProps {
   courseName?: string;
@@ -7,48 +13,64 @@ interface TopBarProps {
   totalCount: number;
 }
 
-export default function TopBar({
-  courseName,
-  topicName,
-  completedCount,
-  totalCount,
-}: TopBarProps) {
-  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+export default function TopBar({ courseName, topicName, completedCount, totalCount }: TopBarProps) {
+  const pct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  const breadcrumbItems = [
+    {
+      title: (
+        <Link to="/">
+          <HomeOutlined /> Assistente IA
+        </Link>
+      ),
+    },
+    ...(courseName ? [{ title: <Text style={{ color: '#94a3b8' }}>{courseName}</Text> }] : []),
+    ...(topicName ? [{ title: <Text style={{ color: '#94a3b8' }}>{topicName}</Text> }] : []),
+  ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-13 z-50 bg-slate-800 border-b border-slate-700 flex items-center px-4 gap-4">
-      {/* Logo */}
-      <Link to="/" className="text-sky-400 font-bold text-lg shrink-0 hover:text-sky-300 transition-colors">
-        Assistente IA
-      </Link>
+    <header
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 52,
+        zIndex: 100,
+        background: '#1e293b',
+        borderBottom: '1px solid #334155',
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 16px',
+        gap: 16,
+      }}
+    >
+      <Breadcrumb items={breadcrumbItems} style={{ flexShrink: 0 }} />
 
-      {/* Breadcrumb */}
-      <div className="flex-1 flex justify-center">
-        {courseName && topicName && (
-          <span className="text-slate-400 text-sm truncate">
-            {courseName}
-            <span className="mx-1.5">›</span>
-            {topicName}
-          </span>
-        )}
+      <div style={{ flex: 1 }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <Progress
+          percent={pct}
+          size={[112, 6]}
+          showInfo={false}
+          strokeColor="#38bdf8"
+          trailColor="#334155"
+          style={{ marginBottom: 0 }}
+        />
+        <Text style={{ color: '#94a3b8', fontSize: 12, whiteSpace: 'nowrap' }}>
+          {completedCount}/{totalCount} aulas
+        </Text>
       </div>
 
-      {/* Right side: progress + recursos */}
-      <div className="flex items-center gap-3 shrink-0">
-        {/* Progress bar + label */}
-        <div className="flex items-center gap-2">
-          <div className="w-28 h-2 bg-slate-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-sky-500 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <span className="text-slate-400 text-xs whitespace-nowrap">
-            {completedCount}/{totalCount} aulas
-          </span>
-        </div>
-
-      </div>
+      <Tooltip title="Sair">
+        <LogoutOutlined
+          onClick={() => signOut(auth)}
+          style={{ color: '#64748b', fontSize: 16, cursor: 'pointer' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
+          onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}
+        />
+      </Tooltip>
     </header>
   );
 }

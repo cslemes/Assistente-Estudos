@@ -7,9 +7,9 @@ import * as api from '../api';
 import type { Lesson } from '../types';
 
 const makeLessons = (): Lesson[] => [
-  { id: 1, course: 'DL Python', topic: 'Autoencoder', aula_number: 1, video_url: 'https://youtu.be/a', summary: 'ok', summarized: true, status: 'sent', file_path: '', created_at: '' },
-  { id: 2, course: 'DL Python', topic: 'Autoencoder', aula_number: 2, video_url: null, summary: null, summarized: false, status: 'pending', file_path: '', created_at: '' },
-  { id: 3, course: 'NLP', topic: 'Transformers', aula_number: 1, video_url: null, summary: null, summarized: false, status: 'pending', file_path: '', created_at: '' },
+  { id: 1, course: 'DL Python', topic: 'Autoencoder', aula_number: 1, video_url: 'https://youtu.be/a', summary: 'ok',status: 'sent', file_path: '', created_at: '' },
+  { id: 2, course: 'DL Python', topic: 'Autoencoder', aula_number: 2, video_url: null, summary: null,status: 'pending', file_path: '', created_at: '' },
+  { id: 3, course: 'NLP', topic: 'Transformers', aula_number: 1, video_url: null, summary: null,status: 'pending', file_path: '', created_at: '' },
 ];
 
 beforeEach(() => {
