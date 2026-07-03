@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Button, Spin, Tabs, Typography } from 'antd';
-import { FileTextOutlined } from '@ant-design/icons';
+import { Alert, Button, Spin, Tabs, Tooltip, Typography } from 'antd';
+import { CheckCircleFilled, CheckCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { fetchLessons, generateSummary } from '../api';
@@ -13,6 +13,7 @@ import HighlightsTab from '../components/HighlightsTab';
 import TopBar from '../components/TopBar';
 import TranscriptTab from '../components/TranscriptTab';
 import VideoPlayer from '../components/VideoPlayer';
+import { useProgress } from '../hooks/useProgress';
 import type { Lesson } from '../types';
 
 const { Title, Text } = Typography;
@@ -29,6 +30,8 @@ export default function Player() {
   const [summary, setSummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+
+  const { watched, markWatched, unmarkWatched } = useProgress();
 
   useEffect(() => {
     fetchLessons().then(setLessons).catch(console.error).finally(() => setLoading(false));
@@ -61,7 +64,8 @@ export default function Player() {
   }
 
   const sidebarLessons = lessons.filter((l) => l.course === currentLesson.course);
-  const completedCount = sidebarLessons.filter((l) => l.summary !== null).length;
+  const completedCount = sidebarLessons.filter((l) => watched.has(l.id)).length;
+  const isWatched = watched.has(currentId);
 
   const resumoContent = summary ? (
     <div className="prose prose-invert prose-sm max-w-none prose-headings:text-slate-100 prose-p:text-slate-300 prose-strong:text-slate-100 prose-li:text-slate-300" style={{ paddingTop: 16 }}>
@@ -116,6 +120,7 @@ export default function Player() {
           <CourseSidebar
             lessons={sidebarLessons}
             currentId={currentId}
+            watched={watched}
             onSelect={(newId) => navigate('/lesson/' + newId)}
           />
         </div>
@@ -125,16 +130,30 @@ export default function Player() {
           <div style={{ padding: 16 }}>
             <VideoPlayer videoUrl={currentLesson.video_url ?? ''} seekTo={seekTo} lessonId={currentId} />
 
-            <div style={{ marginTop: 12 }}>
-              <Title level={4} style={{ color: '#f1f5f9', margin: 0 }}>
-                Aula {currentLesson.aula_number ?? '—'} — {currentLesson.topic ?? 'Sem tópico'}
-              </Title>
-              <Text style={{ color: '#64748b', fontSize: 13 }}>
-                {currentLesson.course ?? ''}
-                {currentLesson.course && currentLesson.topic ? ' › ' : ''}
-                {currentLesson.topic ?? ''}
-                {currentLesson.aula_number != null ? ` · Aula ${currentLesson.aula_number}` : ''}
-              </Text>
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <Title level={4} style={{ color: '#f1f5f9', margin: 0 }}>
+                  Aula {currentLesson.aula_number ?? '—'} — {currentLesson.topic ?? 'Sem tópico'}
+                </Title>
+                <Text style={{ color: '#64748b', fontSize: 13 }}>
+                  {currentLesson.course ?? ''}
+                  {currentLesson.course && currentLesson.topic ? ' › ' : ''}
+                  {currentLesson.topic ?? ''}
+                  {currentLesson.aula_number != null ? ` · Aula ${currentLesson.aula_number}` : ''}
+                </Text>
+              </div>
+
+              <Tooltip title={isWatched ? 'Marcar como não assistida' : 'Marcar como assistida'}>
+                <Button
+                  type="text"
+                  icon={isWatched
+                    ? <CheckCircleFilled style={{ color: '#34d399', fontSize: 20 }} />
+                    : <CheckCircleOutlined style={{ color: '#475569', fontSize: 20 }} />
+                  }
+                  onClick={() => isWatched ? unmarkWatched(currentId) : markWatched(currentId)}
+                  style={{ padding: 4, height: 'auto', flexShrink: 0 }}
+                />
+              </Tooltip>
             </div>
 
             <Tabs

@@ -1,26 +1,40 @@
 import { useState } from 'react';
-import { signInWithRedirect } from 'firebase/auth';
-import { Alert, Button, Typography } from 'antd';
+import { Navigate } from 'react-router-dom';
+import { signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { Alert, Button, Spin, Typography } from 'antd';
 import { auth, googleProvider } from '../firebase';
+import { useAuth } from '../hooks/useAuth';
 
 const { Title, Text } = Typography;
 
 export default function Login() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError]   = useState<string | null>(null);
+  const { user, loading }   = useAuth();
 
   async function handleSignIn() {
-    setLoading(true);
     setError(null);
     try {
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithPopup(auth, googleProvider);
     } catch (e: unknown) {
-      console.error('Auth error:', e);
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
-      setLoading(false);
+      const code = (e as { code?: string }).code ?? '';
+      if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user') {
+        // Fall back to redirect when popup is blocked
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        setError(e instanceof Error ? e.message : String(e));
+      }
     }
   }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (user) return <Navigate to="/" replace />;
 
   return (
     <div style={{
@@ -54,7 +68,6 @@ export default function Login() {
 
         <Button
           size="large"
-          loading={loading}
           onClick={() => void handleSignIn()}
           style={{
             width: '100%',
@@ -78,7 +91,7 @@ export default function Login() {
             </svg>
           }
         >
-          {loading ? 'Entrando…' : 'Entrar com Google'}
+          Entrar com Google
         </Button>
 
         <Text style={{ color: '#475569', fontSize: 11, textAlign: 'center' }}>

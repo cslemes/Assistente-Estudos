@@ -51,7 +51,7 @@ def main():
         return
     print(f"Loaded {len(lookup)} URL mapping(s) from SQLite.")
 
-    client = _get_qdrant_client(settings)
+    client = _get_qdrant_client()
 
     updated = 0
     skipped_no_match = 0

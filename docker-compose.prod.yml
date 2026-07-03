@@ -1,0 +1,20 @@
+services:
+  api:
+    image: ghcr.io/cslemes/assistente-api:latest
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      DOWNLOADS_BASE: /app/Downloads
+    volumes:
+      - ./assistente.db:/app/assistente.db
+      - ./Downloads:/app/Downloads
+    restart: unless-stopped
+
+  frontend:
+    image: ghcr.io/cslemes/assistente-frontend:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped

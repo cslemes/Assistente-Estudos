@@ -6,6 +6,7 @@ const { Text } = Typography;
 interface CourseSidebarProps {
   lessons: Lesson[];
   currentId: number;
+  watched: Set<number>;
   onSelect: (id: number) => void;
 }
 
@@ -15,7 +16,7 @@ function StatusDot({ done, current }: { done: boolean; current: boolean }) {
   return <Badge color="#475569" />;
 }
 
-export default function CourseSidebar({ lessons, currentId, onSelect }: CourseSidebarProps) {
+export default function CourseSidebar({ lessons, currentId, watched, onSelect }: CourseSidebarProps) {
   const byTopic = lessons.reduce<Record<string, Lesson[]>>((acc, l) => {
     const key = l.topic ?? 'Sem tópico';
     (acc[key] ??= []).push(l);
@@ -51,7 +52,7 @@ export default function CourseSidebar({ lessons, currentId, onSelect }: CourseSi
 
             {topicLessons.map((lesson) => {
               const isCurrent = lesson.id === currentId;
-              const isDone = lesson.summary !== null;
+              const isDone = watched.has(lesson.id);
 
               return (
                 <button

@@ -6,6 +6,7 @@ import { fetchLessons } from '../api';
 import type { Lesson } from '../types';
 import TopBar from '../components/TopBar';
 import AiChat from '../components/AiChat';
+import { useProgress } from '../hooks/useProgress';
 
 const { Title, Text } = Typography;
 
@@ -22,9 +23,9 @@ function firstLessonId(lessons: Lesson[]): number | null {
   return sorted[0]?.id ?? null;
 }
 
-function CourseCard({ name, lessons, onClick }: { name: string; lessons: Lesson[]; onClick: () => void }) {
-  const summarized = lessons.filter((l) => l.summary !== null).length;
-  const pct = lessons.length > 0 ? Math.round((summarized / lessons.length) * 100) : 0;
+function CourseCard({ name, lessons, watched, onClick }: { name: string; lessons: Lesson[]; watched: Set<number>; onClick: () => void }) {
+  const watchedCount = lessons.filter((l) => watched.has(l.id)).length;
+  const pct = lessons.length > 0 ? Math.round((watchedCount / lessons.length) * 100) : 0;
   const topics = [...new Set(lessons.map((l) => l.topic ?? 'Sem tópico'))];
 
   return (
@@ -50,7 +51,7 @@ function CourseCard({ name, lessons, onClick }: { name: string; lessons: Lesson[
         style={{ marginBottom: 8 }}
       />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={{ color: '#64748b', fontSize: 12 }}>{summarized}/{lessons.length} resumidas</Text>
+        <Text style={{ color: '#64748b', fontSize: 12 }}>{watchedCount}/{lessons.length} assistidas</Text>
         <Text style={{ color: '#38bdf8', fontSize: 12 }}>{pct}%</Text>
       </div>
     </Card>
@@ -62,6 +63,7 @@ export default function Home() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { watched } = useProgress();
 
   useEffect(() => {
     fetchLessons()
@@ -71,7 +73,7 @@ export default function Home() {
   }, []);
 
   const byCourse = groupBy(lessons, (l) => l.course ?? 'Sem curso');
-  const summarizedCount = lessons.filter((l) => l.summary !== null).length;
+  const watchedCount = lessons.filter((l) => watched.has(l.id)).length;
 
   const tabItems = [
     {
@@ -96,7 +98,7 @@ export default function Home() {
               <div style={{ marginBottom: 24 }}>
                 <Title level={3} style={{ color: '#f1f5f9', margin: 0 }}>Meus Cursos</Title>
                 <Text style={{ color: '#64748b', fontSize: 13 }}>
-                  {Object.keys(byCourse).length} curso{Object.keys(byCourse).length !== 1 ? 's' : ''} · {summarizedCount} de {lessons.length} aulas resumidas
+                  {Object.keys(byCourse).length} curso{Object.keys(byCourse).length !== 1 ? 's' : ''} · {watchedCount} de {lessons.length} aulas assistidas
                 </Text>
               </div>
 
@@ -114,6 +116,7 @@ export default function Home() {
                         key={name}
                         name={name}
                         lessons={cls}
+                        watched={watched}
                         onClick={() => id != null && navigate(`/lesson/${id}`)}
                       />
                     );
@@ -141,7 +144,7 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f172a' }}>
-      <TopBar completedCount={summarizedCount} totalCount={lessons.length} />
+      <TopBar completedCount={watchedCount} totalCount={lessons.length} />
 
       <main style={{ paddingTop: 52, padding: '52px 24px 48px', maxWidth: 1024, margin: '0 auto' }}>
         <Tabs items={tabItems} style={{ marginTop: 8 }} />

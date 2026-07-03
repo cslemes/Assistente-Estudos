@@ -1,60 +1,50 @@
-# Academic Assistant (Jamworks Clone)
+# Assistente de Estudos
 
 End-to-end academic intelligence system for capturing, processing, and retrieving knowledge from classes at the **AI Post-Graduation Program at PUC-Rio**.
 
-## Feature Architecture
+## Features
 
 ### 1. Transcripts & Search (RAG)
-
-* **Engine:** Transcription via **Deepgram Nova-3** with speaker diarization.
-* **Search:** Chunk storage in **Qdrant Cloud** with hybrid embeddings (dense + BM25 + ColBERT reranking).
-* **Deep Link:** Each retrieved excerpt points to the exact second on YouTube (`?t=X`).
+- Transcription via **Deepgram Nova-3** with speaker diarization (PT-BR)
+- Chunk storage in **Qdrant Cloud** with hybrid embeddings (dense + BM25 + ColBERT reranking)
+- Each retrieved excerpt deep-links to the exact second in the video
 
 ### 2. Highlights & Key Points
-
-* **Intelligence:** Map-Reduce LLM pipeline over utterances to identify information density peaks.
-* **Structure:** Automatic generation of titles, descriptions, and timestamps for key moments.
-* **Navigation:** Clickable highlight cards in the web UI that seek the video to the exact moment.
+- Map-Reduce LLM pipeline over utterances to identify information density peaks
+- Clickable highlight cards in the web player seek the video to the exact timestamp
 
 ### 3. Summary & Notes
-
-* **Summary:** *Map-Reduce* technique to condense 3-hour classes into an executive study guide.
-* **Format:** Markdown rendered inline in the web player.
+- Map-Reduce condensation of 3-hour classes into an executive study guide
+- Rendered as Markdown inline in the web player
 
 ### 4. Flashcards (Anki Integration)
+- Atomic concept extraction → `.apkg` decks via `genanki`
+- Supports Cloze Deletions and LaTeX formulas
 
-* **Automation:** Atomic concept extraction → `.apkg` decks via `genanki`.
-* **Active Study:** Support for Cloze Deletions and LaTeX formulas.
+### 5. Documents Tab
+- Lists course documents (PDFs, slides, notebooks) stored in S3-compatible storage
+- Download URLs served from the current `STORAGE_PUBLIC_URL` setting (MinIO locally, R2 in production)
 
-### 5. Visual Intelligence (Postponed)
-
-CLIP + OCR pipeline for slide/notebook/whiteboard frame matching is designed but not yet implemented. The Qdrant payload schema already reserves `source_type`, `slide_thumb`, and related fields for when this ships.
-
----
-
-## Cloud Stack
-
-* **Compute:** Google Cloud Run (Python API) + RunPod Serverless (GPU workers for embed/NER/OCR).
-* **Vector DB:** Qdrant Cloud (semantic memory).
-* **Storage:** Cloudflare R2 (audio and slide images, zero egress cost).
-* **Video:** YouTube API (unlisted video hosting).
+### 6. Visual Intelligence *(Postponed)*
+- CLIP + OCR pipeline for slide/notebook/whiteboard frame matching is designed but not yet implemented
+- Qdrant payload schema already reserves `source_type`, `slide_thumb`, and related fields
 
 ---
 
-## Data Schema (Qdrant Payload)
+## Stack
 
-```json
-{
-  "text": "Chunk content...",
-  "source_type": "transcript",
-  "start_time": 348,
-  "video_url": "https://youtu.be/ID?t=348",
-  "topic": "Autoencoder",
-  "course": "DL Python 25.1",
-  "aula_number": 7,
-  "entities": {}
-}
-```
+| Layer | Technology |
+|-------|-----------|
+| API | FastAPI + Python 3.13 on **Google Cloud Run** |
+| Frontend | React + Vite + Ant Design, served via **nginx** |
+| Auth | **Firebase Authentication** (Google Sign-In) |
+| Vector DB | **Qdrant Cloud** |
+| Storage | **Cloudflare R2** (production) / **MinIO** (local) |
+| Video | **YouTube API** (unlisted hosting) |
+| GPU Workers | **RunPod Serverless** (embed + NER) |
+| Transcription | **Deepgram Nova-3** |
+| LLM | **Groq** (llama) / **OpenAI** (GPT-4o-mini) |
+| CI/CD | **GitHub Actions** → **GitHub Container Registry** |
 
 ---
 
@@ -65,21 +55,14 @@ app/
 ├── api.py                   # FastAPI entrypoint
 ├── database.py              # SQLite staging DB
 ├── config/settings.py       # Pydantic BaseSettings
-├── models/
-│   ├── api.py               # Request/Response schemas
-│   └── embeddings.py        # SparseVector, QueryEmbeddings, Document
+├── models/api.py            # Request/Response schemas
 ├── routers/
-│   ├── search.py            # POST /search
+│   ├── auth.py              # Google OAuth (Classroom/Drive/YouTube)
+│   ├── sync.py              # POST /sync, POST /scrape
+│   ├── youtube.py           # POST /upload, POST /upload/batch
 │   ├── openai.py            # POST /ask, POST /ask/stream
 │   ├── groq.py              # POST /ask/groq, POST /ask/groq/stream
-│   ├── ingestion.py         # POST /ingest, GET /classes
-│   ├── highlights.py        # GET/POST /highlights/{id}
-│   ├── summarize.py         # GET /summarize, POST /summarize/{id}
-│   ├── flashcards.py        # POST /flashcards
-│   ├── audio.py             # POST /extract-audio, POST /transcribe
-│   ├── sync.py              # POST /sync, POST /scrape
-│   ├── transcriptions.py    # GET /transcriptions/{id}/segments
-│   └── youtube.py           # POST /upload, POST /upload/batch
+│   └── documents.py         # GET /lessons/{id}/documents
 └── services/
     ├── sync.py              # Google Classroom → Drive download
     ├── drive.py             # Drive/Forms scraping + file org
@@ -87,105 +70,125 @@ app/
     ├── youtube.py           # YouTube resumable upload
     ├── embedder.py          # Hybrid query embedder
     ├── retriever.py         # Qdrant 2-stage retrieval
-    ├── openai_service.py    # OpenAI sync + streaming
-    ├── groq_service.py      # Groq sync + streaming
-    ├── llm_client.py        # Provider-agnostic chat client factory
     ├── ingestion.py         # Embed + NER + upload to Qdrant
     ├── summarizer.py        # Map-Reduce summarization
-    ├── highlights_service.py# Map-Reduce highlights extraction
     ├── flashcard_service.py # Anki .apkg generation via genanki
-    ├── runpod_client.py     # RunPod serverless GPU dispatch
-    └── r2_storage.py        # Cloudflare R2 upload helpers
+    ├── storage.py           # S3-compatible storage (MinIO / R2)
+    ├── google_auth.py       # OAuth token management
+    └── runpod_client.py     # RunPod serverless GPU dispatch
 frontend/
 ├── src/
+│   ├── firebase.ts          # Firebase app init + Google provider
+│   ├── hooks/useAuth.ts     # onAuthStateChanged hook
 │   ├── pages/
+│   │   ├── Login.tsx        # Google Sign-In screen
 │   │   ├── Home.tsx         # Course grid + global chat
 │   │   └── Player.tsx       # 3-column lesson player
-│   ├── components/
-│   │   ├── VideoPlayer.tsx
-│   │   ├── TranscriptTab.tsx
-│   │   ├── HighlightsTab.tsx
-│   │   ├── FlashcardsTab.tsx
-│   │   ├── AiChat.tsx
-│   │   ├── CourseSidebar.tsx
-│   │   └── TopBar.tsx
-│   ├── api.ts               # Typed fetch helpers + SSE stream
-│   └── types.ts             # Shared TypeScript interfaces
-runpod_workers/              # Local mock GPU worker (Docker)
+│   └── components/
+│       ├── AuthGuard.tsx    # Route protector → /login if unauthenticated
+│       ├── TopBar.tsx       # Breadcrumb + progress + logout button
+│       ├── VideoPlayer.tsx
+│       ├── TranscriptTab.tsx
+│       ├── HighlightsTab.tsx
+│       ├── FlashcardsTab.tsx
+│       ├── DocsTab.tsx      # Documents tab
+│       ├── AiChat.tsx
+│       └── CourseSidebar.tsx
+├── Dockerfile               # Multi-stage build (node → nginx)
+└── nginx.conf               # SPA fallback + API proxy
+runpod_workers/
+├── embed/                   # Hybrid embedding worker (dense + BM25 + ColBERT)
+└── ner/                     # Portuguese NER worker (bert-portuguese-ner)
 scripts/
-├── rename_videos.py         # Rename videos to Aula_NN_Topic.mp4
+├── organize_downloads.py    # Folder rename + video file clean + SQLite/Qdrant sync
 ├── transcribe_folder.py     # Batch transcription trigger
-├── sync_video_urls.py       # Backfill YouTube URLs in SQLite
-├── video_cutter.py          # Local video trimming utility
-└── cleanup.py               # Reset ai_data/ and DB records
-streamlit_app.py             # Legacy CLI chat UI
-main.py                      # CLI trigger
+├── upload_docs.py           # Upload documents to S3 storage
+├── upload_videos.py         # Upload videos to S3 storage
+├── video_cutter.py          # Silero VAD silence trimming
+└── reset_collection.py      # Drop and recreate Qdrant collection
+.github/workflows/
+└── docker-publish.yml       # Build + push API and frontend images to GHCR
 ```
 
 ---
 
-## Setup
+## Quick Start (Docker)
 
-### Prerequisites
-
-- [uv](https://docs.astral.sh/uv/) installed
-- Python 3.13+
-- Node.js 20+ (for the frontend)
-- A `.env` file with the required credentials (see below)
-
-### Install dependencies
+### Local development
 
 ```bash
-uv sync                      # Python backend
-cd frontend && npm install   # React frontend
+cp .env.template .env   # fill in credentials
+docker compose up
 ```
 
-### Environment variables
+- Frontend: `http://localhost:3000`
+- API docs: `http://localhost:8000/docs`
+- MinIO console: `http://localhost:9001` (minioadmin / minioadmin)
 
-Copy `.env.template` to `.env` and fill in the values:
+### Production (pull from GHCR)
 
 ```bash
-cp .env.template .env
+cp .env.template .env   # fill in production credentials
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
 ```
+
+---
+
+## Environment Variables
+
+Copy `.env.template` to `.env` and fill in values:
 
 | Variable | Description |
 |----------|-------------|
-| `OPENAI_API_KEY` | OpenAI API key |
-| `GROQ_API_KEY` | Groq API key |
+| `DEEPGRAM_API_KEY` | Deepgram API key |
 | `QDRANT_URL` | Qdrant Cloud cluster URL |
 | `QDRANT_API_KEY` | Qdrant Cloud API key |
-| `DEEPGRAM_API_KEY` | Deepgram API key |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `YOUTUBE_CHANNEL_ID` | Target YouTube channel |
-| `USE_RUNPOD` | `true` to route embed/NER to RunPod workers |
-| `RUNPOD_API_KEY` | RunPod API key (if `USE_RUNPOD=true`) |
-| `RUNPOD_EMBED_ENDPOINT_ID` | RunPod endpoint for embeddings |
-| `RUNPOD_NER_ENDPOINT_ID` | RunPod endpoint for NER |
+| `GROQ_API_KEY` | Groq API key |
+| `GROQ_MODEL` | Groq model name |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `LLM_PROVIDER` | `groq` (default) or `openai` |
+| `TRANSCRIPTION_PROVIDER` | `deepgram` (default), `openai`, or `groq` |
+| `STORAGE_ENDPOINT_URL` | S3 endpoint (`http://localhost:9000` for MinIO) |
+| `STORAGE_ACCESS_KEY_ID` | S3 access key |
+| `STORAGE_SECRET_ACCESS_KEY` | S3 secret key |
+| `STORAGE_BUCKET_NAME` | S3 bucket name |
+| `STORAGE_PUBLIC_URL` | Public base URL for stored files |
+| `DOWNLOADS_BASE` | Path to Downloads folder (`/app/Downloads` in Docker) |
+| `USE_RUNPOD` | `true` to route embed/NER to RunPod GPU workers |
+| `RUNPOD_API_KEY` | RunPod API key |
+| `RUNPOD_EMBED_ENDPOINT_ID` | RunPod embed endpoint |
+| `RUNPOD_NER_ENDPOINT_ID` | RunPod NER endpoint |
+| `VITE_FIREBASE_*` | Firebase web app config (6 values — see `.env.template`) |
 
 ---
 
-## Google Cloud Platform (GCP) Setup
+## Firebase Authentication Setup
 
-The sync pipeline requires a GCP OAuth 2.0 desktop client with three APIs enabled.
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com)
+2. Add a **Web app** and copy the config values into `.env` as `VITE_FIREBASE_*`
+3. Go to **Authentication → Sign-in method** → enable **Google**
+4. Go to **Authentication → Settings → Authorized domains** → add your domain (and `localhost` for local dev)
 
-### 1. Create a GCP Project
+Firebase vars are baked into the frontend bundle at build time via Docker build args. The GitHub Actions workflow reads them from repository secrets.
 
-Go to [console.cloud.google.com](https://console.cloud.google.com) and create a new project (e.g. `Academic-Assistant`).
+---
 
-### 2. Enable the required APIs
+## Google Cloud Platform Setup
 
-In **APIs & Services → Library**, enable:
+Required for Classroom sync, Drive download, and YouTube upload.
 
-| API | Used for |
-|-----|----------|
-| **Google Classroom API** | List courses, topics, assignments and materials |
-| **Google Drive API** | Download attached files and traverse shared folders |
-| **YouTube Data API v3** | Upload class recordings as unlisted videos |
+### 1. Enable APIs
 
-### 3. Configure the OAuth consent screen
+In [GCP Console](https://console.cloud.google.com) → **APIs & Services → Library**, enable:
 
-Go to **APIs & Services → OAuth consent screen** and add these scopes:
+| API | Purpose |
+|-----|---------|
+| Google Classroom API | List courses, topics, assignments |
+| Google Drive API | Download attached files |
+| YouTube Data API v3 | Upload recordings as unlisted videos |
+
+### 2. OAuth Consent Screen scopes
 
 ```
 https://www.googleapis.com/auth/classroom.courses.readonly
@@ -197,73 +200,60 @@ https://www.googleapis.com/auth/drive.readonly
 https://www.googleapis.com/auth/youtube.upload
 ```
 
-Add your Google account as a **test user**.
+### 3. Create credentials
 
-### 4. Create OAuth credentials
-
-Go to **Credentials → Create Credentials → OAuth client ID → Desktop app**, download the JSON, and save it as `credentials.json` in the project root.
-
-### 5. First-time authentication
-
-On the first `POST /sync`, the app opens a browser to grant permissions. A `token.json` is saved and reused on subsequent runs. Both files are in `.gitignore`.
+**Credentials → Create Credentials → OAuth client ID → Desktop app** → download JSON → save as `credentials.json` in project root. On first `POST /sync` the app opens a browser to grant permissions; `token.json` is saved and reused. Both files are in `.gitignore`.
 
 ---
 
-## Running Locally
+## CI/CD
 
-### API server
+GitHub Actions builds both images on every push to `main` and pushes to GHCR:
 
-```bash
-uv run uvicorn app.api:app --reload
+```
+ghcr.io/cslemes/assistente-api:latest
+ghcr.io/cslemes/assistente-frontend:latest
 ```
 
-Available at `http://localhost:8000`. Docs at `http://localhost:8000/docs`.
+Add these repository secrets in **Settings → Secrets and variables → Actions**:
 
-### Frontend (dev)
-
-```bash
-cd frontend && npm run dev
 ```
-
-Available at `http://localhost:3000`.
-
-### Full stack (Docker Compose)
-
-Spins up the API, the React frontend, and the local RunPod GPU worker mock:
-
-```bash
-docker compose up
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET
+VITE_FIREBASE_MESSAGING_SENDER_ID
+VITE_FIREBASE_APP_ID
 ```
 
 ---
 
-## REST API Endpoints
+## API Endpoints
 
 ```text
 GET  /health
-POST /sync                         # Download from Classroom
+POST /sync                         # Download from Google Classroom
 POST /scrape                       # Download from Drive/Forms URL
+POST /extract-audio                # FFmpeg audio extraction
+POST /extract-audio/batch
 POST /transcribe                   # Deepgram transcription
-POST /extract-audio                # FFmpeg audio extraction (single)
-POST /extract-audio/batch          # FFmpeg audio extraction (batch)
-POST /upload                       # Upload single video to YouTube
-POST /upload/batch?limit=6         # Batch upload (default 6/day)
-POST /ingest                       # Embed + NER + send to Qdrant
-GET  /classes                      # List distinct classes in Qdrant
-GET  /transcriptions/pending       # List pending for embedding
-GET  /transcriptions/{id}/segments # Utterance segments for a lesson
-PATCH /transcriptions/{id}/status  # Update transcription status
+POST /ingest                       # Embed + NER → Qdrant
+GET  /transcriptions/pending
+PATCH /transcriptions/{id}/status
+POST /upload                       # Upload video to YouTube
+POST /upload/batch
+POST /upload/storage               # Upload to S3 storage
+POST /upload/storage/batch
+GET  /lessons/{id}/documents       # List documents for a lesson
 POST /search                       # Hybrid vector search
-POST /ask                          # RAG answer (sync, OpenAI)
-POST /ask/stream                   # RAG answer (SSE streaming, OpenAI)
-POST /ask/groq                     # RAG answer (sync, Groq)
-POST /ask/groq/stream              # RAG answer (SSE streaming, Groq)
-GET  /highlights/{id}              # Fetch stored highlights
-POST /highlights/{id}              # Generate highlights via Map-Reduce LLM
-GET  /summarize                    # List transcriptions with summary status
-POST /summarize/{id}               # Map-Reduce summarize one transcription
-POST /summarize/all                # Map-Reduce summarize all pending
-POST /flashcards                   # Generate Anki .apkg deck
+POST /ask                          # RAG answer (OpenAI, sync)
+POST /ask/stream                   # RAG answer (OpenAI, SSE)
+POST /ask/groq                     # RAG answer (Groq, sync)
+POST /ask/groq/stream              # RAG answer (Groq, SSE)
+GET  /summarize
+POST /summarize/{id}               # Map-Reduce summarize
+POST /summarize/all
+POST /flashcards/generate          # Generate Anki .apkg
 ```
 
 ---
@@ -272,14 +262,13 @@ POST /flashcards                   # Generate Anki .apkg deck
 
 ```text
 POST /sync              → Download files from Google Classroom
-POST /extract-audio     → FFmpeg: video → .mp3
-POST /transcribe        → Deepgram → .txt + .json (utterances) + SQLite (status=pending)
-POST /ingest            → NER + embed transcripts → Qdrant (status=sent)
-POST /upload            → Upload video to YouTube, store URL in SQLite
-POST /highlights/{id}   → Map-Reduce → highlights stored in SQLite
-POST /summarize/{id}    → Map-Reduce → summary stored in SQLite
-POST /flashcards        → Qdrant chunks → LLM → Anki .apkg
-POST /ask/groq/stream   → Query → hybrid search → streaming LLM answer
+POST /extract-audio     → FFmpeg: video → audio
+POST /transcribe        → Deepgram → transcript + SQLite (status=pending)
+POST /ingest            → NER + embed → Qdrant (status=sent)
+POST /upload            → Video → YouTube, URL stored in SQLite
+POST /summarize/{id}    → Map-Reduce → summary in SQLite
+POST /ask/groq/stream   → Query → hybrid search → streaming answer
+POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 ```
 
 ---
@@ -288,43 +277,21 @@ POST /ask/groq/stream   → Query → hybrid search → streaming LLM answer
 
 | Feature | Status |
 |---------|--------|
-| Transcripts & Search (RAG) | Implemented |
-| SQLite staging DB (pending → embedded → sent) | Implemented |
-| NER enrichment (`lfcc/bert-portuguese-ner`) | Implemented |
-| Utterance-level chunking with timestamps | Implemented |
-| Qdrant Cloud — ingestion + retrieval | Implemented |
-| Hybrid search (dense + BM25 + ColBERT rerank) | Implemented |
-| Streaming RAG (SSE) | Implemented |
-| Google Classroom sync | Implemented |
-| Deepgram Nova-3 PT-BR diarization | Implemented |
-| YouTube resumable upload (auto token refresh) | Implemented |
-| Groq LLM sync + streaming | Implemented |
-| FFmpeg audio extraction | Implemented |
-| Summary / Map-Reduce | Implemented |
-| Highlights / Key Points | Implemented |
-| Flashcards (Anki/genanki) | Implemented |
-| React web player (transcript, highlights, flashcards, resumo tabs) | Implemented |
-| RunPod GPU worker dispatch (embed + NER) | Implemented |
-| Visual Intelligence (CLIP + OCR frame pipeline) | Postponed |
-| Discord Bot | Not started |
-
----
-
-## External Services
-
-| Service | Purpose | Status |
-|---------|---------|--------|
-| Deepgram Nova-3 | Speech-to-text (PT-BR) + diarization | Implemented |
-| Google Classroom API | Courses, topics, assignments | Implemented |
-| Google Drive API | File download/listing | Implemented |
-| YouTube Data API | Unlisted video upload | Implemented |
-| Playwright/Chromium | Google Forms scraping | Implemented |
-| FFmpeg | Audio extraction | Implemented |
-| Qdrant Cloud | Vector DB for RAG search | Implemented |
-| OpenAI GPT-4o-mini | RAG answer generation | Implemented |
-| Groq (llama-3.3-70b) | RAG answer generation (fast) | Implemented |
-| Anki/genanki | Flashcard .apkg generation | Implemented |
-| RunPod Serverless | GPU workers for embed + NER | Implemented |
-| Cloudflare R2 | Asset storage | Configured |
-| LangSmith | LLM tracing (optional) | Configured |
-| LibreOffice / EasyOCR / CLIP | Visual intelligence pipeline | Postponed |
+| Transcripts & Search (RAG) | ✅ Done |
+| Hybrid search (dense + BM25 + ColBERT) | ✅ Done |
+| Streaming RAG (SSE) | ✅ Done |
+| Google Classroom / Drive sync | ✅ Done |
+| Deepgram Nova-3 PT-BR diarization | ✅ Done |
+| YouTube upload (auto token refresh) | ✅ Done |
+| Groq + OpenAI LLM support | ✅ Done |
+| Summary / Map-Reduce | ✅ Done |
+| Highlights / Key Points | ✅ Done |
+| Flashcards (Anki/genanki) | ✅ Done |
+| Documents tab (S3 storage) | ✅ Done |
+| Firebase Google Authentication | ✅ Done |
+| React web player | ✅ Done |
+| Docker Compose (local + prod) | ✅ Done |
+| GitHub Actions → GHCR CI/CD | ✅ Done |
+| RunPod GPU workers (embed + NER) | ✅ Done |
+| Visual Intelligence (CLIP + OCR) | ⏸ Postponed |
+| Discord Bot | 🔲 Not started |
