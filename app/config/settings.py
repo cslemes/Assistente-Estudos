@@ -116,6 +116,10 @@ Responda em português, de forma didática e completa."""
     cloudflare_r2_bucket_name: Optional[str] = None
     cloudflare_r2_public_url: Optional[str] = None  # e.g. https://pub-xxx.r2.dev
 
+    # Backend API key — if set, all non-health routes require X-Api-Key header.
+    # Leave empty to disable (default for local dev without docker-compose).
+    backend_api_key: str = ""
+
     # Base path to the Downloads folder. Override with an absolute path when the DB
     # stores Windows paths but the server runs on Linux/Docker (e.g. /app/Downloads).
     downloads_base: str = "Downloads"

@@ -74,7 +74,10 @@ def sync(background_tasks: BackgroundTasks, background: bool = True):
 
 @router.post("/scrape")
 def scrape_download_job(payload: ScrapeDownloadRequest):
-    ids = get_drive_links_from_form(payload.url)
+    try:
+        ids = get_drive_links_from_form(payload.url)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
     _, drive, _ = get_google_services()
 
     downloaded_files = []

@@ -1,0 +1,44 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored — never commit it.
+
+# ── DigitalOcean ──────────────────────────────────────────────────────────────
+
+# Personal access token
+# Get it at: https://cloud.digitalocean.com/account/api/tokens
+do_token = "dop_v1_..."
+
+# Spaces access key + secret (separate from the API token)
+# Create at: https://cloud.digitalocean.com/account/api/tokens → Spaces Keys
+spaces_access_key = "DO00..."
+spaces_secret_key = "..."
+
+# Spaces bucket name — must be globally unique across all DO Spaces
+# Change if "assistente-estudos" is already taken
+spaces_bucket_name = "assistente-estudos"
+
+# ── GitHub ────────────────────────────────────────────────────────────────────
+
+# GitHub username (owner of the GHCR packages)
+github_user = "cslemes"
+
+# Personal access token with read:packages scope
+# Create at: https://github.com/settings/tokens/new?scopes=read:packages
+github_token = "ghp_..."
+
+# ── SSH ───────────────────────────────────────────────────────────────────────
+
+# SSH public key to install on the droplet
+# Run: cat ~/.ssh/id_ed25519.pub
+ssh_public_key = "ssh-ed25519 AAAA... user@host"
+
+# ── Optional ──────────────────────────────────────────────────────────────────
+
+# Region — must support both Droplets AND Spaces:
+#   nyc3, ams3, sgp1, fra1, sfo3, syd1, tor1
+# region = "nyc3"
+
+# Droplet size (default: s-2vcpu-4gb = $24/mo)
+# droplet_size = "s-2vcpu-4gb"
+
+# Domain for DNS A record (requires domain managed by DigitalOcean DNS)
+# domain = "assistente.example.com"

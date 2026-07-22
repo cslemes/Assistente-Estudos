@@ -6,7 +6,7 @@
 __pycache__/
 *.py[codz]
 *$py.class
-
+.vscode/
 # C extensions
 *.so
 
@@ -230,3 +230,11 @@ downloaded_ids.json
 *.mp4
 
 .claude
+
+# Terraform
+infrastructure/terraform.tfvars
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl
+infrastructure/terraform.tfstate
+infrastructure/terraform.tfstate.backup
+vulnerabilities/

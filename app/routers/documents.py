@@ -1,10 +1,11 @@
 import platform
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, RedirectResponse
 
 from app.database import get_connection
+from app.dependencies.auth import require_api_key
 
 router = APIRouter(tags=["documents"])
 
@@ -85,7 +86,7 @@ def _lesson_dir(lesson_id: int) -> Path:
     return _to_path(row["file_path"]).parent.parent
 
 
-@router.get("/lessons/{lesson_id}/documents")
+@router.get("/lessons/{lesson_id}/documents", dependencies=[Depends(require_api_key)])
 def list_documents(lesson_id: int) -> list[dict]:
     """List documents for a lesson. Each entry includes a `url` ready for download."""
     lesson = _lesson_dir(lesson_id)
@@ -116,11 +117,10 @@ def list_documents(lesson_id: int) -> list[dict]:
 @router.get("/lessons/{lesson_id}/documents/download")
 def download_document(lesson_id: int, file: str):
     """Download a document — redirects to storage if available, else serves locally."""
-    lesson = _lesson_dir(lesson_id)
-    target = (lesson / file).resolve()
+    lesson_root = _lesson_dir(lesson_id).resolve()
+    target = (lesson_root / file).resolve()
 
-    # Prevent path traversal outside the lesson folder
-    if not str(target).startswith(str(lesson.resolve())):
+    if not target.is_relative_to(lesson_root):
         raise HTTPException(status_code=400, detail="Invalid file path")
     if not target.is_file():
         raise HTTPException(status_code=404, detail="File not found")

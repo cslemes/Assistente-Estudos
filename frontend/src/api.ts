@@ -7,33 +7,39 @@ import type {
   SummarizeResponse,
 } from './types';
 
+const API_KEY = import.meta.env.VITE_BACKEND_API_KEY as string | undefined;
+
+function apiHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  return API_KEY ? { 'X-Api-Key': API_KEY, ...extra } : extra;
+}
+
 export async function fetchLessons(): Promise<Lesson[]> {
-  const res = await fetch('/api/summarize');
+  const res = await fetch('/api/summarize', { headers: apiHeaders() });
   if (!res.ok) throw new Error(`fetchLessons failed: ${res.status}`);
   return res.json() as Promise<Lesson[]>;
 }
 
 export async function fetchSegments(id: number): Promise<Segment[]> {
-  const res = await fetch(`/api/transcriptions/${id}/segments`);
+  const res = await fetch(`/api/transcriptions/${id}/segments`, { headers: apiHeaders() });
   if (!res.ok) throw new Error(`fetchSegments failed: ${res.status}`);
   return res.json() as Promise<Segment[]>;
 }
 
 export async function fetchHighlights(id: number): Promise<HighlightsResponse> {
-  const res = await fetch(`/api/highlights/${id}`);
+  const res = await fetch(`/api/highlights/${id}`, { headers: apiHeaders() });
   if (!res.ok) throw new Error(`fetchHighlights failed: ${res.status}`);
   return res.json() as Promise<HighlightsResponse>;
 }
 
 export async function generateHighlights(id: number, n?: number): Promise<HighlightsResponse> {
   const url = n !== undefined ? `/api/highlights/${id}?n=${n}` : `/api/highlights/${id}`;
-  const res = await fetch(url, { method: 'POST' });
+  const res = await fetch(url, { method: 'POST', headers: apiHeaders() });
   if (!res.ok) throw new Error(`generateHighlights failed: ${res.status}`);
   return res.json() as Promise<HighlightsResponse>;
 }
 
 export async function generateSummary(id: number): Promise<SummarizeResponse> {
-  const res = await fetch(`/api/summarize/${id}`, { method: 'POST' });
+  const res = await fetch(`/api/summarize/${id}`, { method: 'POST', headers: apiHeaders() });
   if (!res.ok) throw new Error(`generateSummary failed: ${res.status}`);
   return res.json() as Promise<SummarizeResponse>;
 }
@@ -41,7 +47,7 @@ export async function generateSummary(id: number): Promise<SummarizeResponse> {
 export async function downloadFlashcards(req: FlashcardRequest): Promise<Blob> {
   const res = await fetch('/api/flashcards', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: apiHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(req),
   });
   if (!res.ok) throw new Error(`downloadFlashcards failed: ${res.status}`);
@@ -55,7 +61,7 @@ export async function* streamAsk(
 ): AsyncGenerator<AskStreamEvent> {
   const res = await fetch('/api/ask/groq/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: apiHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ query, course, topic }),
   });
 

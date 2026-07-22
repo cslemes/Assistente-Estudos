@@ -1,0 +1,44 @@
+# Version control
+.git/
+.gitignore
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.env
+.envrc
+.venv/
+venv/
+
+# Large data that should not be in the API image
+Downloads/
+*.db
+*.mp3
+*.mp4
+
+# Credentials and secrets
+credentials.json
+token.json
+token_forms.json
+certs/
+
+# Dev/local tooling (not needed in the API container)
+scripts/
+frontend/
+runpod_workers/
+main.py
+
+# Docs and config files
+*.md
+docker-compose*.yml
+.github/
+vulnerabilities/
+
+# AI
+.claude

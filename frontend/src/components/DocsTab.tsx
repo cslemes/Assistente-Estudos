@@ -45,6 +45,11 @@ function formatSize(bytes: number): string {
 }
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '/api';
+const API_KEY  = import.meta.env.VITE_BACKEND_API_KEY as string | undefined;
+
+function apiHeaders(): Record<string, string> {
+  return API_KEY ? { 'X-Api-Key': API_KEY } : {};
+}
 
 function downloadHref(lessonId: number, doc: DocFile): string {
   // If the file is in object storage, use the direct public URL.
@@ -60,7 +65,7 @@ export default function DocsTab({ lessonId }: { lessonId: number }) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch(`${API_BASE}/lessons/${lessonId}/documents`)
+    fetch(`${API_BASE}/lessons/${lessonId}/documents`, { headers: apiHeaders() })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json() as Promise<DocFile[]>;

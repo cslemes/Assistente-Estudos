@@ -33,13 +33,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8000:8080"
     env_file: .env
     environment:
-      # Inside the Docker network the MinIO service is reachable by name, not localhost
       STORAGE_ENDPOINT_URL: http://minio:9000
-      # Downloads is mounted at /app/Downloads inside the container
       DOWNLOADS_BASE: /app/Downloads
     volumes:
       # Mount the host DB and Downloads so the container sees real data
@@ -60,8 +56,9 @@ services:
         VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET}
         VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID}
         VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID}
+        VITE_BACKEND_API_KEY: ${VITE_BACKEND_API_KEY}
     ports:
-      - "3000:3000"
+      - "8000:3000"
     depends_on:
       - api
 

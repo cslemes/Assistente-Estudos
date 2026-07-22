@@ -10,16 +10,18 @@ const lessons: Lesson[] = [
   { id: 3, course: 'DL', topic: 'GAN', aula_number: 1, video_url: null, summary: null,status: 'pending', file_path: '', created_at: '' },
 ];
 
+const noWatched = new Set<number>();
+
 describe('CourseSidebar', () => {
   it('renders a section header for each topic', () => {
-    render(<CourseSidebar lessons={lessons} currentId={1} onSelect={vi.fn()} />);
+    render(<CourseSidebar lessons={lessons} currentId={1} watched={noWatched} onSelect={vi.fn()} />);
 
     expect(screen.getByText('Autoencoder')).toBeInTheDocument();
     expect(screen.getByText('GAN')).toBeInTheDocument();
   });
 
   it('renders a button for each lesson with its aula number', () => {
-    render(<CourseSidebar lessons={lessons} currentId={1} onSelect={vi.fn()} />);
+    render(<CourseSidebar lessons={lessons} currentId={1} watched={noWatched} onSelect={vi.fn()} />);
 
     // lessons 1 and 3 both have aula_number 1 (different topics) → 2 matches
     expect(screen.getAllByText('Aula 1', { selector: 'p' })).toHaveLength(2);
@@ -27,14 +29,14 @@ describe('CourseSidebar', () => {
   });
 
   it('highlights the current lesson with sky-400 text', () => {
-    render(<CourseSidebar lessons={lessons} currentId={1} onSelect={vi.fn()} />);
+    render(<CourseSidebar lessons={lessons} currentId={1} watched={noWatched} onSelect={vi.fn()} />);
 
     const currentLabel = screen.getAllByText('Aula 1', { selector: 'p' })[0];
     expect(currentLabel).toHaveClass('text-sky-400');
   });
 
-  it('shows done icon for summarized lessons', () => {
-    render(<CourseSidebar lessons={lessons} currentId={1} onSelect={vi.fn()} />);
+  it('shows done dot for watched lessons', () => {
+    render(<CourseSidebar lessons={lessons} currentId={1} watched={new Set([2])} onSelect={vi.fn()} />);
 
     const doneIcons = screen.getAllByText('✓');
     expect(doneIcons).toHaveLength(1);
@@ -42,7 +44,7 @@ describe('CourseSidebar', () => {
 
   it('calls onSelect with lesson id when a lesson button is clicked', async () => {
     const onSelect = vi.fn();
-    render(<CourseSidebar lessons={lessons} currentId={1} onSelect={onSelect} />);
+    render(<CourseSidebar lessons={lessons} currentId={1} watched={noWatched} onSelect={onSelect} />);
 
     const buttons = screen.getAllByRole('button');
     await userEvent.click(buttons[1]); // second lesson in Autoencoder topic
@@ -55,7 +57,7 @@ describe('CourseSidebar', () => {
       { ...lessons[1], id: 2, aula_number: 2 },
       { ...lessons[0], id: 1, aula_number: 1 },
     ];
-    render(<CourseSidebar lessons={reversed} currentId={99} onSelect={vi.fn()} />);
+    render(<CourseSidebar lessons={reversed} currentId={99} watched={noWatched} onSelect={vi.fn()} />);
 
     const aulaLabels = screen.getAllByText(/Aula \d/, { selector: 'p' });
     expect(aulaLabels[0]).toHaveTextContent('Aula 1');

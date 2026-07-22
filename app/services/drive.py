@@ -2,8 +2,25 @@ import io
 import json
 import os
 import re
+from urllib.parse import urlparse
 
 from googleapiclient.http import MediaIoBaseDownload
+
+_ALLOWED_SCRAPE_HOSTS = {
+    "docs.google.com",
+    "forms.gle",
+    "drive.google.com",
+    "forms.google.com",
+}
+
+
+def _validate_scrape_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme != "https":
+        raise ValueError("Only https:// URLs are allowed for scraping")
+    host = (parsed.hostname or "").lower()
+    if not any(host == h or host.endswith("." + h) for h in _ALLOWED_SCRAPE_HOSTS):
+        raise ValueError(f"Host {host!r} is not an allowed Google domain")
 
 MANIFEST_PATH = "downloaded_ids.json"
 
@@ -37,6 +54,8 @@ def clean_filename(name: str) -> str:
 
 
 def get_drive_links_from_form(url: str) -> list[str]:
+    _validate_scrape_url(url)
+
     from playwright.sync_api import sync_playwright
 
     ids = []

@@ -155,6 +155,8 @@ Copy `.env.template` to `.env` and fill in values:
 | `STORAGE_BUCKET_NAME` | S3 bucket name |
 | `STORAGE_PUBLIC_URL` | Public base URL for stored files |
 | `DOWNLOADS_BASE` | Path to Downloads folder (`/app/Downloads` in Docker) |
+| `BACKEND_API_KEY` | Shared API key required on all non-health routes (leave empty to disable) |
+| `VITE_BACKEND_API_KEY` | Same value as `BACKEND_API_KEY` — baked into frontend bundle |
 | `USE_RUNPOD` | `true` to route embed/NER to RunPod GPU workers |
 | `RUNPOD_API_KEY` | RunPod API key |
 | `RUNPOD_EMBED_ENDPOINT_ID` | RunPod embed endpoint |
@@ -215,7 +217,7 @@ ghcr.io/cslemes/assistente-api:latest
 ghcr.io/cslemes/assistente-frontend:latest
 ```
 
-Add these repository secrets in **Settings → Secrets and variables → Actions**:
+Add these secrets to the **production** environment in **Settings → Environments → production → Secrets**:
 
 ```
 VITE_FIREBASE_API_KEY
@@ -224,7 +226,35 @@ VITE_FIREBASE_PROJECT_ID
 VITE_FIREBASE_STORAGE_BUCKET
 VITE_FIREBASE_MESSAGING_SENDER_ID
 VITE_FIREBASE_APP_ID
+VITE_BACKEND_API_KEY
 ```
+
+---
+
+## Security
+
+### API Authentication
+
+All routes except `GET /health` require an `X-Api-Key` header matching `BACKEND_API_KEY`. When the env var is empty the check is skipped (safe for local dev).
+
+Generate a key:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+Set the same value for both `BACKEND_API_KEY` (API) and `VITE_BACKEND_API_KEY` (frontend build arg) in `.env`.
+
+### Network Isolation
+
+The API container has **no exposed ports** — it is only reachable through the nginx frontend container on port 3000. All external traffic goes through nginx, which proxies `/api/*` to the API internally.
+
+### Security Fixes Applied
+
+| ID | Severity | Description | Fix |
+|----|----------|-------------|-----|
+| vuln-0001 | HIGH (CVSS 7.5) | Path traversal in document download — string prefix check bypassable via sibling directory names | `Path.is_relative_to()` filesystem-aware containment |
+| vuln-0002 | HIGH (CVSS 8.6) | No server-side auth on any route — unauthenticated callers could invoke all API operations | `X-Api-Key` dependency on all routers + API port removed from compose |
+| vuln-0003 | HIGH (CVSS 8.6) | SSRF in `/scrape` — user-supplied URL passed directly to Playwright | Allowlist restricted to Google domains (`docs.google.com`, `drive.google.com`, `forms.gle`) |
 
 ---
 
@@ -289,9 +319,13 @@ POST /flashcards/generate → Qdrant chunks → LLM → Anki .apkg
 | Flashcards (Anki/genanki) | ✅ Done |
 | Documents tab (S3 storage) | ✅ Done |
 | Firebase Google Authentication | ✅ Done |
+| Per-user watch progress (Firestore) | ✅ Done |
+| Backend API key auth (X-Api-Key) | ✅ Done |
+| Security fixes (path traversal, SSRF, missing auth) | ✅ Done |
 | React web player | ✅ Done |
 | Docker Compose (local + prod) | ✅ Done |
 | GitHub Actions → GHCR CI/CD | ✅ Done |
 | RunPod GPU workers (embed + NER) | ✅ Done |
+| Standalone classroom sync script | ✅ Done |
 | Visual Intelligence (CLIP + OCR) | ⏸ Postponed |
 | Discord Bot | 🔲 Not started |
